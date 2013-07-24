@@ -133,8 +133,8 @@ namespace MediaPortal.Common.MediaManagement.MLQueries
     protected HashSet<Guid> _necessaryRequestedMIATypeIDs;
     protected HashSet<Guid> _optionalRequestedMIATypeIDs = null;
     protected List<SortInformation> _sortInformation = null;
-    protected uint? _offset = null;
-    protected uint? _limit = null;
+    protected int? _offset = null;
+    protected int? _limit = null;
 
     // We could use some cache for this instance, if we would have one...
     protected static XmlSerializer _xmlSerializer = null; // Lazy initialized
@@ -204,7 +204,7 @@ namespace MediaPortal.Common.MediaManagement.MLQueries
     /// <summary>
     /// Optional offset to return items from a specific starting position from query.
     /// </summary>
-    public uint? Offset
+    public int? Offset
     {
       get { return _offset; }
       set { _offset = value; }
@@ -213,7 +213,7 @@ namespace MediaPortal.Common.MediaManagement.MLQueries
     /// <summary>
     /// Optional limit to return only a specific number of items from query.
     /// </summary>
-    public uint? Limit
+    public int? Limit
     {
       get { return _limit; }
       set { _limit = value; }

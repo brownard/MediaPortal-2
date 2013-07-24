@@ -49,8 +49,8 @@ namespace MediaPortal.Backend.Services.MediaLibrary.QueryEngine
     protected readonly IDictionary<MediaItemAspectMetadata.AttributeSpecification, QueryAttribute> _mainSelectAttributes;
     protected readonly ICollection<MediaItemAspectMetadata.AttributeSpecification> _explicitSelectAttributes;
     protected readonly IFilter _filter;
-    protected readonly uint? _offset;
-    protected readonly uint? _limit;
+    protected int? _offset;
+    protected int? _limit;
 
     protected readonly IList<SortInformation> _sortInformation;
 
@@ -61,8 +61,8 @@ namespace MediaPortal.Backend.Services.MediaLibrary.QueryEngine
         IDictionary<MediaItemAspectMetadata.AttributeSpecification, QueryAttribute> mainSelectedAttributes,
         ICollection<MediaItemAspectMetadata.AttributeSpecification> explicitSelectedAttributes,
         IFilter filter, IList<SortInformation> sortInformation,
-        uint? limit = null,
-        uint? offset = null)
+        int? limit = null,
+        int? offset = null)
     {
       _miaManagement = miaManagement;
       _necessaryRequestedMIAs = necessaryRequestedMIAs;
@@ -98,7 +98,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary.QueryEngine
     /// <summary>
     /// Optional offset to return items from a specific starting position from query.
     /// </summary>
-    public uint? Offset
+    public int? Offset
     {
       get { return _offset; }
     }
@@ -106,7 +106,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary.QueryEngine
     /// <summary>
     /// Optional limit to return only a specific number of items from query.
     /// </summary>
-    public uint? Limit
+    public int? Limit
     {
       get { return _limit; }
     }
