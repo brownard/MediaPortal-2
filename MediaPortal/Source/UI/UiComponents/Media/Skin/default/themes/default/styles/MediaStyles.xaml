@@ -1523,4 +1523,35 @@
       </BindingSetter.BindingWrapper>
     </BindingSetter>
   </Style>
+
+  <!-- Latest media styles -->
+  <Model x:Key="MediaModel" Id="4CDD601F-E280-43b9-AD0A-6D7B2403C856"/>
+
+  <Style x:Key="LatestMediaListViewStyle" BasedOn="{ThemeResource MediaItemsListListViewStyle}">
+    <Setter Property="ItemsPanel">
+      <Setter.Value>
+        <ItemsPanelTemplate>
+          <VirtualizingStackPanel x:Name="ListItemsHost" IsItemsHost="True" Orientation="Horizontal"/>
+        </ItemsPanelTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <DataTemplate x:Key="NestedMediaListDataTemplate" DataType="{x:Type collections:ListItem}">
+    <StackPanel>
+      <Label Content="{Binding [Name]}" Color="{ThemeResource TextColor}" />
+
+      <ListView x:Name="MediaItemsList" Style="{ThemeResource LatestMediaListViewStyle}" ItemsSource="{Binding Items}"
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsVisible="{Binding ShowList}">
+        <ListView.Resources>
+          <Command x:Key="Menu_Command" Source="{StaticResource MediaModel}" Path="Select" Parameters="{LateBoundValue BindingValue={Binding}}"/>
+        </ListView.Resources>
+      </ListView>
+    </StackPanel>
+  </DataTemplate>
+
+  <Style x:Key="NestedMediaListViewStyle" BasedOn="{ThemeResource DefaultListViewStyle}">
+    <Setter Property="ItemTemplate" Value="{ThemeResource NestedMediaListDataTemplate}"/>
+  </Style>
+
 </ResourceDictionary>

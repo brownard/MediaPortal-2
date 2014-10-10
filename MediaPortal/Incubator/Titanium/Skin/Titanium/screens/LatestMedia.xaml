@@ -9,6 +9,9 @@
     >
   <Include.Resources>
 
+    <!-- Defines the default margins for the content area -->
+    <ResourceWrapper x:Key="CustomContentMargin" Resource="10,0,6,-25" />
+
     <!-- Header_Text resource has to be added by including screen -->
 
     <!-- Contents -->

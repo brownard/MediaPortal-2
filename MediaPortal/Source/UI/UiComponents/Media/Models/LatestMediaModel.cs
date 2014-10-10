@@ -36,11 +36,28 @@ using MediaPortal.UI.Presentation.Workflow;
 using MediaPortal.UI.ServerCommunication;
 using MediaPortal.UiComponents.Media.General;
 using MediaPortal.UiComponents.Media.Models.Navigation;
+using MediaPortal.UiComponents.Media.Settings;
 
 namespace MediaPortal.UiComponents.Media.Models
 {
   public class LatestMediaModel : IWorkflowModel
   {
+    public class TitledItem : ListItem
+    {
+      public ItemsList Items { get; private set; }
+
+      public TitledItem()
+        : this(string.Empty)
+      {
+      }
+
+      public TitledItem(string title, ItemsList nestedList = null)
+      {
+        Items = nestedList ?? new ItemsList();
+        SetLabel(Consts.KEY_NAME, title);
+      }
+    }
+
     #region Consts
 
     // Global ID definitions and references
@@ -55,47 +72,45 @@ namespace MediaPortal.UiComponents.Media.Models
 
     public delegate PlayableMediaItem MediaItemToListItemAction(MediaItem mediaItem);
 
-    public ItemsList LatestMovies { get; private set; }
-
-    public ItemsList LatestSeries { get; private set; }
-
-    public ItemsList LatestImages { get; private set; }
-
-    public ItemsList LatestAudio { get; private set; }
-
-    private readonly ItemsList[] _knownLists;
+    public ItemsList AllItems { get; private set; }
 
     public LatestMediaModel()
     {
-      LatestMovies = new ItemsList();
-      LatestSeries = new ItemsList();
-      LatestImages = new ItemsList();
-      LatestAudio = new ItemsList();
-      _knownLists = new[] { LatestMovies, LatestSeries, LatestImages, LatestAudio };
+      AllItems = new ItemsList();
     }
 
     protected void ClearAll()
     {
-      foreach (ItemsList list in _knownLists)
-      {
-        list.Clear();
-        list.FireChange();
-      }
+      AllItems.Clear();
+      AllItems.FireChange();
     }
 
     protected void Update()
     {
+      ClearAll();
       var contentDirectory = ServiceRegistration.Get<IServerConnectionManager>().ContentDirectory;
       if (contentDirectory == null)
       {
-        ClearAll();
         return;
       }
 
-      FillList(contentDirectory, Consts.NECESSARY_MOVIES_MIAS, LatestMovies, item => new MovieItem(item));
-      FillList(contentDirectory, Consts.NECESSARY_SERIES_MIAS, LatestSeries, item => new SeriesItem(item));
-      FillList(contentDirectory, Consts.NECESSARY_IMAGE_MIAS, LatestImages, item => new ImageItem(item));
-      FillList(contentDirectory, Consts.NECESSARY_AUDIO_MIAS, LatestAudio, item => new AudioItem(item));
+      ItemsList list = new ItemsList();
+      FillList(contentDirectory, Consts.NECESSARY_MOVIES_MIAS, list, item => new MovieItem(item));
+      AllItems.Add(new TitledItem("Movies", list));
+
+      list = new ItemsList();
+      FillList(contentDirectory, Consts.NECESSARY_SERIES_MIAS, list, item => new SeriesItem(item));
+      AllItems.Add(new TitledItem("Series", list));
+
+      list = new ItemsList();
+      FillList(contentDirectory, Consts.NECESSARY_IMAGE_MIAS, list, item => new ImageItem(item));
+      AllItems.Add(new TitledItem("Images", list));
+
+      list = new ItemsList();
+      FillList(contentDirectory, Consts.NECESSARY_AUDIO_MIAS, list, item => new AudioItem(item));
+      AllItems.Add(new TitledItem("Audio", list));
+
+      AllItems.FireChange();
     }
 
     protected static void FillList(IContentDirectory contentDirectory, Guid[] necessaryMIAs, ItemsList list, MediaItemToListItemAction converterAction)
@@ -117,6 +132,17 @@ namespace MediaPortal.UiComponents.Media.Models
       list.FireChange();
     }
 
+    protected void SetLayout()
+    {
+      IWorkflowManager workflowManager = ServiceRegistration.Get<IWorkflowManager>();
+      ViewModeModel vwm = workflowManager.GetModel(ViewModeModel.VM_MODEL_ID) as ViewModeModel;
+      if (vwm != null)
+      {
+        vwm.LayoutType = LayoutType.GridLayout;
+        vwm.LayoutSize = LayoutSize.Medium;
+      }
+    }
+
     #region IWorkflowModel implementation
 
     public Guid ModelId
@@ -132,6 +158,7 @@ namespace MediaPortal.UiComponents.Media.Models
     public void EnterModelContext(NavigationContext oldContext, NavigationContext newContext)
     {
       Update();
+      SetLayout();
     }
 
     public void ExitModelContext(NavigationContext oldContext, NavigationContext newContext)
