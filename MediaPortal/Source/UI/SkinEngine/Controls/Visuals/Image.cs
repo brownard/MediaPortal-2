@@ -102,7 +102,6 @@ namespace MediaPortal.UI.SkinEngine.Controls.Visuals
     protected bool _fallbackSourceInUse = false;
     protected SizeF _lastImageSourceSize = new SizeF();
     protected string _formerWarnURI = null;
-    protected bool _invalidateImageSourceOnResize = false;
 
     #endregion
 
@@ -133,9 +132,6 @@ namespace MediaPortal.UI.SkinEngine.Controls.Visuals
       _stretchDirectionProperty.Attach(OnArrangeGetsInvalid);
       _thumbnailProperty.Attach(OnArrangeGetsInvalid);
       _skinNeutralProperty.Attach(OnArrangeGetsInvalid);
-
-      WidthProperty.Attach(OnImageSizeChanged);
-      HeightProperty.Attach(OnImageSizeChanged);
     }
 
     void Detach()
@@ -146,16 +142,13 @@ namespace MediaPortal.UI.SkinEngine.Controls.Visuals
       _stretchDirectionProperty.Detach(OnArrangeGetsInvalid);
       _thumbnailProperty.Detach(OnArrangeGetsInvalid);
       _skinNeutralProperty.Detach(OnArrangeGetsInvalid);
-
-      WidthProperty.Detach(OnImageSizeChanged);
-      HeightProperty.Detach(OnImageSizeChanged);
     }
 
     public override void DeepCopy(IDeepCopyable source, ICopyManager copyManager)
     {
       Detach();
       base.DeepCopy(source, copyManager);
-      Image i = (Image) source;
+      Image i = (Image)source;
       Source = copyManager.GetCopy(i.Source);
       FallbackSource = copyManager.GetCopy(i.FallbackSource);
       StretchDirection = i.StretchDirection;
@@ -207,7 +200,7 @@ namespace MediaPortal.UI.SkinEngine.Controls.Visuals
     /// </summary>
     public Stretch Stretch
     {
-      get { return (Stretch) _stretchProperty.GetValue(); }
+      get { return (Stretch)_stretchProperty.GetValue(); }
       set { _stretchProperty.SetValue(value); }
     }
 
@@ -221,7 +214,7 @@ namespace MediaPortal.UI.SkinEngine.Controls.Visuals
     /// </summary>
     public StretchDirection StretchDirection
     {
-      get { return (StretchDirection) _stretchDirectionProperty.GetValue(); }
+      get { return (StretchDirection)_stretchDirectionProperty.GetValue(); }
       set { _stretchDirectionProperty.SetValue(value); }
     }
 
@@ -264,7 +257,7 @@ namespace MediaPortal.UI.SkinEngine.Controls.Visuals
     /// </summary>
     public bool Thumbnail
     {
-      get { return (bool) _thumbnailProperty.GetValue(); }
+      get { return (bool)_thumbnailProperty.GetValue(); }
       set { _thumbnailProperty.SetValue(value); }
     }
 
@@ -278,7 +271,7 @@ namespace MediaPortal.UI.SkinEngine.Controls.Visuals
     /// </summary>
     public bool SkinNeutralAR
     {
-      get { return (bool) _skinNeutralProperty.GetValue(); }
+      get { return (bool)_skinNeutralProperty.GetValue(); }
       set { _skinNeutralProperty.SetValue(value); }
     }
 
@@ -292,7 +285,7 @@ namespace MediaPortal.UI.SkinEngine.Controls.Visuals
     /// </summary>
     public bool HasImage
     {
-      get { return (bool) _hasImageProperty.GetValue(); }
+      get { return (bool)_hasImageProperty.GetValue(); }
       set { _hasImageProperty.SetValue(value); }
     }
 
@@ -361,21 +354,16 @@ namespace MediaPortal.UI.SkinEngine.Controls.Visuals
     protected bool IsValidSource(string uriSource)
     {
       string lower = uriSource.ToLower();
-      if (lower.EndsWith(".png") || lower.EndsWith(".bmp") || lower.EndsWith(".jpg") || lower.EndsWith(".jpeg") || lower.EndsWith(".gif"))
+      // Web URIs often doesn't contain a image based extensions. For absolute uri we expect them to point to a valid image source.
+      // TODO: the list of image extensions should be extensible, i.e. the FreeImage library support much more image types to be loaded!
+      Uri uri;
+      if (Uri.TryCreate(uriSource, UriKind.Absolute, out uri) || lower.EndsWith(".png") || lower.EndsWith(".bmp") || lower.EndsWith(".jpg") || lower.EndsWith(".jpeg") || lower.EndsWith(".gif"))
         return true;
 
       if (Thumbnail && (lower.EndsWith(".avi") || lower.EndsWith(".ts") || lower.EndsWith(".mkv")))
         return true;
 
       return false;
-    }
-
-    // FIXME: Remove this ugly hack and find a general solution to make image sources react to size changes
-    protected void OnImageSizeChanged(AbstractProperty prop, object oldValue)
-    {
-      if (_invalidateImageSourceOnResize)
-        // Invalidate the loaded sources for MediaItems to allow use of different thumb resolutions.
-        InvalidateImageSources();
     }
 
     /// <summary>
@@ -393,25 +381,12 @@ namespace MediaPortal.UI.SkinEngine.Controls.Visuals
         return null;
       bool thumbnail = allowThumbs && Thumbnail;
 
-      _invalidateImageSourceOnResize = false;
-      if (source is MediaItem)
+      ImageSource imageSource;
+      if (ImageSourceFactory.TryCreateImageSource(source, (int)Width, (int)Height, out imageSource))
       {
-        _invalidateImageSourceOnResize = true;
-        return MediaItemsHelper.CreateThumbnailImageSource((MediaItem) source, (int) Math.Max(Width, Height));
+        return imageSource;
       }
-      if (source is IResourceLocator)
-      {
-        IResourceLocator resourceLocator = (IResourceLocator) source;
-        IResourceAccessor ra = resourceLocator.CreateAccessor();
-        IFileSystemResourceAccessor fsra = ra as IFileSystemResourceAccessor;
-        if (fsra == null)
-          ra.Dispose();
-        else
-          return new ResourceAccessorTextureImageSource(fsra, RightAngledRotation.Zero);
-      }
-      ImageSource result = source as ImageSource;
-      if (result != null)
-        return result;
+
       string uriSource = source as string;
       if (!string.IsNullOrEmpty(uriSource))
       {
@@ -421,7 +396,7 @@ namespace MediaPortal.UI.SkinEngine.Controls.Visuals
           BitmapImageSource bmi = new BitmapImageSource { UriSource = uriSource, Thumbnail = thumbnail };
           if (thumbnail)
             // Set the requested thumbnail dimension, to use the best matching format.
-            bmi.ThumbnailDimension = (int) Math.Max(Width, Height);
+            bmi.ThumbnailDimension = (int)Math.Max(Width, Height);
           return bmi;
         }
         // TODO: More image types

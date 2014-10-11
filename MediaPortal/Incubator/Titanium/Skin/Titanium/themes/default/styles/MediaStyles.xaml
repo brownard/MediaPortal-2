@@ -68,13 +68,7 @@
                     <media:MovieAspectWrapper.Template>
                       <ControlTemplate>
                         <Image Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}" Stretch="Uniform"
-                               FallbackSource="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=MediaItem}">
-                          <Image.Source>
-                            <fanart:FanArtImageSource fanart:FanArtMediaType="Movie" fanart:FanArtType="Poster"
-                                    fanart:FanArtName="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=MovieName}"
-                                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
-                          </Image.Source>
-                        </Image>
+                               Source="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=MediaItem}"/>
                       </ControlTemplate>
                     </media:MovieAspectWrapper.Template>
                   </media:MovieAspectWrapper>
@@ -89,7 +83,7 @@
                     <media:SeriesAspectWrapper.Template>
                       <ControlTemplate>
                         <Image Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}" Stretch="Uniform"
-                               FallbackSource="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=MediaItem}">
+                               FallbackSource="VideoLarge.png">
                           <Image.Source>
                             <fanart:FanArtImageSource fanart:FanArtMediaType="Series" fanart:FanArtType="Poster"
                                     fanart:FanArtName="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=SeriesName}"
@@ -190,8 +184,29 @@
                           IsVisible="{Binding Source={StaticResource VideoPlayerModel},Path=PlayerUIContributor.SubtitlesAvailable}"
                           Command="{Command Source={StaticResource VideoPlayerModel},Path=PlayerUIContributor.OpenChooseSubtitleDialog}"/>
 
-                  <Button x:Name="AudioActiveButton" IsVisible="{Binding IsAudio}" Style="{ThemeResource AudioActiveButtonStyle}"
+                  <Grid x:Name="AudioPanel" DockPanel.Dock="Right" HorizontalAlignment="Right" Margin="4,0,0,0">
+                    <Grid x:Name="Audio_NoMouse" IsVisible="{Binding !ShowMouseControls}"
+                      VerticalAlignment="Center" HorizontalAlignment="Center">
+                      <!-- Must be located the same as Audio_Mouse -->
+                      <Control x:Name="AudioSimple" IsVisible="{Binding IsAudio}" Template="{ThemeResource AudioActiveControlTemplate}"/>
+                      <Control x:Name="MuteOnOffSimple" Template="{ThemeResource MuteOnOffControlTemplate}">
+                        <Control.IsVisible>
+                          <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} &amp;&amp; {1}">
+                            <Binding Path="IsAudio"/>
+                            <Binding Path="IsMuted"/>
+                          </MultiBinding>
+                        </Control.IsVisible>
+                      </Control>
+                    </Grid>
+                    <Grid x:Name="Audio_Mouse" IsVisible="{Binding ShowMouseControls}"
+                      VerticalAlignment="Center" HorizontalAlignment="Center">
+                      <!-- Must be located the same as Audio_NoMouse -->
+                      <Button x:Name="AudioActiveButton" IsVisible="{Binding IsAudio}" Style="{ThemeResource AudioActiveButtonStyle}"
                         Command="{Command AudioButtonPressed}"/>
+                      <Button x:Name="AudioInactiveButton" IsVisible="{Binding !IsAudio}" Style="{ThemeResource AudioInactiveButtonStyle}"
+                        Command="{Command AudioButtonPressed}"/>
+                    </Grid>
+                  </Grid>
 
                 </StackPanel>
                 <!-- PlayControlsPanel -->
@@ -338,9 +353,29 @@
                   </StackPanel>
                   <!-- DvdButtons -->
 
-                  <Button x:Name="AudioActiveButton" IsVisible="{Binding IsAudio}" Style="{ThemeResource AudioActiveButtonStyle}"
+                  <Grid x:Name="AudioPanel" DockPanel.Dock="Right" HorizontalAlignment="Right" Margin="4,0,0,0">
+                    <Grid x:Name="Audio_NoMouse" IsVisible="{Binding !ShowMouseControls}"
+                      VerticalAlignment="Center" HorizontalAlignment="Center">
+                      <!-- Must be located the same as Audio_Mouse -->
+                      <Control x:Name="AudioSimple" IsVisible="{Binding IsAudio}" Template="{ThemeResource AudioActiveControlTemplate}"/>
+                      <Control x:Name="MuteOnOffSimple" Template="{ThemeResource MuteOnOffControlTemplate}">
+                        <Control.IsVisible>
+                          <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} &amp;&amp; {1}">
+                            <Binding Path="IsAudio"/>
+                            <Binding Path="IsMuted"/>
+                          </MultiBinding>
+                        </Control.IsVisible>
+                      </Control>
+                    </Grid>
+                    <Grid x:Name="Audio_Mouse" IsVisible="{Binding ShowMouseControls}"
+                      VerticalAlignment="Center" HorizontalAlignment="Center">
+                      <!-- Must be located the same as Audio_NoMouse -->
+                      <Button x:Name="AudioActiveButton" IsVisible="{Binding IsAudio}" Style="{ThemeResource AudioActiveButtonStyle}"
                         Command="{Command AudioButtonPressed}"/>
-
+                      <Button x:Name="AudioInactiveButton" IsVisible="{Binding !IsAudio}" Style="{ThemeResource AudioInactiveButtonStyle}"
+                        Command="{Command AudioButtonPressed}"/>
+                    </Grid>
+                  </Grid>
                 </StackPanel>
                 <!-- PlayControlsPanel -->
               </ControlTemplate>
@@ -845,12 +880,36 @@
 
       <Label x:Name="ItemLabel" Grid.Row="0" Grid.Column="1" Content="{Binding SimpleTitle}"
           Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}"/>
-      <Image Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}" Stretch="Uniform" FallbackSource="VideoLarge.png"
-             Grid.Row="0" Grid.Column="0">
+
+      <Image x:Name="ItemTypeSmall" Stretch="Uniform"
+            FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
         <Image.Source>
           <fanart:FanArtImageSource fanart:FanArtMediaType="MovieCollection" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
-                                    fanart:MaxWidth="{StaticResource MEDIA_THUMB_WIDTH_L}" fanart:MaxHeight="{StaticResource MEDIA_THUMB_HEIGHT_L}"/>
+                                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
         </Image.Source>
+        <Image.IsVisible>
+          <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
+        </Image.IsVisible>
+      </Image>
+      <Image x:Name="ItemTypeMedium" Stretch="Uniform"
+            FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
+        <Image.Source>
+          <fanart:FanArtImageSource fanart:FanArtMediaType="MovieCollection" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
+                                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
+        </Image.Source>
+        <Image.IsVisible>
+          <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Medium}"/>
+        </Image.IsVisible>
+      </Image>
+      <Image x:Name="ItemTypeLarge" Stretch="Uniform"
+            FallbackSource="VideoLarge.png" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
+        <Image.Source>
+          <fanart:FanArtImageSource fanart:FanArtMediaType="MovieCollection" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
+                                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
+        </Image.Source>
+        <Image.IsVisible>
+          <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Large}"/>
+        </Image.IsVisible>
       </Image>
 
       <Label x:Name="NumItems" Grid.Row="0" Grid.Column="2" Content="{Binding NumItems}"
@@ -931,12 +990,23 @@
           </MultiBinding>
         </Label.Color>
       </Label>
-      <Image Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}" Stretch="Uniform" FallbackSource="VideoLarge.png"
-             Grid.Row="0" Grid.Column="0">
-        <Image.Source>
-          <fanart:FanArtImageSource fanart:FanArtMediaType="Movie" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
-                                    fanart:MaxWidth="{StaticResource MEDIA_THUMB_WIDTH_L}" fanart:MaxHeight="{StaticResource MEDIA_THUMB_HEIGHT_L}"/>
-        </Image.Source>
+      <Image x:Name="ItemTypeSmall" Stretch="Uniform"
+            Source="{Binding MediaItem}" FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
+        <Image.IsVisible>
+          <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
+        </Image.IsVisible>
+      </Image>
+      <Image x:Name="ItemTypeMedium" Stretch="Uniform"
+            Source="{Binding MediaItem}" FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
+        <Image.IsVisible>
+          <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Medium}"/>
+        </Image.IsVisible>
+      </Image>
+      <Image x:Name="ItemTypeLarge" Stretch="Uniform"
+            Source="{Binding MediaItem}" FallbackSource="VideoLarge.png" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
+        <Image.IsVisible>
+          <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Large}"/>
+        </Image.IsVisible>
       </Image>
 
       <!-- TODO: Year -->
@@ -963,13 +1033,9 @@
           </MultiBinding>
         </Label.Color>
       </Label>
-      <Image Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}" Stretch="Uniform" FallbackSource="VideoLarge.png"
-             Grid.Row="0" Grid.Column="1">
-        <Image.Source>
-          <fanart:FanArtImageSource fanart:FanArtMediaType="Movie" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
-                                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
-        </Image.Source>
-      </Image>
+      <Image Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}" Stretch="Uniform"
+             Source="{Binding MediaItem}" FallbackSource="VideoLarge.png"
+             Grid.Row="0" Grid.Column="1"/>
       <!-- Unwatched indicator -->
       <Image Source="unwatched_flag.png" HorizontalAlignment="Left" VerticalAlignment="Top">
         <Image.IsVisible>
@@ -994,12 +1060,8 @@
           <ResourceWrapper x:Key="ControlWidth" Resource="{StaticResource REFLEXION_WIDTH}"/>
           <ResourceWrapper x:Key="ControlHeight" Resource="{StaticResource REFLEXION_HEIGHT}"/>
           <ControlTemplate x:Key="MakeReflexion">
-            <Image Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}" Stretch="Uniform" FallbackSource="VideoLarge.png">
-              <Image.Source>
-                <fanart:FanArtImageSource fanart:FanArtMediaType="Movie" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
-                                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
-              </Image.Source>
-            </Image>
+            <Image Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}" Stretch="Uniform"
+                   Source="{Binding MediaItem}" FallbackSource="VideoLarge.png"/>
           </ControlTemplate>
         </Control.Resources>
       </Control>
@@ -1041,6 +1103,7 @@
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
           </Image.IsVisible>
         </Image>
+
         <Image x:Name="ItemTypeMedium" Stretch="Uniform"
             Source="{Binding MediaItem}" FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
           <Image.IsVisible>
@@ -1092,9 +1155,12 @@
         <RowDefinition Height="{StaticResource GRIDVIEW_FILTER_HEIGHT}"/>
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-      <Image x:Name="ItemTypeImage" Grid.Row="0" Stretch="Uniform" Source="{Binding MediaItem}"
+      <Image Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}" Stretch="Uniform"
+             Source="{Binding MediaItem}" FallbackSource="VideoLarge.png">
+      </Image>
+      <!--<Image x:Name="ItemTypeImage" Grid.Row="0" Stretch="Uniform" Source="{Binding MediaItem}"
            Thumbnail="True" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}"
-           FallbackSource="VideoLarge.png"/>
+           FallbackSource="VideoLarge.png"/>-->
       <!-- Unwatched indicator -->
       <Image Source="unwatched_flag.png" HorizontalAlignment="Left" VerticalAlignment="Top">
         <Image.IsVisible>
@@ -1128,9 +1194,8 @@
           <ResourceWrapper x:Key="ControlWidth" Resource="{StaticResource REFLEXION_WIDTH}"/>
           <ResourceWrapper x:Key="ControlHeight" Resource="{StaticResource REFLEXION_HEIGHT}"/>
           <ControlTemplate x:Key="MakeReflexion">
-            <Image x:Name="ItemTypeImage" Stretch="Uniform" Source="{Binding MediaItem}"
-               Thumbnail="True" Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}"
-               FallbackSource="VideoLarge.png"/>
+            <Image Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}" Stretch="Uniform"
+                   Source="{Binding MediaItem}" FallbackSource="VideoLarge.png"/>
           </ControlTemplate>
         </Control.Resources>
       </Control>
@@ -1280,7 +1345,7 @@
         <Image x:Name="ItemTypeSmall" Stretch="Uniform" FallbackSource="AudioSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
           <Image.Source>
             <fanart:FanArtImageSource fanart:FanArtMediaType="Album" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
-                    fanart:MaxWidth="{StaticResource MEDIA_THUMB_WIDTH_L}" fanart:MaxHeight="{StaticResource MEDIA_THUMB_HEIGHT_L}"/>
+                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
           </Image.Source>
           <Image.IsVisible>
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
@@ -1289,7 +1354,7 @@
         <Image x:Name="ItemTypeMedium" Stretch="Uniform" FallbackSource="AudioSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
           <Image.Source>
             <fanart:FanArtImageSource fanart:FanArtMediaType="Album" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
-                    fanart:MaxWidth="{StaticResource MEDIA_THUMB_WIDTH_L}" fanart:MaxHeight="{StaticResource MEDIA_THUMB_HEIGHT_L}"/>
+                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
           </Image.Source>
           <Image.IsVisible>
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Medium}"/>
@@ -1298,7 +1363,7 @@
         <Image x:Name="ItemTypeLarge" Stretch="Uniform" FallbackSource="AudioLarge.png" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
           <Image.Source>
             <fanart:FanArtImageSource fanart:FanArtMediaType="Album" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
-                    fanart:MaxWidth="{StaticResource MEDIA_THUMB_WIDTH_L}" fanart:MaxHeight="{StaticResource MEDIA_THUMB_HEIGHT_L}"/>
+                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
           </Image.Source>
           <Image.IsVisible>
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Large}"/>
@@ -1323,7 +1388,7 @@
            Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
         <Image.Source>
           <fanart:FanArtImageSource fanart:FanArtMediaType="Album" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
-                    fanart:MaxWidth="{StaticResource MEDIA_THUMB_WIDTH_L}" fanart:MaxHeight="{StaticResource MEDIA_THUMB_HEIGHT_L}"/>
+                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
         </Image.Source>
       </Image>
       <Label x:Name="ItemLabel" Grid.Row="1" Content="{Binding SimpleTitle}" Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}" HorizontalAlignment="Center" />
@@ -1349,7 +1414,7 @@
                Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}">
               <Image.Source>
                 <fanart:FanArtImageSource fanart:FanArtMediaType="Album" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
-                    fanart:MaxWidth="{StaticResource MEDIA_THUMB_WIDTH_L}" fanart:MaxHeight="{StaticResource MEDIA_THUMB_HEIGHT_L}"/>
+                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
               </Image.Source>
             </Image>
           </ControlTemplate>
@@ -1373,7 +1438,7 @@
       </Grid.RowDefinitions>
       <DockPanel LastChildFill="True" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Margin="0,0,4,0">
         <Image x:Name="ItemTypeSmall" Stretch="Uniform"
-            Source="{Binding MediaItem}" FallbackSource="ImageSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
+             Source="{Binding MediaItem}" FallbackSource="ImageSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
           <Image.IsVisible>
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
           </Image.IsVisible>
@@ -1430,9 +1495,8 @@
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
       <!-- For grid layout, we only support large layout size -->
-      <Image x:Name="ItemTypeImage" Grid.Row="0" Stretch="Uniform" Source="{Binding MediaItem}"
-           Thumbnail="True" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}"
-           FallbackSource="ImageLarge.png"/>
+      <Image x:Name="ItemTypeImage" Grid.Row="0" Stretch="Uniform" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}"
+           Source="{Binding MediaItem}" FallbackSource="ImageLarge.png"/>
       <!-- Unwatched indicator -->
       <Image Source="unwatched_flag.png" HorizontalAlignment="Left" VerticalAlignment="Top">
         <Image.IsVisible>
@@ -1466,9 +1530,8 @@
           <ResourceWrapper x:Key="ControlWidth" Resource="{StaticResource REFLEXION_WIDTH}"/>
           <ResourceWrapper x:Key="ControlHeight" Resource="{StaticResource REFLEXION_HEIGHT}"/>
           <ControlTemplate x:Key="MakeReflexion">
-            <Image x:Name="ItemTypeImage" Stretch="Uniform" Source="{Binding MediaItem}"
-               Thumbnail="True" Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}"
-               FallbackSource="ImageLarge.png"/>
+            <Image x:Name="ItemTypeImage" Stretch="Uniform" Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}"
+               Source="{Binding MediaItem}" FallbackSource="ImageLarge.png"/>
           </ControlTemplate>
         </Control.Resources>
       </Control>
@@ -1631,6 +1694,31 @@
     </Setter>
   </Style>
 
+  <Model x:Key="MediaItemsActionModel" Id="970649B2-CAE8-4830-A985-E5E78F3CB24F"/>
+
+  <!-- An item list container used for MediaItems. Additionally to the standard "Button", it adds a context menu command  -->
+  <Style x:Key="MediaItemWithContextMenuContainerStyle" BasedOn="{ThemeResource DefaultItemContainerStyle}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ListViewItem}">
+          <Button Style="{ThemeResource ButtonWideStyle}"
+              Command="{DynamicResource ResourceKey=Menu_Command}"
+              IsEnabled="{Binding Enabled}" SetFocus="{Binding Path=Selected,Mode=OneTime}">
+            <Button.Triggers>
+              <Trigger Property="HasFocus" Value="True">
+                <Setter TargetName="ItemLabel" Property="Scroll" Value="Auto"/>
+                <Setter Property="StackPanel.ZIndex" Value="100.0"/>
+              </Trigger>
+            </Button.Triggers>
+            <Button.ContextMenuCommand>
+              <Command Source="{StaticResource MediaItemsActionModel}" Path="ShowMediaItemActions" Parameters="{LateBoundValue BindingValue={Binding MediaItem}}"/>
+            </Button.ContextMenuCommand>
+          </Button>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <Style x:Key="CoverMediaItemContainerStyle" BasedOn="{ThemeResource DefaultItemContainerStyle}">
     <Setter Property="Template">
       <Setter.Value>
@@ -1644,6 +1732,9 @@
                 <Setter TargetName="ItemLabel" Property="Scroll" Value="Auto"/>
               </Trigger>
             </Button.Triggers>
+            <Button.ContextMenuCommand>
+              <Command Source="{StaticResource MediaItemsActionModel}" Path="ShowMediaItemActions" Parameters="{LateBoundValue BindingValue={Binding MediaItem}}"/>
+            </Button.ContextMenuCommand>
           </Button>
         </ControlTemplate>
       </Setter.Value>
@@ -1662,7 +1753,7 @@
             <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} == {LayoutType}.{CoverLayout} ? {1} : {2}">
               <Binding Source="{StaticResource ViewModeModel}" Path="LayoutType"/>
               <Binding Source="{ThemeResource CoverMediaItemContainerStyle}"/>
-              <Binding Source="{ThemeResource MediaItemContainerStyle}"/>
+              <Binding Source="{ThemeResource MediaItemWithContextMenuContainerStyle}"/>
             </MultiBinding>
           </BindingWrapper.Binding>
         </BindingWrapper>

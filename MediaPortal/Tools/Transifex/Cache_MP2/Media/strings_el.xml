@@ -51,6 +51,7 @@
   <!--Shown in the header of an items list, e.g. "45 items"-->
   <!--Playlists-->
   <string name="Media.OpenPlayerStrategy.MediaPortal.UI.Services.Players.PCMOpenPlayerStrategy.Default">Προκαθορισμένο</string>
+  <!--MediaItemAction dialog-->
   <!--Play items dialog-->
   <!--Player context names-->
   <string name="Media.AudioContextName">Ήχος</string>
@@ -63,5 +64,7 @@
   <string name="Media.RepeatMode.All">Όλα</string>
   <!--VideoPlayerUIContributor-->
   <!--Video Player time units-->
+  <string name="Media.SwitchFilterMenuItem">Φίλτρο</string>
+  <string name="Media.SwitchFilterDialogTitle">Φίλτρο</string>
   <string name="Settings.Players">Παίκτες</string>
 </resources>

@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using MediaPortal.Common.Logging;
 using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Utilities;
 using MediaPortal.Utilities.FileSystem;
@@ -33,7 +34,7 @@ using MediaPortal.Utilities.Network;
 
 namespace MediaPortal.Common.Services.ResourceAccess.LocalFsResourceProvider
 {
-  public class LocalFsResourceAccessor : ILocalFsResourceAccessor, IResourceChangeNotifier
+  public class LocalFsResourceAccessor : ILocalFsResourceAccessor, IResourceChangeNotifier, IResourceDeletor
   {
     protected LocalFsResourceProvider _provider;
     protected string _path;
@@ -251,6 +252,34 @@ namespace MediaPortal.Common.Services.ResourceAccess.LocalFsResourceProvider
     public void UnregisterAll(PathChangeDelegate changeDelegate)
     {
       _provider.UnregisterAll(changeDelegate);
+    }
+
+    #endregion
+
+    #region IResourceDeletor members
+
+    public bool Delete()
+    {
+      string dosPath = LocalFsResourceProviderBase.ToDosPath(_path);
+      try
+      {
+        if (IsDirectory)
+        {
+          Directory.Delete(dosPath);
+          return true;
+        }
+        if (IsFile)
+        {
+          File.Delete(dosPath);
+          return true;
+        }
+      }
+      catch (Exception ex)
+      {
+        // There can be a wide range of exceptions because of read-only filesystems, access denied, file in use etc...
+        ServiceRegistration.Get<ILogger>().Error("Error deleting resource '{0}'", ex, dosPath);
+      }
+      return false; // Non existing or exception
     }
 
     #endregion

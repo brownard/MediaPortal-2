@@ -422,6 +422,13 @@ namespace MediaPortal.Backend.Services.ClientCommunication
           };
       AddStateVariable(A_ARG_TYPE_PlaylistIdentificationDataEnumeration);
 
+      // Used to transport an IDictionary<Guid, DateTime> such as the MediaItemAspectCreationDates
+      DvStateVariable A_ARG_TYPE_DictionaryGuidDateTime = new DvStateVariable("A_ARG_TYPE_DictionaryGuidDateTime", new DvExtendedDataType(UPnPExtendedDataTypes.DtDictionaryGuidDateTime))
+      {
+        SendEvents = false
+      };
+      AddStateVariable(A_ARG_TYPE_DictionaryGuidDateTime);
+
       // Change event for playlists
       PlaylistsChangeCounter = new DvStateVariable("PlaylistsChangeCounter", new DvStandardDataType(UPnPStandardDataType.Ui4))
         {

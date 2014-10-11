@@ -23,6 +23,8 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using MediaPortal.Common.Localization;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
@@ -75,6 +77,14 @@ namespace MediaPortal.Common
 
       logger.Info("ApplicationCore: Launching in AppDomain {0}...", AppDomain.CurrentDomain.FriendlyName);
 
+      // Assembly and build information
+      FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(System.Reflection.Assembly.GetCallingAssembly().Location);
+      logger.Info("ApplicationCore: Comments:   {0}", fileVersionInfo.Comments);
+      logger.Info("ApplicationCore: Copyright:  {0}", fileVersionInfo.LegalCopyright);
+      logger.Info("ApplicationCore: Version:    {0}", fileVersionInfo.FileVersion);
+      logger.Info("ApplicationCore: Source:     {0}", fileVersionInfo.ProductVersion);
+      logger.Info("ApplicationCore: ----------------------------------------------------------");
+
       logger.Debug("ApplicationCore: Registering ILogger service");
       ServiceRegistration.Set<ILogger>(logger);
 
@@ -110,8 +120,19 @@ namespace MediaPortal.Common
       logger.Debug("ApplicationCore: Registering IMediaAccessor service");
       ServiceRegistration.Set<IMediaAccessor>(new MediaAccessor());
 
-      logger.Debug("ApplicationCore: Registering IImporterWorker service");
-      ServiceRegistration.Set<IImporterWorker>(new ImporterWorker());
+      // ToDo: Remove the old ImporterWorker and this setting once the NewGen ImporterWorker actually works
+      var importerWorkerSettings = ServiceRegistration.Get<ISettingsManager>().Load<ImporterWorkerSettings>();
+      if (importerWorkerSettings.UseNewImporterWorker)
+      {
+        logger.Debug("ApplicationCore: Registering IImporterWorker NewGen service");
+        ServiceRegistration.Set<IImporterWorker>(new ImporterWorkerNewGen());
+      }
+      else
+      {
+        logger.Debug("ApplicationCore: Registering IImporterWorker service");
+        ServiceRegistration.Set<IImporterWorker>(new ImporterWorker());        
+      }
+      ServiceRegistration.Get<ISettingsManager>().Save(importerWorkerSettings);
 
       logger.Debug("ApplicationCore: Registering IResourceServer service");
       ServiceRegistration.Set<IResourceServer>(new ResourceServer());
@@ -132,7 +153,7 @@ namespace MediaPortal.Common
     {
       ServiceRegistration.Get<ILocalization>().Startup();
       ServiceRegistration.Get<ITaskScheduler>().Startup();
-      ServiceRegistration.Get<IImporterWorker>().Startup();
+      ServiceRegistration.Get<IImporterWorker>().Startup(); // shutdown in ApplicationLaunchers
       ServiceRegistration.Get<IResourceServer>().Startup();
       ServiceRegistration.Get<IResourceMountingService>().Startup();
       ServiceRegistration.Get<IRemoteResourceInformationService>().Startup();
@@ -144,7 +165,6 @@ namespace MediaPortal.Common
       ServiceRegistration.Get<IRemoteResourceInformationService>().Shutdown();
       ServiceRegistration.Get<IResourceMountingService>().Shutdown();
       ServiceRegistration.Get<IResourceServer>().Shutdown();
-      ServiceRegistration.Get<IImporterWorker>().Shutdown();
       ServiceRegistration.Get<ITaskScheduler>().Shutdown();
       ServiceRegistration.Get<IThreadPool>().Shutdown();
     }
@@ -161,7 +181,6 @@ namespace MediaPortal.Common
       miatr.RegisterLocallyKnownMediaItemAspectType(ImageAspect.Metadata);
       miatr.RegisterLocallyKnownMediaItemAspectType(SeriesAspect.Metadata);
       miatr.RegisterLocallyKnownMediaItemAspectType(MovieAspect.Metadata);
-      miatr.RegisterLocallyKnownMediaItemAspectType(ThumbnailSmallAspect.Metadata);
       miatr.RegisterLocallyKnownMediaItemAspectType(ThumbnailLargeAspect.Metadata);
     }
 

@@ -62,7 +62,7 @@
                   <Image x:Name="ChannelLogo" Grid.Column="0" Grid.Row="0" Width="64" Height="64" Grid.RowSpan="2"
                          Stretch="Uniform">
                     <Image.Source>
-                      <fanart:FanArtImageSource fanart:FanArtMediaType="Channel" fanart:FanArtType="Banner" fanart:FanArtName="{Binding Source={StaticResource SlimTvClient}, Path=ChannelName}"
+                      <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Banner" fanart:FanArtName="{Binding Source={StaticResource SlimTvClient}, Path=ChannelName}"
                                     fanart:MaxWidth="0" fanart:MaxHeight="0"/>
                     </Image.Source>
                   </Image>
@@ -286,6 +286,29 @@
     </Grid>
   </DataTemplate>
 
+  <!-- ScheduleDataTemplate contains channel logo, title, recording type -->
+  <DataTemplate x:Key="ScheduleDataTemplate" DataType="{x:Type collections:ListItem}">
+    <Grid x:Name="ItemControl" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+
+      <Image x:Name="ChannelLogo" Grid.Column="0" Height="{ThemeResource ChannelLogoSmall}" Stretch="Uniform">
+        <Image.Source>
+          <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Banner" fanart:FanArtName="{Binding [ChannelName]}"
+                                    fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+        </Image.Source>
+      </Image>
+      <Label x:Name="ItemLabel" Grid.Column="1" Content="{Binding [Name]}" Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}" Margin="5,0,0,0"/>
+      <StackPanel Grid.Column="2">
+        <Label x:Name="TypeLabel" Content="{Binding [ScheduleType]}" Color="{ThemeResource EmphasisTextColor}" FontSize="{ThemeResource TinyFontSize}" HorizontalAlignment="Right"/>
+        <Label x:Name="StartTimeLabel" Content="{Binding [StartTime]}" Color="{ThemeResource TextColor}" FontSize="{ThemeResource TinyFontSize}" HorizontalAlignment="Right"/>
+      </StackPanel>
+    </Grid>
+  </DataTemplate>
+
   <Style x:Key="VirtualizingHorizontalListViewStyle" BasedOn="{ThemeResource DefaultListViewStyle}">
     <Setter Property="ItemsPanel">
       <Setter.Value>
@@ -343,7 +366,7 @@
               </TransformGroup>
             </Grid.RenderTransform>
             <Control Grid.ColumnSpan="2" Style="{ThemeResource ProgramGuideButtonControlStyle}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
-            <ContentPresenter Grid.ColumnSpan="2" x:Name="ButtonContentPresenter" Margin="0,5,0,5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <ContentPresenter Grid.ColumnSpan="2" x:Name="ButtonContentPresenter" Margin="3,5,0,5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
             <Image Grid.Column="1" x:Name="SeriesRecIndicator" Source="tvguide_recordserie_button.png" IsVisible="False"
                    Height="{ThemeResource SeriesRecIndicatorHeight}" Stretch="Uniform"/>
           </Grid>
@@ -418,6 +441,12 @@
     <Setter Property="ItemContainerStyle" Value="{ThemeResource ProgramGuideItemContainerStyle}"/>
   </Style>
 
+  <!-- ScheduleListViewStyle is used for schedule list, including channel, program and recording type -->
+  <Style x:Key="ScheduleListViewStyle" BasedOn="{ThemeResource VirtualizingListViewStyle}">
+    <Setter Property="ItemTemplate" Value="{ThemeResource ScheduleDataTemplate}"/>
+    <Setter Property="ItemContainerStyle" Value="{ThemeResource ProgramGuideItemContainerStyle}"/>
+  </Style>
+
   <!-- SlimTvClient model -->
   <Model x:Key="SlimTvMultiChannelGuide" Id="5054408D-C2A9-451f-A702-E84AFCD29C10"/>
   
@@ -441,7 +470,7 @@
       <Control Style="{ThemeResource ButtonControlStyle}" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
       <Image x:Name="ChannelLogo" Grid.Column="0" Grid.Row="0" Width="{ThemeResource ChannelLogoSmall}" Height="{ThemeResource ChannelLogoSmall}" Stretch="Uniform">
         <Image.Source>
-          <fanart:FanArtImageSource fanart:FanArtMediaType="Channel" fanart:FanArtType="Banner" fanart:FanArtName="{Binding ChannelLogoPath}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+          <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Banner" fanart:FanArtName="{Binding ChannelLogoPath}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
         </Image.Source>
       </Image>
       <ContentPresenter Grid.Column="1" Grid.Row="0" x:Name="ButtonContentPresenter" Margin="5,5,0,5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
@@ -471,7 +500,7 @@
 
       <Image x:Name="ChannelLogo" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Width="{ThemeResource ChannelLogoMedium}" Height="{ThemeResource ChannelLogoMedium}" Stretch="Uniform" Margin="5,2,2,2">
         <Image.Source>
-          <fanart:FanArtImageSource fanart:FanArtMediaType="Channel" fanart:FanArtType="Banner" fanart:FanArtName="{Binding ChannelLogoPath}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+          <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Banner" fanart:FanArtName="{Binding ChannelLogoPath}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
         </Image.Source>
       </Image>
       
@@ -495,9 +524,10 @@
   <DataTemplate x:Key="ChannelWithCurrentProgramDataTemplate" DataType="{x:Type collections:ListItem}">
     <Grid x:Name="ItemControl" VerticalAlignment="Center" HorizontalAlignment="Stretch" RenderTransformOrigin="0.5,0.5" Margin="{ThemeResource ChannelWithLogoAndProgramMargin}">
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="{ThemeResource MainListTimeLength}"/>  <!-- Program Time -->
+        <ColumnDefinition Width="{ThemeResource ChannelLogoContainerMedium}"/> <!-- Channel Logo -->
         <ColumnDefinition Width="{ThemeResource MainListChannelNameLength}"/> <!-- Channel Name -->
         <ColumnDefinition Width="*"/> <!-- Program Title -->
+        <ColumnDefinition Width="{ThemeResource MainListTimeLength}"/>  <!-- Program Time -->
       </Grid.ColumnDefinitions>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
@@ -508,16 +538,22 @@
         </TransformGroup>
       </Grid.RenderTransform>
 
-      <!-- Shows the progress of current time in relation to the current playing program -->
-      <ProgressBar x:Name="CurrentProgramProgress" Grid.Column="0" Grid.Row="0" Height="10" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                    Value="{Binding Programs[0].Progress}"/>
+      <Image x:Name="ChannelLogo" Grid.Column="0" Grid.Row="0" Width="{ThemeResource ChannelLogoMedium}" Stretch="Uniform" Margin="5,2,5,2" VerticalAlignment="Center">
+        <Image.Source>
+          <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Banner" fanart:FanArtName="{Binding ChannelLogoPath}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+        </Image.Source>
+      </Image>
 
-      <Label Grid.Column="1" Grid.Row="0" x:Name="NameLabel" Margin="3,5,0,5" Content="{Binding [Name]}" Color="{ThemeResource EmphasisTextColor}"/>
+      <!-- Shows the progress of current time in relation to the current playing program -->
+      <ProgressBar x:Name="CurrentProgramProgress" Grid.Column="3" Grid.Row="0" Height="10" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                    Value="{Binding Programs[0].Progress}"/>
 
       <Label Grid.Column="2" Grid.Row="0" x:Name="CurrentProgramLabel" Margin="5,5,0,5"
               Content="{Binding Programs[0].Program.Title}"
               Color="{ThemeResource TextColor}"/>
 
+      <Label Grid.Column="1" Grid.Row="0" x:Name="NameLabel" Margin="3,5,0,5" Content="{Binding [Name]}" Color="{ThemeResource EmphasisTextColor}"
+             VerticalAlignment="Center" FontSize="{ThemeResource SmallerFontSize}"/>
     </Grid>
   </DataTemplate>
 
@@ -544,7 +580,7 @@
       <DockPanel LastChildFill="True" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Margin="0,0,4,0">
         <Image x:Name="ItemTypeSmall" Stretch="Uniform" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
           <Image.Source>
-            <fanart:FanArtImageSource fanart:FanArtMediaType="Channel" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+            <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
           </Image.Source>
           <Image.IsVisible>
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
@@ -552,7 +588,7 @@
         </Image>
         <Image x:Name="ItemTypeMedium" Stretch="Uniform" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
           <Image.Source>
-            <fanart:FanArtImageSource fanart:FanArtMediaType="Channel" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+            <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
           </Image.Source>
           <Image.IsVisible>
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Medium}"/>
@@ -560,7 +596,7 @@
         </Image>
         <Image x:Name="ItemTypeLarge" Stretch="Uniform" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
           <Image.Source>
-            <fanart:FanArtImageSource fanart:FanArtMediaType="Channel" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+            <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
           </Image.Source>
           <Image.IsVisible>
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Large}"/>
@@ -587,7 +623,7 @@
           Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}"/>
       <Image Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}" Stretch="Uniform" Grid.Row="0" Grid.Column="1">
         <Image.Source>
-          <fanart:FanArtImageSource fanart:FanArtMediaType="Channel" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+          <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
         </Image.Source>
       </Image>
     </Grid>
@@ -624,7 +660,7 @@
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
           </Image.IsVisible>
           <Image.FallbackSource>
-            <fanart:FanArtImageSource fanart:FanArtMediaType="Channel" fanart:FanArtType="Banner" fanart:FanArtName="{Binding Channel}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+            <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Banner" fanart:FanArtName="{Binding Channel}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
           </Image.FallbackSource>
         </Image>
         <Image x:Name="ItemTypeMedium" Stretch="Uniform"
@@ -633,7 +669,7 @@
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Medium}"/>
           </Image.IsVisible>
           <Image.FallbackSource>
-            <fanart:FanArtImageSource fanart:FanArtMediaType="Channel" fanart:FanArtType="Banner" fanart:FanArtName="{Binding Channel}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+            <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Banner" fanart:FanArtName="{Binding Channel}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
           </Image.FallbackSource>
         </Image>
         <Image x:Name="ItemTypeLarge" Stretch="Uniform"
@@ -642,7 +678,7 @@
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Large}"/>
           </Image.IsVisible>
           <Image.FallbackSource>
-            <fanart:FanArtImageSource fanart:FanArtMediaType="Channel" fanart:FanArtType="Banner" fanart:FanArtName="{Binding Channel}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+            <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Banner" fanart:FanArtName="{Binding Channel}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
           </Image.FallbackSource>
         </Image>
       </DockPanel>
@@ -699,7 +735,7 @@
 
               <Image x:Name="ChannelLogo" Grid.Column="0" Grid.Row="0" Width="{ThemeResource ChannelLogoSmall}" Height="{ThemeResource ChannelLogoSmall}" Stretch="Uniform">
                 <Image.Source>
-                  <fanart:FanArtImageSource fanart:FanArtMediaType="Channel" fanart:FanArtType="Banner" fanart:FanArtName="{Binding ChannelLogoPath}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
+                  <fanart:FanArtImageSource fanart:FanArtMediaType="ChannelTv" fanart:FanArtType="Banner" fanart:FanArtName="{Binding ChannelLogoPath}" fanart:MaxWidth="0" fanart:MaxHeight="0"/>
                 </Image.Source>
               </Image>
 

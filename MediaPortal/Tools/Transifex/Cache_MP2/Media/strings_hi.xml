@@ -28,6 +28,7 @@
   <string name="Media.AddToPlaylistProgressDialogHeader">प्रगति</string>
   <string name="Media.StopAddToPlaylistButton">रोकें</string>
   <string name="Media.OpenPlayerStrategy.MediaPortal.UI.Services.Players.PCMOpenPlayerStrategy.Default">तयशुदा</string>
+  <!--MediaItemAction dialog-->
   <!--Play items dialog-->
   <!--Player context names-->
   <!--Video currently playing-->
@@ -39,5 +40,7 @@
   <string name="Media.RepeatMode.All">सभी</string>
   <!--VideoPlayerUIContributor-->
   <!--Video Player time units-->
+  <string name="Media.SwitchFilterMenuItem">फ़िल्टर</string>
+  <string name="Media.SwitchFilterDialogTitle">फ़िल्टर</string>
   <string name="Settings.Players">प्लेयर</string>
 </resources>

@@ -186,6 +186,7 @@
   <string name="Media.PlaylistIdInfoLabel">Intern afspilningsliste id</string>
   <string name="Media.OpenPlayerStrategy.MediaPortal.UI.Services.Players.PCMOpenPlayerStrategy.Default">normal</string>
   <string name="Media.OpenPlayerStrategy.MediaPortal.UI.Services.Players.PCMOpenPlayerStrategy.PreservePiP">Bibehold PiP video</string>
+  <!--MediaItemAction dialog-->
   <!--Play items dialog-->
   <string name="Media.PlayItemDialogHeader">Afspil emne</string>
   <string name="Media.PlayAudioItems">Afspil lyd emne</string>
@@ -309,6 +310,8 @@
   <string name="Media.SortByDate">Sorter per optagelsesdato</string>
   <string name="Media.SortByEpisode">Sorter per episode</string>
   <string name="Media.SortingBrowseDefault">Standard sortering</string>
+  <string name="Media.SwitchFilterMenuItem">Filtrer</string>
+  <string name="Media.SwitchFilterDialogTitle">Filtrer</string>
   <string name="Settings.Players">Afspillere</string>
   <string name="Settings.Players.ClosePlayersWhenFinished">Luk afspillere når slut</string>
   <string name="Settings.Players.ClosePlayersWhenFinished.Help">Aktiver denne indstilling til at få MediaPortal til at lukke færdige afspillere automatisk</string>

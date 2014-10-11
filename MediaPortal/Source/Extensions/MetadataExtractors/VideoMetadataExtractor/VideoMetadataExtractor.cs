@@ -99,7 +99,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.VideoMetadataExtractor
               {
                 MediaAspect.Metadata,
                 VideoAspect.Metadata,
-                SeriesAspect.Metadata
+                ThumbnailLargeAspect.Metadata
               });
     }
 
@@ -162,6 +162,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.VideoMetadataExtractor
       protected long? _vidBitRate;
       protected long? _audBitRate;
       protected int _audioStreamCount;
+      protected long _fileSize;
       protected ICollection<string> _vidCodecs = new List<string>();
       protected ICollection<string> _audCodecs = new List<string>();
       protected ICollection<string> _audioLanguages = new List<string>();
@@ -243,13 +244,13 @@ namespace MediaPortal.Extensions.MetadataExtractors.VideoMetadataExtractor
         if (_playTime.HasValue)
           MediaItemAspect.SetAttribute(extractedAspectData, VideoAspect.ATTR_DURATION, _playTime.Value / 1000);
         if (_vidBitRate.HasValue)
-          MediaItemAspect.SetAttribute(extractedAspectData, VideoAspect.ATTR_VIDEOBITRATE, _vidBitRate.Value);
+          MediaItemAspect.SetAttribute(extractedAspectData, VideoAspect.ATTR_VIDEOBITRATE, _vidBitRate.Value / 1024); // We store kbit/s
 
         MediaItemAspect.SetAttribute(extractedAspectData, VideoAspect.ATTR_VIDEOENCODING, StringUtils.Join(", ", _vidCodecs));
 
         MediaItemAspect.SetAttribute(extractedAspectData, VideoAspect.ATTR_AUDIOSTREAMCOUNT, _audioStreamCount);
         if (_audBitRate.HasValue)
-          MediaItemAspect.SetAttribute(extractedAspectData, VideoAspect.ATTR_AUDIOBITRATE, _audBitRate.Value);
+          MediaItemAspect.SetAttribute(extractedAspectData, VideoAspect.ATTR_AUDIOBITRATE, _audBitRate.Value / 1024); // We store kbit/s
 
         MediaItemAspect.SetAttribute(extractedAspectData, VideoAspect.ATTR_AUDIOENCODING, StringUtils.Join(", ", _audCodecs));
 
@@ -369,8 +370,6 @@ namespace MediaPortal.Extensions.MetadataExtractors.VideoMetadataExtractor
       IThumbnailGenerator generator = ServiceRegistration.Get<IThumbnailGenerator>();
       byte[] thumbData;
       ImageType imageType;
-      if (generator.GetThumbnail(localFsResourcePath, 96, 96, cachedOnly, out thumbData, out imageType))
-        MediaItemAspect.SetAttribute(extractedAspectData, ThumbnailSmallAspect.ATTR_THUMBNAIL, thumbData);
       if (generator.GetThumbnail(localFsResourcePath, 256, 256, cachedOnly, out thumbData, out imageType))
         MediaItemAspect.SetAttribute(extractedAspectData, ThumbnailLargeAspect.ATTR_THUMBNAIL, thumbData);
     }
@@ -458,6 +457,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.VideoMetadataExtractor
             ILocalFsResourceAccessor lfsra = rah.LocalFsResourceAccessor;
             if (lfsra != null)
             {
+              MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_SIZE, lfsra.Size);
               string localFsPath = lfsra.LocalFileSystemPath;
               ExtractMatroskaTags(localFsPath, extractedAspectData, forceQuickMode);
               ExtractMp4Tags(localFsPath, extractedAspectData, forceQuickMode);

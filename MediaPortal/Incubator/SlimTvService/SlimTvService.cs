@@ -26,9 +26,9 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Timers;
-using Ionic.Zip;
 using MediaPortal.Backend.Database;
 using MediaPortal.Common;
 using MediaPortal.Common.MediaManagement;
@@ -54,7 +54,6 @@ using Mediaportal.TV.Server.TVService.Interfaces;
 using Mediaportal.TV.Server.TVService.Interfaces.Enums;
 using Mediaportal.TV.Server.TVService.Interfaces.Services;
 using Channel = Mediaportal.TV.Server.TVDatabase.Entities.Channel;
-using ChannelGroup = MediaPortal.Plugins.SlimTv.Interfaces.UPnP.Items.ChannelGroup;
 using ILogger = MediaPortal.Common.Logging.ILogger;
 using Program = Mediaportal.TV.Server.TVDatabase.Entities.Program;
 using Schedule = Mediaportal.TV.Server.TVDatabase.Entities.Schedule;
@@ -125,6 +124,23 @@ namespace MediaPortal.Plugins.SlimTv.Service
     /// </summary>
     private void PrepareProgramData()
     {
+      // Morpheus_xx, 2014-09-01: As soon as our extension installer is able to place files in different target folders, this code can be removed.
+      const string ini = "MPIPTVSource.ini";
+      string mp2DataPath = ServiceRegistration.Get<IPathManager>().GetPath("<DATA>");
+      try
+      {
+        var destFileName = Path.Combine(mp2DataPath, ini);
+        if (!File.Exists(destFileName))
+        {
+          ServiceRegistration.Get<ILogger>().Info("SlimTvService: {0} does not exist yet, copy file.", destFileName);
+          File.Copy(Utilities.FileSystem.FileUtils.BuildAssemblyRelativePath("ProgramData\\" + ini), destFileName);
+        }
+      }
+      catch (Exception ex)
+      {
+        ServiceRegistration.Get<ILogger>().Error("SlimTvService: Failed to copy {0}!", ex, ini);
+      }
+
       string dataPath = ServiceRegistration.Get<IPathManager>().GetPath("<TVCORE>");
       string tuningDetails = Path.Combine(dataPath, "TuningParameters");
       if (Directory.Exists(tuningDetails))
@@ -133,8 +149,7 @@ namespace MediaPortal.Plugins.SlimTv.Service
       ServiceRegistration.Get<ILogger>().Info("SlimTvService: Tuningdetails folder does not exist yet, extracting default items.");
       try
       {
-        ZipFile dataArchive = new ZipFile(Utilities.FileSystem.FileUtils.BuildAssemblyRelativePath("ProgramData\\ProgramData.zip"));
-        dataArchive.ExtractAll(dataPath);
+        ZipFile.ExtractToDirectory(Utilities.FileSystem.FileUtils.BuildAssemblyRelativePath("ProgramData\\ProgramData.zip"), dataPath);
       }
       catch (Exception ex)
       {
@@ -352,6 +367,8 @@ namespace MediaPortal.Plugins.SlimTv.Service
     {
       IChannelGroupService channelGroupService = GlobalServiceProvider.Get<IChannelGroupService>();
       groups = channelGroupService.ListAllChannelGroups()
+        .OrderBy(tvGroup => tvGroup.MediaType)
+        .ThenBy(tvGroup => tvGroup.SortOrder)
         .Select(tvGroup => tvGroup.ToChannelGroup())
         .ToList();
       return true;
@@ -369,6 +386,7 @@ namespace MediaPortal.Plugins.SlimTv.Service
       IChannelGroupService channelGroupService = GlobalServiceProvider.Get<IChannelGroupService>();
       channels = channelGroupService.GetChannelGroup(group.ChannelGroupId).GroupMaps
         .Where(groupMap => groupMap.Channel.VisibleInGuide)
+        .OrderBy(groupMap => groupMap.SortOrder)
         .Select(groupMap => groupMap.Channel.ToChannel())
         .ToList();
       return true;

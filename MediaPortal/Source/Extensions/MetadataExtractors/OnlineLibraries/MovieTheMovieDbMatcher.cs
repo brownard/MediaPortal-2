@@ -23,6 +23,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -54,6 +55,7 @@ namespace MediaPortal.Extensions.OnlineLibraries
     public static string CACHE_PATH = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\TheMovieDB\");
     protected static string _matchesSettingsFile = Path.Combine(CACHE_PATH, "Matches.xml");
     protected static string _collectionMatchesFile = Path.Combine(CACHE_PATH, "CollectionMatches.xml");
+    protected static TimeSpan MAX_MEMCACHE_DURATION = TimeSpan.FromHours(12);
 
     readonly MatchStorage<MovieCollectionMatch, int> _collectionStorage = new MatchStorage<MovieCollectionMatch, int>(_collectionMatchesFile);
 
@@ -66,7 +68,8 @@ namespace MediaPortal.Extensions.OnlineLibraries
 
     #region Fields
 
-    protected Dictionary<string, Movie> _memoryCache = new Dictionary<string, Movie>();
+    protected DateTime _memoryCacheInvalidated = DateTime.MinValue;
+    protected ConcurrentDictionary<string, Movie> _memoryCache = new ConcurrentDictionary<string, Movie>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Contains the initialized TheMovieDbWrapper.
@@ -106,6 +109,8 @@ namespace MediaPortal.Extensions.OnlineLibraries
           if (movieDetails.Revenue.HasValue) movieInfo.Revenue = movieDetails.Revenue.Value;
           if (movieDetails.Runtime.HasValue) movieInfo.Runtime = movieDetails.Runtime.Value;
           if (movieDetails.Popularity.HasValue) movieInfo.Popularity = movieDetails.Popularity.Value;
+          if (movieDetails.Rating.HasValue) movieInfo.TotalRating = movieDetails.Rating.Value;
+          if (movieDetails.RatingCount.HasValue) movieInfo.RatingCount = movieDetails.RatingCount.Value;
           movieInfo.ImdbId = movieDetails.ImdbId;
           movieInfo.MovieDbId = movieDetails.Id;
           if (movieDetails.Genres.Count > 0)
@@ -174,7 +179,7 @@ namespace MediaPortal.Extensions.OnlineLibraries
           MovieDBName = movieDetails.Title
         };
         // Save cache
-        _storage.SaveNewMatch(movieDetails.Title, onlineMatch);
+        _storage.TryAddMatch(onlineMatch);
         return true;
       }
       movieDetails = null;
@@ -183,7 +188,7 @@ namespace MediaPortal.Extensions.OnlineLibraries
 
     public bool TryGetCollectionId(string collectionName, out int collectionId)
     {
-      MovieCollectionMatch match = _collectionStorage.LoadMatches().Find(m => m.ItemName == collectionName);
+      MovieCollectionMatch match = _collectionStorage.GetMatches().Find(m => m.ItemName == collectionName);
       collectionId = match == null ? 0 : match.Id;
       return collectionId != 0;
     }
@@ -206,17 +211,20 @@ namespace MediaPortal.Extensions.OnlineLibraries
       try
       {
         // Prefer memory cache
+        CheckCacheAndRefresh();
         if (_memoryCache.TryGetValue(movieName, out movieDetail))
           return true;
 
         // Load cache or create new list
-        List<MovieMatch> matches = _storage.LoadMatches();
+        List<MovieMatch> matches = _storage.GetMatches();
 
         // Init empty
         movieDetail = null;
 
         // Use cached values before doing online query
-        MovieMatch match = matches.Find(m => m.ItemName == movieName || m.MovieDBName == movieName);
+        MovieMatch match = matches.Find(m => 
+          string.Equals(m.ItemName, movieName, StringComparison.OrdinalIgnoreCase) || 
+          string.Equals(m.MovieDBName, movieName, StringComparison.OrdinalIgnoreCase));
         ServiceRegistration.Get<ILogger>().Debug("MovieTheMovieDbMatcher: Try to lookup movie \"{0}\" from cache: {1}", movieName, match != null && match.Id != 0);
 
         // Try online lookup
@@ -253,17 +261,17 @@ namespace MediaPortal.Extensions.OnlineLibraries
                   Id = movieDetail.Collection.Id,
                   ItemName = movieDetail.Collection.Name
                 };
-              _collectionStorage.SaveNewMatch(movieDetail.Collection.Name, collectionMatch);
+              _collectionStorage.TryAddMatch(collectionMatch);
             }
 
             // Save cache
-            _storage.SaveNewMatch(movieName, onlineMatch);
+            _storage.TryAddMatch(onlineMatch);
           }
           return true;
         }
         ServiceRegistration.Get<ILogger>().Debug("MovieTheMovieDbMatcher: No unique match found for \"{0}\"", movieName);
         // Also save "non matches" to avoid retrying
-        _storage.SaveNewMatch(movieName, new MovieMatch { ItemName = movieName });
+        _storage.TryAddMatch(new MovieMatch { ItemName = movieName });
         return false;
       }
       catch (Exception ex)
@@ -273,9 +281,22 @@ namespace MediaPortal.Extensions.OnlineLibraries
       }
       finally
       {
-        if (movieDetail != null && !_memoryCache.ContainsKey(movieName))
-          _memoryCache.Add(movieName, movieDetail);
+        if (movieDetail != null)
+          _memoryCache.TryAdd(movieName, movieDetail);
       }
+    }
+
+    /// <summary>
+    /// Check if the memory cache should be cleared and starts an online update of (file-) cached series information.
+    /// </summary>
+    private void CheckCacheAndRefresh()
+    {
+      if (DateTime.Now - _memoryCacheInvalidated <= MAX_MEMCACHE_DURATION)
+        return;
+      _memoryCache.Clear();
+      _memoryCacheInvalidated = DateTime.Now;
+
+      // TODO: when updating movie information is implemented, start here a job to do it
     }
 
     public override bool Init()

@@ -299,6 +299,8 @@ namespace MediaPortal.Backend.MediaLibrary
 
     IDictionary<Guid, MediaItemAspectMetadata> GetManagedMediaItemAspectMetadata();
 
+    IDictionary<Guid, DateTime> GetManagedMediaItemAspectCreationDates();
+
     MediaItemAspectMetadata GetManagedMediaItemAspectMetadata(Guid aspectId);
 
     #endregion

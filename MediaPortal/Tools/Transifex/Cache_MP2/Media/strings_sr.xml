@@ -186,6 +186,7 @@
   <string name="Media.PlaylistIdInfoLabel">Сопствени плејлист идентификациони број</string>
   <string name="Media.OpenPlayerStrategy.MediaPortal.UI.Services.Players.PCMOpenPlayerStrategy.Default">Подразумевано</string>
   <string name="Media.OpenPlayerStrategy.MediaPortal.UI.Services.Players.PCMOpenPlayerStrategy.PreservePiP">Задржи видео као слику у слици</string>
+  <!--MediaItemAction dialog-->
   <!--Play items dialog-->
   <string name="Media.PlayItemDialogHeader">Пусти ставку</string>
   <string name="Media.PlayAudioItems">Пусти аудио ставку</string>
@@ -309,6 +310,8 @@
   <string name="Media.SortByDate">Поређај по датуму снимања</string>
   <string name="Media.SortByEpisode">Поређај по епизоди</string>
   <string name="Media.SortingBrowseDefault">Подразумевано ређање</string>
+  <string name="Media.SwitchFilterMenuItem">Филтер</string>
+  <string name="Media.SwitchFilterDialogTitle">Филтер</string>
   <string name="Settings.Players">Плејери</string>
   <string name="Settings.Players.ClosePlayersWhenFinished">Одабери плејер</string>
   <string name="Settings.Players.ClosePlayersWhenFinished.Help">Одабери ово подешавање да МедијаПортал затвори плејере који су завршили аутоматски</string>

@@ -54,6 +54,7 @@
   <!--Shown in the header of an items list, e.g. "45 items"-->
   <!--Playlists-->
   <string name="Media.AddToPlaylistProgressDialogHeader">Napredak</string>
+  <!--MediaItemAction dialog-->
   <!--Play items dialog-->
   <!--Player context names-->
   <string name="Media.AudioContextName">Audio</string>
@@ -79,6 +80,7 @@
   <string name="Media.AudioTitleLabel">Naslov:</string>
   <string name="Media.AudioYearLabel">Godina: </string>
   <string name="Media.AudioDurationLabel">Trajanje: </string>
+  <string name="Media.SavePLAtServer">Spremi na server</string>
   <string name="Media.SavePLLocally">Spremi lokalno</string>
   <string name="Media.PlayMode">Način izvođenja</string>
   <!--VideoPlayerUIContributor-->

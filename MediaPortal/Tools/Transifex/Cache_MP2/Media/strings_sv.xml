@@ -40,6 +40,8 @@
   <string name="Media.ImageFilterBig">Stora</string>
   <string name="Media.SwitchToBrowseMLView">Till servervy</string>
   <string name="Media.SwitchToLocalMediaView">Till lokal vy</string>
+  <string name="Media.SwitchToBrowseShareView">Till mappvy</string>
+  <string name="Media.SwitchToMediaLibraryView">Till biblioteksvy</string>
   <!--Navbar display labels for sub view navigation-->
   <string name="Media.BrowseMediaNavigationNavbarDisplayLabel">{0}</string>
   <!--For example: "R.E.M."-->
@@ -186,6 +188,11 @@
   <string name="Media.PlaylistIdInfoLabel">Internt id på spellistan</string>
   <string name="Media.OpenPlayerStrategy.MediaPortal.UI.Services.Players.PCMOpenPlayerStrategy.Default">Standard</string>
   <string name="Media.OpenPlayerStrategy.MediaPortal.UI.Services.Players.PCMOpenPlayerStrategy.PreservePiP">Bevara bild-i-bild video</string>
+  <!--MediaItemAction dialog-->
+  <string name="Media.MediaItemsActionDialogHeader">Media alternativ</string>
+  <string name="Media.SetWatched">Markera som sedda</string>
+  <string name="Media.SetUnwatched">Markera som inte sedda</string>
+  <string name="Media.DeleteFromStorage">Ta bort filen.</string>
   <!--Play items dialog-->
   <string name="Media.PlayItemDialogHeader">Spela objekt</string>
   <string name="Media.PlayAudioItems">Spela ljudobjekt</string>
@@ -209,6 +216,7 @@
   <string name="Media.AudioContextName">Ljud</string>
   <!--Video currently playing-->
   <string name="Media.VideoCurrentlyPlayingHeader">Videoinformation</string>
+  <string name="Media.Rating">Betyg:</string>
   <string name="Media.VideoTitleLabel">Titel:</string>
   <string name="Media.VideoGenreLabel">Genre: </string>
   <string name="Media.VideoCollectionLabel">Samling</string>
@@ -273,7 +281,7 @@
   <string name="Media.RepeatMode.All">Alla</string>
   <string name="Media.RepeatMode.One">En</string>
   <!--VideoPlayerUIContributor-->
-  <string name="Media.SubtitleOff">Avaktivera undertexter</string>
+  <string name="Media.SubtitleOff">Inaktivera undertexter</string>
   <string name="Media.ChooseChapterDialogHeader">Välj kapitel</string>
   <string name="Media.ChooseSubtitleDialogHeader">Välj undertexter</string>
   <string name="Media.ChooseTitleDialogHeader">Välj titel</string>
@@ -284,8 +292,8 @@
   <string name="Media.Start">Start</string>
   <string name="Media.End">Slut</string>
   <string name="Media.DontSkip">Hoppa inte över</string>
-  <string name="Media.SwitchViewModeMenuItem">Vy</string>
-  <string name="Media.SwitchViewModeDialogTitle">Välj vy</string>
+  <string name="Media.SwitchViewModeMenuItem">Layout</string>
+  <string name="Media.SwitchViewModeDialogTitle">Välj layout</string>
   <string name="Media.SmallList">Liten lista</string>
   <string name="Media.MediumList">Medelstor lista:</string>
   <string name="Media.LargeList">Stor lista</string>
@@ -311,6 +319,8 @@
   <string name="Media.SortByDate">Sortera på inspelningsdatum</string>
   <string name="Media.SortByEpisode">Sortera på avsnitt</string>
   <string name="Media.SortingBrowseDefault">Standardsortering</string>
+  <string name="Media.SwitchFilterMenuItem">Filter</string>
+  <string name="Media.SwitchFilterDialogTitle">Filter</string>
   <string name="Settings.Players">Spelare</string>
   <string name="Settings.Players.ClosePlayersWhenFinished">Stäng av spelarna när speltiden är slut</string>
   <string name="Settings.Players.ClosePlayersWhenFinished.Help">Aktivera denna inställning för att MediaPortal 2 ska stänga av spelarna när speltiden är slut</string>

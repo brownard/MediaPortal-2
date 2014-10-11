@@ -195,6 +195,12 @@
   <string name="Media.OpenPlayerStrategy.MediaPortal.UI.Services.Players.PCMOpenPlayerStrategy.Default">Default</string>
   <string name="Media.OpenPlayerStrategy.MediaPortal.UI.Services.Players.PCMOpenPlayerStrategy.PreservePiP">Preserve PiP video</string>
 
+  <!-- MediaItemAction dialog-->
+  <string name="Media.MediaItemsActionDialogHeader">Media item actions</string>
+  <string name="Media.SetWatched">Set watched</string>
+  <string name="Media.SetUnwatched">Set unwatched</string>
+  <string name="Media.DeleteFromStorage">Delete from storage</string>
+
   <!-- Play items dialog -->
   <string name="Media.PlayItemDialogHeader">Play item</string>
 
@@ -225,6 +231,7 @@
 
   <!-- Video currently playing -->
   <string name="Media.VideoCurrentlyPlayingHeader">Current video information</string>
+  <string name="Media.Rating">Rating: </string>
   <string name="Media.VideoTitleLabel">Title: </string>
   <string name="Media.VideoGenreLabel">Genre: </string>
   <string name="Media.VideoCollectionLabel">Collection: </string>

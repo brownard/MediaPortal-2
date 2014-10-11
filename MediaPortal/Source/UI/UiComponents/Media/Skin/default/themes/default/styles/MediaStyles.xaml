@@ -966,11 +966,36 @@
 
       <Label x:Name="ItemLabel" Grid.Row="0" Grid.Column="1" Content="{Binding SimpleTitle}"
           Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}"/>
-      <Image Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}" Stretch="Uniform" Grid.Row="0" Grid.Column="0">
+
+      <Image x:Name="ItemTypeSmall" Stretch="Uniform"
+            FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
         <Image.Source>
           <fanart:FanArtImageSource fanart:FanArtMediaType="MovieCollection" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
-                                    fanart:MaxWidth="{StaticResource MEDIA_THUMB_WIDTH_L}" fanart:MaxHeight="{StaticResource MEDIA_THUMB_HEIGHT_L}"/>
+                                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
         </Image.Source>
+        <Image.IsVisible>
+          <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
+        </Image.IsVisible>
+      </Image>
+      <Image x:Name="ItemTypeMedium" Stretch="Uniform"
+            FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
+        <Image.Source>
+          <fanart:FanArtImageSource fanart:FanArtMediaType="MovieCollection" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
+                                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
+        </Image.Source>
+        <Image.IsVisible>
+          <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Medium}"/>
+        </Image.IsVisible>
+      </Image>
+      <Image x:Name="ItemTypeLarge" Stretch="Uniform"
+            FallbackSource="VideoLarge.png" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
+        <Image.Source>
+          <fanart:FanArtImageSource fanart:FanArtMediaType="MovieCollection" fanart:FanArtType="Poster" fanart:FanArtName="{Binding SimpleTitle}"
+                                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
+        </Image.Source>
+        <Image.IsVisible>
+          <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Large}"/>
+        </Image.IsVisible>
       </Image>
 
       <Label x:Name="NumItems" Grid.Row="0" Grid.Column="2" Content="{Binding NumItems}"
@@ -1064,12 +1089,7 @@
       <Label x:Name="ItemLabel" Grid.Row="1" Grid.Column="0" Content="{Binding MovieName}" HorizontalAlignment="Center"
           Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}"/>
       <Image Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}" Stretch="Uniform" Grid.Row="0" Grid.Column="1"
-        FallbackSource="VideoLarge.png">
-        <Image.Source>
-          <fanart:FanArtImageSource fanart:FanArtMediaType="Movie" fanart:FanArtType="Poster" fanart:FanArtName="{Binding MovieName}"
-                                    fanart:MaxWidth="{StaticResource FANART_POSTER_WIDTH}" fanart:MaxHeight="{StaticResource FANART_POSTER_HEIGHT}"/>
-        </Image.Source>
-      </Image>
+        Source="{Binding MediaItem}" FallbackSource="VideoLarge.png" />
     </Grid>
   </ControlTemplate>
 
@@ -1438,10 +1458,35 @@
 
   <DataStringProvider x:Key="MediaItemDataStringProvider" Path="SimpleTitle"/>
 
+  <Model x:Key="MediaItemsActionModel" Id="970649B2-CAE8-4830-A985-E5E78F3CB24F"/>
+
+  <!-- An item list container used for MediaItems. Additionally to the standard "Button", it adds a context menu command  -->
+  <Style x:Key="MediaItemWithContextMenuContainerStyle" BasedOn="{ThemeResource DefaultItemContainerStyle}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ListViewItem}">
+          <Button Style="{ThemeResource ButtonWideStyle}"
+              Command="{DynamicResource ResourceKey=Menu_Command}"
+              IsEnabled="{Binding Enabled}" SetFocus="{Binding Path=Selected,Mode=OneTime}">
+            <Button.Triggers>
+              <Trigger Property="HasFocus" Value="True">
+                <Setter TargetName="ItemLabel" Property="Scroll" Value="Auto"/>
+                <Setter Property="StackPanel.ZIndex" Value="100.0"/>
+              </Trigger>
+            </Button.Triggers>
+            <Button.ContextMenuCommand>
+              <Command Source="{StaticResource MediaItemsActionModel}" Path="ShowMediaItemActions" Parameters="{LateBoundValue BindingValue={Binding MediaItem}}"/>
+            </Button.ContextMenuCommand>
+          </Button>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <Style x:Key="MediaItemsListListViewStyle" BasedOn="{ThemeResource ContentsMenuListViewStyle}">
     <Setter Property="ItemTemplate"/> <!-- Don't inherit the ItemTemplate from ContentsMenuListViewStyle - It should remain null to make the SkinEngine choose an appropriate template -->
     <Setter Property="DataStringProvider" Value="{ThemeResource MediaItemDataStringProvider}"/>
-    <Setter Property="ItemContainerStyle" Value="{ThemeResource DefaultMenuItemContainerStyle}"/>
+    <Setter Property="ItemContainerStyle" Value="{ThemeResource MediaItemWithContextMenuContainerStyle}"/>
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type ListView}">

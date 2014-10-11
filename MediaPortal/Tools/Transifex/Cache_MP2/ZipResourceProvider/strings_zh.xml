@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<resources>
+  <string name="ZipMediaProvider.Description">访问ZIP格式文件和目录</string>
+</resources>

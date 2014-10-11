@@ -107,7 +107,9 @@
             <ScrollContentPresenter Grid.Row="0" Grid.Column="0" Grid.ZIndex="100"
                 VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
             <Grid x:Name="HorizontalScrollBar" IsVisible="{TemplateBinding ScrollBarXVisible}" Grid.Row="1" Grid.Column="0"
-                Grid.ZIndex="0" Margin="2,10,2,2">
+                Grid.ZIndex="0" Margin="2,10,2,2"
+                RenderTransform="{DynamicResource ResourceKey=HorizontalScrollBarRenderTransform}">
+              <!-- RenderTransform can be applied by any ListView by defining a transform inside ResourceWrapper x:Key="HorizontalScrollBarRenderTransform" -->
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
               </Grid.ColumnDefinitions>
@@ -117,24 +119,23 @@
               <!-- Background -->
               <Rectangle x:Name="ScrollBarXBackground" Grid.Row="0" Grid.Column="0"
                   Stroke="{ThemeResource ScrollBarStrokeColor}" RadiusX="4" RadiusY="4"
-                  ActualWidth="{TemplateBinding Path=ScrollBarXSize,Mode=OneWayToSource}">
-                <Rectangle.Fill>
-                  <SolidColorBrush Color="{ThemeResource ScrollBarBackgroundColor}"/>
-                </Rectangle.Fill>
+                  Height="{ThemeResource ScrollBarWidth}"
+                  ActualWidth="{TemplateBinding Path=ScrollBarXSize,Mode=OneWayToSource}"
+                  Fill="{ThemeResource ScrollBarBackgroundColor}">
               </Rectangle>
               <!-- Knob -->
               <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
                 <StackPanel Width="{TemplateBinding ScrollBarXKnobPos}"/>
-                <Rectangle x:Name="ScrollBarXKnob" Width="{TemplateBinding ScrollBarXKnobWidth}" Height="{ThemeResource ScrollBarWidth}"
-                    Stroke="{ThemeResource ScrollBarKnobStrokeColor}" RadiusX="4" RadiusY="4">
-                  <Rectangle.Fill>
-                    <SolidColorBrush Color="{ThemeResource ScrollBarKnobBackgroundColor}"/>
-                  </Rectangle.Fill>
+                <Rectangle x:Name="ScrollBarXKnob" Width="{TemplateBinding ScrollBarXKnobWidth}" Height="{ThemeResource ScrollBarKnobWidth}"
+                    Stroke="{ThemeResource ScrollBarKnobStrokeColor}" RadiusX="4" RadiusY="4"
+                    Fill="{ThemeResource ScrollBarKnobBackgroundColor}">
                 </Rectangle>
               </StackPanel>
             </Grid>
             <Grid x:Name="VerticalScrollBar" IsVisible="{TemplateBinding ScrollBarYVisible}" Grid.Row="0" Grid.Column="1"
-                Grid.ZIndex="0" Margin="10,2,2,2">
+                Grid.ZIndex="0" Margin="10,2,2,2"
+                RenderTransform="{DynamicResource ResourceKey=VerticalScrollbarRenderTransform}">
+              <!-- RenderTransform can be applied by any ListView by defining a transform inside ResourceWrapper x:Key="VerticalScrollbarRenderTransform" -->
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
               </Grid.ColumnDefinitions>
@@ -144,19 +145,16 @@
               <!-- Background -->
               <Rectangle x:Name="ScrollBarYBackground" Grid.Row="0" Grid.Column="0"
                   Stroke="{ThemeResource ScrollBarStrokeColor}" RadiusX="4" RadiusY="4"
-                  ActualHeight="{TemplateBinding Path=ScrollBarYSize,Mode=OneWayToSource}">
-                <Rectangle.Fill>
-                  <SolidColorBrush Color="{ThemeResource ScrollBarBackgroundColor}"/>
-                </Rectangle.Fill>
+                  Width="{ThemeResource ScrollBarWidth}"
+                  ActualHeight="{TemplateBinding Path=ScrollBarYSize,Mode=OneWayToSource}"
+                  Fill="{ThemeResource ScrollBarBackgroundColor}">
               </Rectangle>
               <!-- Knob -->
               <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
                 <StackPanel Height="{TemplateBinding ScrollBarYKnobPos}"/>
-                <Rectangle x:Name="ScrollBarYKnob" Width="{ThemeResource ScrollBarWidth}" Height="{TemplateBinding ScrollBarYKnobHeight}"
-                    Stroke="{ThemeResource ScrollBarKnobStrokeColor}" RadiusX="4" RadiusY="4">
-                  <Rectangle.Fill>
-                    <SolidColorBrush Color="{ThemeResource ScrollBarKnobBackgroundColor}"/>
-                  </Rectangle.Fill>
+                <Rectangle x:Name="ScrollBarYKnob" Width="{ThemeResource ScrollBarKnobWidth}" Height="{TemplateBinding ScrollBarYKnobHeight}"
+                    Stroke="{ThemeResource ScrollBarKnobStrokeColor}" RadiusX="4" RadiusY="4"
+                    Fill="{ThemeResource ScrollBarKnobBackgroundColor}">
                 </Rectangle>
               </StackPanel>
             </Grid>
@@ -916,6 +914,52 @@
     <Setter Property="ItemContainerStyle" Value="{ThemeResource SingleMarkableResourceProviderContainerStyle}"/>
   </Style>
 
+
+  <!-- Data template for a system entry including subview for resource providers -->
+  <DataTemplate x:Key="SystemItemDataTemplate" DataType="{x:Type collections:ListItem}">
+    <Grid x:Name="ItemControl">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Label x:Name="ShareName" Content="{Binding [Name]}" FontSize="{ThemeResource SmallFontSize}"
+          HorizontalAlignment="Left" VerticalAlignment="Center"
+          Color="{ThemeResource TextColor}"/>
+
+      <!-- Subitems of systems: resourceproviders -->
+      <ListView Grid.Row="1" Margin="10,0,0,10" Style="{ThemeResource SingleMarkableResourceProvidersListViewStyle}"
+          ItemsSource="{Binding Path=AdditionalProperties[SharesProxy].AllBaseResourceProviders,Mode=OneTime}"/>
+    </Grid>
+  </DataTemplate>
+
+  <!-- ListView style to be used for the nested systems/shares list -->
+  <Style x:Key="SingleMarkableSubItemListViewStyle" BasedOn="{ThemeResource DefaultListViewStyle}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ListView}">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <ScrollViewer CanContentScroll="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                Background="{ThemeResource ItemsControlShadowBackgroundColor}">
+              <ItemsPresenter VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+            </ScrollViewer>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="ItemTemplate" Value="{ThemeResource SystemItemDataTemplate}"/>
+    <Setter Property="DataStringProvider" Value="{ThemeResource ShareItemDataStringProvider}"/>
+    <!--Setter Property="ItemContainerStyle" Value="{ThemeResource SingleMarkableShareContainerStyle}"/-->
+  </Style>
+
   <!-- ListView style to be used for lists where multiple items can be marked -->
   <Style x:Key="MultiMarkableListViewStyle" BasedOn="{ThemeResource ContentsMenuListViewStyle}">
     <Setter Property="ItemTemplate" Value="{ThemeResource DefaultItemDataTemplate}"/>
@@ -1606,6 +1650,57 @@
       <Label FontSize="{ThemeResource HugeFontSize}" Color="{ThemeResource TextColor}" DockPanel.Dock="Center"
         HorizontalAlignment="Center" VerticalAlignment="Center"
         Content="[Home.Title]"/>
+    </DockPanel>
+  </ControlTemplate>
+
+  <!-- ********************************** Star rating control template ************************************** -->
+
+  <ControlTemplate x:Key="StarTemplate">
+    <DockPanel LastChildFill="True">
+      <Grid RenderTransformOrigin="0.5,0.5" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Focusable="True">
+        <!-- Star shape -->
+        <Control Template="{ThemeResource StarPolygonTemplate}" Width="18" Height="18" />
+      </Grid>
+    </DockPanel>
+    <ControlTemplate.Triggers>
+      <Trigger Property="IsChecked" Value="True">
+        <Setter TargetName="Star" Property="Fill" Value="{ThemeResource StarRatingSelectedColor}" />
+      </Trigger>
+      <Trigger Property="HasFocus" Value="True">
+        <Setter TargetName="Star" Property="Stroke" Value="{ThemeResource StarRatingFocusedColor}" />
+      </Trigger>
+    </ControlTemplate.Triggers>
+  </ControlTemplate>
+
+  <!-- Checkbox style for star rating -->
+  <Style x:Key="StarCheckBoxStyle" TargetType="{x:Type CheckBox}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type CheckBox}" >
+          <Control Template="{StaticResource StarTemplate}"/>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <ControlTemplate x:Key="StarReadOnlyTemplate">
+    <DockPanel LastChildFill="True" DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}">
+      <Grid RenderTransformOrigin="0.5,0.5">
+        <!-- Star shape for background -->
+        <Control Template="{ThemeResource StarPolygonTemplate}" Width="18" Height="18"/>
+
+        <!-- Star shape for (partial) foreground -->
+        <Control Template="{ThemeResource StarPolygonSelectedTemplate}" Width="18" Height="18">
+          <Control.OpacityMask>
+            <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+              <GradientStop Color="#FF000000" Offset="0"/>
+              <GradientStop Color="#FF000000" Offset="{Binding Value}"/>
+              <GradientStop Color="#00000000" Offset="{Binding Value}"/>
+              <GradientStop Color="#00000000" Offset="1"/>
+            </LinearGradientBrush>
+          </Control.OpacityMask>
+        </Control>
+      </Grid>
     </DockPanel>
   </ControlTemplate>
 

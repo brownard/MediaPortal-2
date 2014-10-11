@@ -23,6 +23,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -32,6 +33,7 @@ using MediaPortal.Common.Localization;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.PathManager;
+using MediaPortal.Common.Threading;
 using MediaPortal.Extensions.OnlineLibraries.Libraries.Common;
 using MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib.Data;
 using MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib.Data.Banner;
@@ -59,6 +61,7 @@ namespace MediaPortal.Extensions.OnlineLibraries
 
     public static string CACHE_PATH = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\TvDB\");
     protected static string _matchesSettingsFile = Path.Combine(CACHE_PATH, "Matches.xml");
+    protected static TimeSpan MAX_MEMCACHE_DURATION = TimeSpan.FromHours(12);
 
     protected override string MatchesSettingsFile
     {
@@ -69,7 +72,8 @@ namespace MediaPortal.Extensions.OnlineLibraries
 
     #region Fields
 
-    protected Dictionary<string, TvdbSeries> _memoryCache = new Dictionary<string, TvdbSeries>();
+    protected DateTime _memoryCacheInvalidated = DateTime.MinValue;
+    protected ConcurrentDictionary<string, TvdbSeries> _memoryCache = new ConcurrentDictionary<string, TvdbSeries>(StringComparer.OrdinalIgnoreCase);
     protected bool _useUniversalLanguage = false; // Universal language often leads to unwanted cover languages (i.e. russian)
 
     /// <summary>
@@ -136,6 +140,8 @@ namespace MediaPortal.Extensions.OnlineLibraries
       if (episodes.Count == 1)
       {
         episode = episodes[0];
+        seriesInfo.ImdbId = seriesDetail.ImdbId;
+        seriesInfo.TvdbId = seriesDetail.Id;
         seriesInfo.SeasonNumber = episode.SeasonNumber;
         seriesInfo.EpisodeNumbers.Clear();
         seriesInfo.EpisodeNumbers.Add(episode.EpisodeNumber);
@@ -158,6 +164,7 @@ namespace MediaPortal.Extensions.OnlineLibraries
 
     private static void SetEpisodeDetails(SeriesInfo seriesInfo, TvdbEpisode episode)
     {
+      seriesInfo.TotalRating = episode.Rating;
       seriesInfo.Summary = episode.Overview;
       // Don't clear seriesInfo.Actors again. It's already been filled with actors from series details.
       if (episode.GuestStars.Count > 0)
@@ -175,6 +182,7 @@ namespace MediaPortal.Extensions.OnlineLibraries
       tvDbId = 0;
       // Prefer memory cache
       TvdbSeries seriesDetail;
+      CheckCacheAndRefresh();
       if (_memoryCache.TryGetValue(seriesName, out seriesDetail))
       {
         tvDbId = seriesDetail.Id;
@@ -211,6 +219,7 @@ namespace MediaPortal.Extensions.OnlineLibraries
       try
       {
         // Prefer memory cache
+        CheckCacheAndRefresh();
         if (_memoryCache.TryGetValue(seriesNameOrImdbId, out seriesDetail))
           return true;
 
@@ -223,7 +232,9 @@ namespace MediaPortal.Extensions.OnlineLibraries
         seriesDetail = null;
 
         // Use cached values before doing online query
-        SeriesMatch match = matches.Find(m => m.ItemName == seriesNameOrImdbId || m.TvDBName == seriesNameOrImdbId);
+        SeriesMatch match = matches.Find(m =>
+          string.Equals(m.ItemName, seriesNameOrImdbId, StringComparison.OrdinalIgnoreCase) ||
+          string.Equals(m.TvDBName, seriesNameOrImdbId, StringComparison.OrdinalIgnoreCase));
         ServiceRegistration.Get<ILogger>().Debug("SeriesTvDbMatcher: Try to lookup series \"{0}\" from cache: {1}", seriesNameOrImdbId, match != null && match.Id != 0);
 
         // Try online lookup
@@ -262,13 +273,13 @@ namespace MediaPortal.Extensions.OnlineLibraries
                 };
 
             // Save cache
-            _storage.SaveNewMatch(seriesNameOrImdbId, onlineMatch);
+            _storage.TryAddMatch(onlineMatch);
             return true;
           }
         }
         ServiceRegistration.Get<ILogger>().Debug("SeriesTvDbMatcher: No unique match found for \"{0}\"", seriesNameOrImdbId);
         // Also save "non matches" to avoid retrying
-        _storage.SaveNewMatch(seriesNameOrImdbId, new SeriesMatch { ItemName = seriesNameOrImdbId });
+        _storage.TryAddMatch(new SeriesMatch { ItemName = seriesNameOrImdbId });
         return false;
       }
       catch (Exception ex)
@@ -278,8 +289,25 @@ namespace MediaPortal.Extensions.OnlineLibraries
       }
       finally
       {
-        if (seriesDetail != null && !_memoryCache.ContainsKey(seriesNameOrImdbId))
-          _memoryCache.Add(seriesNameOrImdbId, seriesDetail);
+        if (seriesDetail != null)
+          _memoryCache.TryAdd(seriesNameOrImdbId, seriesDetail);
+      }
+    }
+
+    /// <summary>
+    /// Check if the memory cache should be cleared and starts an online update of (file-) cached series information.
+    /// </summary>
+    private void CheckCacheAndRefresh()
+    {
+      if (DateTime.Now - _memoryCacheInvalidated <= MAX_MEMCACHE_DURATION)
+        return;
+      _memoryCache.Clear();
+      _memoryCacheInvalidated = DateTime.Now;
+      IThreadPool threadPool = ServiceRegistration.Get<IThreadPool>(false);
+      if (threadPool != null)
+      {
+        ServiceRegistration.Get<ILogger>().Debug("SeriesTvDbMatcher: Refreshing local cache");
+        threadPool.Add(() => _tv.UpdateCache());
       }
     }
 

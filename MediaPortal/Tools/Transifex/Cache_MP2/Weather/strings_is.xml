@@ -5,7 +5,8 @@
   <!--Dialog state, doesn't appear at the UI-->
   <string name="Weather.WeatherLocationStateDisplayLabel">Veldu staðsetningu</string>
   <!--Dialog state, doesn't appear at the UI-->
-  <string name="Weather.Title">Veður\n</string>
+  <string name="Weather.Title">Veður
+</string>
   <string name="Weather.ChooseLocation">Veldu staðsetningu</string>
   <string name="Weather.Refresh">Endurstilla</string>
   <string name="Weather.Updating">Uppfæri...</string>
@@ -37,7 +38,6 @@
   <string name="Weather.Showers">Skúrir</string>
   <string name="Weather.Few">Fáir</string>
   <string name="Weather.Scattered">í grennd</string>
-  <string name="Weather.Wind">Vindur</string>
   <string name="Weather.Strong">Sterkur</string>
   <string name="Weather.Clear">Heiðskýrt</string>
   <string name="Weather.Early">Snemma</string>

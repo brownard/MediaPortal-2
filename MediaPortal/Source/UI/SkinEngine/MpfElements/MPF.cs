@@ -79,6 +79,7 @@ namespace MediaPortal.UI.SkinEngine.MpfElements
       _objectClassRegistrations.Add("WrapPanel", typeof(SkinEngine.Controls.Panels.WrapPanel));
       _objectClassRegistrations.Add("VirtualizingWrapPanel", typeof(SkinEngine.Controls.Panels.VirtualizingWrapPanel));
       _objectClassRegistrations.Add("UniformGrid", typeof(SkinEngine.Controls.Panels.UniformGrid));
+      _objectClassRegistrations.Add("StarRatingPanel", typeof(SkinEngine.Controls.Panels.StarRatingPanel));
 
       // Visuals
       _objectClassRegistrations.Add("ARRetainingControl", typeof(SkinEngine.Controls.Visuals.ARRetainingControl));
@@ -236,6 +237,26 @@ namespace MediaPortal.UI.SkinEngine.MpfElements
 
     #region Public methods
 
+    public static bool ConvertCollectionType(object value, Type targetType, out object result)
+    {
+      result = value;
+      if (value == null)
+        return true;
+      if (targetType == typeof(PointCollection))
+      {
+        PointCollection coll = new PointCollection();
+        string text = value.ToString();
+        string[] parts = text.Split(new char[] { ',', ' ' });
+        for (int i = 0; i < parts.Length; i += 2)
+        {
+          Point p = new Point(Int32.Parse(parts[i]), Int32.Parse(parts[i + 1]));
+          coll.Add(p);
+        }
+        result = coll;
+        return true;
+      }
+      return false;
+    }
 
     public static bool ConvertType(object value, Type targetType, out object result)
     {
@@ -367,19 +388,6 @@ namespace MediaPortal.UI.SkinEngine.MpfElements
         {
           return false;
         }
-      }
-      else if (targetType == typeof(PointCollection))
-      {
-        PointCollection coll = new PointCollection();
-        string text = value.ToString();
-        string[] parts = text.Split(new char[] { ',', ' ' });
-        for (int i = 0; i < parts.Length; i += 2)
-        {
-          Point p = new Point(Int32.Parse(parts[i]), Int32.Parse(parts[i + 1]));
-          coll.Add(p);
-        }
-        result = coll;
-        return true;
       }
       else if (targetType == typeof(GridLength))
       {
