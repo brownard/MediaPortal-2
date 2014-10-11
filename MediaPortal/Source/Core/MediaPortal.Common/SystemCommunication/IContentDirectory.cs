@@ -124,6 +124,8 @@ namespace MediaPortal.Common.SystemCommunication
 
     MediaItemAspectMetadata GetMediaItemAspectMetadata(Guid miamId);
 
+    IDictionary<Guid, DateTime> GetAllManagedMediaItemAspectCreationDates();
+
     #endregion
 
     #region Media query
