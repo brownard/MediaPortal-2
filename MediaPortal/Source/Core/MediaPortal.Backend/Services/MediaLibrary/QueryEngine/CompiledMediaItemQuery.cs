@@ -49,8 +49,8 @@ namespace MediaPortal.Backend.Services.MediaLibrary.QueryEngine
     protected readonly IDictionary<MediaItemAspectMetadata.AttributeSpecification, QueryAttribute> _mainSelectAttributes;
     protected readonly ICollection<MediaItemAspectMetadata.AttributeSpecification> _explicitSelectAttributes;
     protected readonly IFilter _filter;
-    protected int? _offset;
-    protected int? _limit;
+    protected readonly uint? _offset;
+    protected readonly uint? _limit;
 
     protected readonly IList<SortInformation> _sortInformation;
 
@@ -61,8 +61,8 @@ namespace MediaPortal.Backend.Services.MediaLibrary.QueryEngine
         IDictionary<MediaItemAspectMetadata.AttributeSpecification, QueryAttribute> mainSelectedAttributes,
         ICollection<MediaItemAspectMetadata.AttributeSpecification> explicitSelectedAttributes,
         IFilter filter, IList<SortInformation> sortInformation,
-        int? limit = null,
-        int? offset = null)
+        uint? limit = null,
+        uint? offset = null)
     {
       _miaManagement = miaManagement;
       _necessaryRequestedMIAs = necessaryRequestedMIAs;
@@ -98,7 +98,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary.QueryEngine
     /// <summary>
     /// Optional offset to return items from a specific starting position from query.
     /// </summary>
-    public int? Offset
+    public uint? Offset
     {
       get { return _offset; }
     }
@@ -106,7 +106,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary.QueryEngine
     /// <summary>
     /// Optional limit to return only a specific number of items from query.
     /// </summary>
-    public int? Limit
+    public uint? Limit
     {
       get { return _limit; }
     }
@@ -219,14 +219,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary.QueryEngine
           IDictionary<QueryAttribute, string> qa2a;
           mainQueryBuilder.GenerateSqlStatement(out mediaItemIdAlias2, out miamAliases, out qa2a,
               out statementStr, out bindVars);
-
-          // Try to use SQL side paging, which gives best performance if supported
-          ISQLDatabasePaging paging = database as ISQLDatabasePaging;
-          if (paging != null)
-            paging.Process(ref statementStr, ref bindVars, ref _offset, ref _limit);
-
           command.CommandText = statementStr;
-
           foreach (BindVar bindVar in bindVars)
             database.AddParameter(command, bindVar.Name, bindVar.Value, bindVar.VariableType);
 
@@ -400,13 +393,13 @@ namespace MediaPortal.Backend.Services.MediaLibrary.QueryEngine
         result.Append(".");
         result.Append(attr.AttributeName);
         result.Append(":\r\n");
-        result.Append(complexAttributeQueryBuilder);
+        result.Append(complexAttributeQueryBuilder.ToString());
         result.Append("\r\n\r\n");
       }
       result.Append("Main query:\r\n");
       MainQueryBuilder mainQueryBuilder = new MainQueryBuilder(_miaManagement,
           _mainSelectAttributes.Values, null, _necessaryRequestedMIAs, _optionalRequestedMIAs, _filter, _sortInformation, _limit, _offset);
-      result.Append(mainQueryBuilder);
+      result.Append(mainQueryBuilder.ToString());
       return result.ToString();
     }
   }
