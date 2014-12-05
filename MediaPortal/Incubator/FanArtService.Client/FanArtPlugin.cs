@@ -38,7 +38,7 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Client
     public static ImageSource CreateFanArtImageSource(object source, int width, int height)
     {
       MediaItem mediaItem = source as MediaItem;
-      if (mediaItem == null)
+      if (mediaItem == null || mediaItem.MediaItemId == System.Guid.Empty)
         return null;
       FanArtConstants.FanArtMediaType mediaType = FanArtConstants.FanArtMediaType.Undefined;
       // Special handling for ImageThumbs that might require rotation
@@ -61,7 +61,8 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Client
 
     public void Activated(PluginRuntime pluginRuntime)
     {
-      ImageSourceFactory.ReplaceCustomImageSource(ImageSourceFactory.CreateMediaItemThumbnailAspectSource, CreateFanArtImageSource);
+      //ImageSourceFactory.ReplaceCustomImageSource(ImageSourceFactory.CreateMediaItemThumbnailAspectSource, CreateFanArtImageSource);
+        ImageSourceFactory.RegisterPriorityCustomImageSource(CreateFanArtImageSource);
     }
 
     public bool RequestEnd()

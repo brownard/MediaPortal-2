@@ -71,6 +71,12 @@ namespace MediaPortal.UI.SkinEngine.Utils
         _imageSourceFactories.Add(creator);
     }
 
+    public static void RegisterPriorityCustomImageSource(CreateCustomImageSourceDelegate creator)
+    {
+        if (!_imageSourceFactories.Contains(creator))
+            _imageSourceFactories.Insert(0, creator);
+    }
+
     public static void RemoveCustomImageSource(CreateCustomImageSourceDelegate creator)
     {
       if (_imageSourceFactories.Contains(creator))
