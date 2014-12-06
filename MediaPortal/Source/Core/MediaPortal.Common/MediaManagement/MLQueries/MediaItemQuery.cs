@@ -55,7 +55,6 @@ namespace MediaPortal.Common.MediaManagement.MLQueries
       set { _attributeType = value; }
     }
 
-    [XmlIgnore]
     public SortDirection Direction
     {
       get { return _sortDirection; }
@@ -275,7 +274,7 @@ namespace MediaPortal.Common.MediaManagement.MLQueries
       if (Limit.HasValue)
         result.AppendFormat(" LIMIT {0}", Limit.Value);
       if (Offset.HasValue)
-        result.AppendFormat(" OFFSET {0}", Offset.HasValue);
+        result.AppendFormat(" OFFSET {0}", Offset.Value);
       return result.ToString();
     }
 
