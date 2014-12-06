@@ -399,7 +399,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary.QueryEngine
       result.Append("Main query:\r\n");
       MainQueryBuilder mainQueryBuilder = new MainQueryBuilder(_miaManagement,
           _mainSelectAttributes.Values, null, _necessaryRequestedMIAs, _optionalRequestedMIAs, _filter, _sortInformation, _limit, _offset);
-      result.Append(mainQueryBuilder.ToString());
+      result.Append(mainQueryBuilder);
       return result.ToString();
     }
   }

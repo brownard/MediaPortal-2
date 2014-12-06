@@ -120,11 +120,11 @@ namespace MediaPortal.Common.SystemCommunication
 
     void RemoveMediaItemAspectStorage(Guid aspectId);
 
-    IDictionary<Guid, DateTime> GetAllManagedMediaItemAspectCreationDates();
-
     ICollection<Guid> GetAllManagedMediaItemAspectTypes();
 
     MediaItemAspectMetadata GetMediaItemAspectMetadata(Guid miamId);
+
+    IDictionary<Guid, DateTime> GetAllManagedMediaItemAspectCreationDates();
 
     #endregion
 
