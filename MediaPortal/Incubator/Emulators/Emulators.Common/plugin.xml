@@ -1,0 +1,25 @@
+<Plugin
+    DescriptorVersion="1.0"
+    Name="Emulators Backend"
+    PluginId="{AFD22F9B-9842-40BE-B2B5-37767713E9C1}"
+    Author = "Brownard"
+    Copyright="GPL"
+    Description="Manages games and emulators"
+    PluginVersion="1.0">
+
+  <DependsOn>
+    
+  </DependsOn>
+
+  <Runtime>
+    <Assembly FileName="Emulators.Common.dll"/>
+    <PluginStateTracker ClassName="Emulators.Common.EmulatorsPlugin"/>
+  </Runtime>
+
+  <Register Location="/Media/MetadataExtractors">
+    <Instance
+        Id="GamesMetadataExtractor"
+        ClassName="Emulators.Common.GameMetadataExtractor"/>
+  </Register>
+
+</Plugin>

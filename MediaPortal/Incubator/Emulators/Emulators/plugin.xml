@@ -1,0 +1,56 @@
+<Plugin
+    DescriptorVersion="1.0" 
+    Name="Emulators"
+    PluginId="{FFAC513C-40B3-4FB0-8CBC-1683B4B7395C}"
+    Author="Brownard"
+    Copyright="GPL"
+    Description="Frontend for the emulators plugin."
+    PluginVersion="1.0">
+
+  <Runtime>
+    <Assembly FileName="Emulators.dll"/>
+    <PluginStateTracker ClassName="Emulators.EmulatorsPlugin"/>
+  </Runtime>
+
+  <DependsOn>
+    <PluginReference PluginId="{5D239050-02B8-4f58-8301-7630A1C4CF85}"/>    <!-- SkinBase -->
+    <PluginReference PluginId="{15FB35F7-8C85-4404-BC67-BFF28446158A}"/>    <!-- Media -->
+    <PluginReference PluginId="{AFD22F9B-9842-40BE-B2B5-37767713E9C1}"/>    <!-- Emulators Backend -->
+    <PluginReference PluginId="{1AFF4467-64B0-4ca1-AF28-9AEDF3525BCE}"/>    <!-- ConfigurationManager -->
+    <PluginReference PluginId="{B765A4B6-F455-4941-BDAE-2CE45208BFEB}"/>    <!-- Configuration plugin -->
+  </DependsOn>
+
+  <Register Location="/Players/Builders">
+    <PlayerBuilder Id="454EDEB8-99AB-4D5F-95BD-B699DD2ACBE4" ClassName="Emulators.GamePlayerBuilder"/>
+  </Register>
+
+  <Register Location="/Workflow/States">
+
+    <WorkflowState Id="DFC41902-DE22-4AEF-B9D2-C369BD79C4E0"
+      Name="GamesNavigation-Root"
+      DisplayLabel="[Emulators.GamesMenuItem]"
+      WorkflowModel="4CDD601F-E280-43b9-AD0A-6D7B2403C856"/>   <!-- Workflow model = Media model -->
+
+  </Register>
+
+  <!-- Language resources -->
+  <Register Location="/Resources/Language">
+    <Resource Id="EmulatorsLanguage" Directory="Language" Type="Language"/>
+  </Register>
+
+  <Register Location="/Models">
+  </Register>
+
+  <Register Location="/Resources/Skin">
+    <Resource Id="EmulatorsSkin" Directory="Skin" Type="Skin"/>
+  </Register>
+
+  <!-- Root Sections -->
+  <Register Location="/Configuration/Settings">
+    <ConfigSection
+        Id="Plugins"
+        Redundant="true"
+        Text="[Settings.Plugins]"/>
+  </Register>
+  
+</Plugin>
