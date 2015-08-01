@@ -1,4 +1,5 @@
-﻿using MediaPortal.Common.MediaManagement;
+﻿using Emulators.Emulator;
+using MediaPortal.Common.MediaManagement;
 using MediaPortal.UI.Presentation.Players;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,8 @@ namespace Emulators
       if (mimeType.StartsWith("game/"))
       {
         GamePlayer player = new GamePlayer();
-        player.SetMediaItem(mediaItem.GetResourceLocator(), title, new PJ64Config());
+        var rs = mediaItem.GetResourceLocator();
+        player.SetMediaItem(mediaItem.GetResourceLocator(), title, new Project64());
         return player;
       }
       return null;

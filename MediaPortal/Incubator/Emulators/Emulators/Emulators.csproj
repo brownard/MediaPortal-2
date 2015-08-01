@@ -40,12 +40,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EmulatorConfiguration.cs" />
     <Compile Include="EmulatorsConsts.cs" />
     <Compile Include="EmulatorsPlugin.cs" />
-    <Compile Include="GameLauncher.cs" />
+    <Compile Include="Emulator\EmulatorConfiguration.cs" />
+    <Compile Include="Emulator\EmulatorConfigurationManager.cs" />
+    <Compile Include="Emulator\EmulatorFilter.cs" />
+    <Compile Include="Emulator\Project64.cs" />
+    <Compile Include="Fanart\GameImageSourceConverter.cs" />
+    <Compile Include="Game\GameLauncher.cs" />
     <Compile Include="GamePlayer.cs" />
     <Compile Include="GamePlayerBuilder.cs" />
+    <Compile Include="MediaExtensions\GameAspectWrapper.cs" />
     <Compile Include="MediaExtensions\GamesLibrary.cs" />
     <Compile Include="MediaExtensions\GamesShowItemsScreenData.cs" />
     <Compile Include="Models\Navigation\GameItem.cs" />
@@ -60,9 +65,29 @@
       <Project>{52e587d0-a274-44da-8846-8eeaf5414923}</Project>
       <Name>MediaPortal.UI</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Source\Core\MediaPortal.Utilities\MediaPortal.Utilities.csproj">
+      <Project>{4fe7b8ae-1330-424a-91a1-c68d7abf9cb8}</Project>
+      <Name>MediaPortal.Utilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Source\UI\SkinEngine\SkinEngine.csproj">
+      <Project>{7e943389-3589-40c9-b481-2e223554cc49}</Project>
+      <Name>SkinEngine</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Source\UI\UiComponents\Media\Media.csproj">
       <Project>{cd37e2ff-4cf7-4f96-8c73-c6764988d408}</Project>
       <Name>Media</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\FanArtService.Client\FanArtService.Client.csproj">
+      <Project>{cda7272f-e218-42a0-a53a-2d44e4015ff7}</Project>
+      <Name>FanArtService.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\FanArtService.Interfaces\FanArtService.Interfaces.csproj">
+      <Project>{587b806e-9afc-47d7-a024-1cec38c4d1d3}</Project>
+      <Name>FanArtService.Interfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\ServerSettings.Interfaces\ServerSettings.Interfaces.csproj">
+      <Project>{8e15fbe3-f6c8-4b76-a560-f391b4124e9c}</Project>
+      <Name>ServerSettings.Interfaces</Name>
     </ProjectReference>
     <ProjectReference Include="..\Emulators.Common\Emulators.Common.csproj">
       <Project>{f7e3d356-1cf6-43a8-91f1-4baca72f6637}</Project>
@@ -70,15 +95,31 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="plugin.xml" />
+    <Content Include="Language\strings_en.xml" />
+    <Content Include="plugin.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Skin\default\workflow\Emulators-actions.xml" />
+    <Content Include="Skin\Titanium\screens\MediaItemGameDetails.inc" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Skin\default\screens\GameShowItems.xaml">
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Skin\Titanium\screens\GameShowItems.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy "$(TargetPath)" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\EmulatorsNew\" /Y /E /I
+xcopy "$(TargetDir)$(TargetName).pdb" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\EmulatorsNew\" /Y /E /I
+xcopy "$(ProjectDir)plugin.xml" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\EmulatorsNew\" /Y
+xcopy "$(ProjectDir)Skin" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\EmulatorsNew\Skin" /Y /E /I
+xcopy "$(ProjectDir)Language" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\EmulatorsNew\Language" /Y /E /I</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

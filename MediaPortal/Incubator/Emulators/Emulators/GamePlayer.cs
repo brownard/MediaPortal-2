@@ -1,4 +1,6 @@
-﻿using MediaPortal.Common.ResourceAccess;
+﻿using Emulators.Emulator;
+using Emulators.Game;
+using MediaPortal.Common.ResourceAccess;
 using MediaPortal.UI.Presentation.Players;
 using System;
 using System.Collections.Generic;

@@ -1,20 +1,23 @@
 <Plugin
     DescriptorVersion="1.0"
-    Name="Emulators Backend"
+    Name="Emulators Common"
     PluginId="{AFD22F9B-9842-40BE-B2B5-37767713E9C1}"
     Author = "Brownard"
     Copyright="GPL"
-    Description="Manages games and emulators"
-    PluginVersion="1.0">
+    Description="Manages games and emulators">
 
-  <DependsOn>
-    
-  </DependsOn>
+  <Version
+        PluginVersion="1.0"
+        ReleaseDate="2015-07-22 01:00:00 GMT+01:00"
+        CurrentAPI="1"/>
 
   <Runtime>
     <Assembly FileName="Emulators.Common.dll"/>
-    <PluginStateTracker ClassName="Emulators.Common.EmulatorsPlugin"/>
   </Runtime>
+
+  <DependsOn>
+    <CoreDependency Name="MediaPortal.Common" CompatibleAPI="1" />
+  </DependsOn>
 
   <Register Location="/Media/MetadataExtractors">
     <Instance
@@ -22,4 +25,10 @@
         ClassName="Emulators.Common.GameMetadataExtractor"/>
   </Register>
 
+  <!-- We use our own local name here to avoid circular references to FanArtService -->
+  <Builder Name="GameFanartProviderBuilder" ClassName="MediaPortal.Extensions.UserServices.FanArtService.Interfaces.Providers.FanartProviderBuilder"/>
+  <Register Location="/Fanart/Providers">
+    <GameFanartProviderBuilder Id="{CD23AA74-57E8-4FFE-93DB-9AC4C701F19A}" MediaTypes="Unknown" ClassName="Emulators.Common.FanartProvider.GameFanartProvider"/>
+  </Register>
+  
 </Plugin>

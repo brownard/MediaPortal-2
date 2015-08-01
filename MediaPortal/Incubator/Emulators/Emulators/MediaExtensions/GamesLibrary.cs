@@ -1,4 +1,6 @@
-﻿using Emulators.Models.Navigation;
+﻿using Emulators.Emulator;
+using Emulators.Game;
+using Emulators.Models.Navigation;
 using MediaPortal.Common.Commands;
 using MediaPortal.UiComponents.Media.Models;
 using MediaPortal.UiComponents.Media.Models.NavigationModel;
@@ -37,10 +39,7 @@ namespace Emulators.MediaExtensions
 
       AbstractItemsScreenData.PlayableItemCreatorDelegate picd = mi => new GameItem(mi)
       {
-        Command = new MethodDelegateCommand(() =>
-          {
-            GameLauncher.LaunchGame(new PJ64Config(), mi);
-          })
+        Command = new MethodDelegateCommand(() => GameLauncher.LaunchGame(mi))
       };
 
       _defaultScreen = new GamesShowItemsScreenData(picd);

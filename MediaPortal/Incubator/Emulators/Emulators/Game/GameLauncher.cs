@@ -1,6 +1,10 @@
-﻿using MediaPortal.Common;
+﻿using Emulators.Common;
+using Emulators.Emulator;
+using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
+using MediaPortal.Common.MediaManagement.DefaultItemAspects;
+using MediaPortal.Common.ResourceAccess;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,19 +12,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Emulators
+namespace Emulators.Game
 {
   public class GameLauncher
   {
     const string WILDCARD_GAME_PATH = "<gamepath>";
 
     protected Process _process;
+    protected EmulatorConfigurationManager _emulatorConfigurationManager;
     protected EmulatorConfiguration _emulatorConfiguration;
     protected string _gamePath;
 
-    public static void LaunchGame(EmulatorConfiguration emulatorConfiguration, MediaItem mediaItem)
+    public static void LaunchGame(MediaItem mediaItem)
     {
+      MediaItemAspect aspect;
+      if (mediaItem == null || !mediaItem.Aspects.TryGetValue(MediaAspect.ASPECT_ID, out aspect))
+        return;
+
+      string mimeType = (string)aspect[MediaAspect.ATTR_MIME_TYPE];
       var locator = mediaItem.GetResourceLocator();
+      EmulatorConfigurationManager manager = new EmulatorConfigurationManager();
+      EmulatorConfiguration emulatorConfiguration = manager.GetConfiguration(mimeType, locator.NativeResourcePath.LastPathSegment.Path);
       var accessor = locator.CreateAccessor();
       var launcher = new GameLauncher(emulatorConfiguration, accessor.ResourcePathName);
       launcher.Init();
@@ -52,10 +64,9 @@ namespace Emulators
 
     void initProcess()
     {
-      string arguments = CreateArguments(_emulatorConfiguration.Arguments, _gamePath);
       _process = new Process();
-      _process.StartInfo = new ProcessStartInfo(_emulatorConfiguration.Path, arguments);
-      _process.StartInfo.WorkingDirectory = _emulatorConfiguration.WorkingDirectory;
+      _process.StartInfo = new ProcessStartInfo(_emulatorConfiguration.Path, CreateArguments(_emulatorConfiguration, _gamePath));
+      _process.StartInfo.WorkingDirectory = string.IsNullOrEmpty(_emulatorConfiguration.WorkingDirectory) ? DosPathHelper.GetDirectory(_emulatorConfiguration.Path) : _emulatorConfiguration.WorkingDirectory;
       _process.EnableRaisingEvents = true;
       _process.Exited += process_Exited;
     }
@@ -78,17 +89,18 @@ namespace Emulators
       OnGameExited(e);
     }
 
-    static string CreateArguments(string emulatorArguments, string gamePath)
+    static string CreateArguments(EmulatorConfiguration configuration, string gamePath)
     {
-      string arguments;
-      if (emulatorArguments.Contains(WILDCARD_GAME_PATH))
-      {
-        arguments = emulatorArguments.Replace(WILDCARD_GAME_PATH, gamePath);
-      }
+      if (configuration.UseQuotes)
+        gamePath = string.Format("\"{0}\"", gamePath);
+
+      string arguments = configuration.Arguments;
+      if (string.IsNullOrEmpty(arguments))
+        arguments = gamePath;
+      else if (arguments.Contains(WILDCARD_GAME_PATH))
+        arguments = arguments.Replace(WILDCARD_GAME_PATH, gamePath);
       else
-      {
-        arguments = string.Format("{0} {1}", emulatorArguments.TrimEnd(), gamePath);
-      }
+        arguments = string.Format("{0} {1}", arguments.TrimEnd(), gamePath);
       return arguments;
     }
   }

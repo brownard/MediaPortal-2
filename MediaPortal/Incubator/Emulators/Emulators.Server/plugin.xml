@@ -1,0 +1,27 @@
+<Plugin
+    DescriptorVersion="1.0"
+    Name="Emulators Server"
+    PluginId="{C98D7481-5E7B-4DD0-873A-192A4EAA922E}"
+    Author = "Brownard"
+    Copyright="GPL"
+    Description=""
+    AutoActivate="true">
+
+  <Version
+        PluginVersion="1.0"
+        ReleaseDate="2015-07-22 01:00:00 GMT+01:00"
+        CurrentAPI="1"/>
+
+  <Runtime>
+    <Assembly FileName="Emulators.Server.dll"/>
+    <PluginStateTracker ClassName="Emulators.Server.ServerPlugin"/>
+  </Runtime>
+
+  <DependsOn>
+    <CoreDependency Name="MediaPortal.Common" CompatibleAPI="1" />
+    <CoreDependency Name="MediaPortal.Backend" CompatibleAPI="1" />
+    <PluginReference PluginId="{AFD22F9B-9842-40BE-B2B5-37767713E9C1}" CompatibleAPI="1" />
+     <!--Emulators Common--> 
+  </DependsOn>
+  
+</Plugin>
