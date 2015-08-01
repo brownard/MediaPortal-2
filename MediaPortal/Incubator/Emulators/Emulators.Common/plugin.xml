@@ -13,6 +13,7 @@
 
   <Runtime>
     <Assembly FileName="Emulators.Common.dll"/>
+    <Assembly FileName="FanArtService.Interfaces.dll"/>
   </Runtime>
 
   <DependsOn>
@@ -28,7 +29,7 @@
   <!-- We use our own local name here to avoid circular references to FanArtService -->
   <Builder Name="GameFanartProviderBuilder" ClassName="MediaPortal.Extensions.UserServices.FanArtService.Interfaces.Providers.FanartProviderBuilder"/>
   <Register Location="/Fanart/Providers">
-    <GameFanartProviderBuilder Id="{CD23AA74-57E8-4FFE-93DB-9AC4C701F19A}" MediaTypes="Unknown" ClassName="Emulators.Common.FanartProvider.GameFanartProvider"/>
+    <GameFanartProviderBuilder Id="{CD23AA74-57E8-4FFE-93DB-9AC4C701F19A}" MediaTypes="Game" ClassName="Emulators.Common.FanartProvider.GameFanartProvider"/>
   </Register>
   
 </Plugin>

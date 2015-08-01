@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="DownloadCache.cs" />
     <Compile Include="Downloader.cs" />
+    <Compile Include="FanartProvider\FanartTypes.cs" />
     <Compile Include="FanartProvider\GameFanartProvider.cs" />
     <Compile Include="GameAspect.cs" />
     <Compile Include="GameInfo.cs" />

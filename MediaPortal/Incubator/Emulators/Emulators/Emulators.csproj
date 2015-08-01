@@ -46,6 +46,7 @@
     <Compile Include="Emulator\EmulatorConfigurationManager.cs" />
     <Compile Include="Emulator\EmulatorFilter.cs" />
     <Compile Include="Emulator\Project64.cs" />
+    <Compile Include="Fanart\FanartImageSourceProvider.cs" />
     <Compile Include="Fanart\GameImageSourceConverter.cs" />
     <Compile Include="Game\GameLauncher.cs" />
     <Compile Include="GamePlayer.cs" />

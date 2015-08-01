@@ -13,10 +13,10 @@ namespace Emulators.Common.FanartProvider
 {
   public class GameFanartProvider : IFanArtProvider
   {
-    public bool TryGetFanArt(FanArtConstants.FanArtMediaType mediaType, FanArtConstants.FanArtType fanArtType, string name, int maxWidth, int maxHeight, bool singleRandom, out IList<IResourceLocator> result)
+    public bool TryGetFanArt(string mediaType, string fanArtType, string name, int maxWidth, int maxHeight, bool singleRandom, out IList<IResourceLocator> result)
     {
       result = null;
-      if (mediaType != FanArtConstants.FanArtMediaType.Undefined || string.IsNullOrWhiteSpace(name))
+      if (mediaType != FanartTypes.MEDIA_TYPE_GAME || string.IsNullOrWhiteSpace(name))
         return false;
 
       string path = Path.Combine(TheGamesDbWrapper.CACHE_PATH, name);
@@ -24,6 +24,9 @@ namespace Emulators.Common.FanartProvider
       {
         case FanArtConstants.FanArtType.Poster:
           path = Path.Combine(path, @"Covers\front");
+          break;
+        case FanArtConstants.FanArtType.FanArt:
+          path = Path.Combine(path, @"Fanart");
           break;
         default:
           return false;
@@ -51,7 +54,7 @@ namespace Emulators.Common.FanartProvider
       return false;
     }
 
-    protected string[] GetPatterns(FanArtConstants.FanArtType fanArtType)
+    protected string[] GetPatterns(string fanArtType)
     {
       return new string[] { "*.jpg", "*.png" };
     }

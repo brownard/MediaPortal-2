@@ -1,4 +1,5 @@
 ﻿using Emulators.Common;
+using Emulators.Common.FanartProvider;
 using Emulators.Models.Navigation;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Extensions.UserServices.FanArtService.Client;
@@ -34,9 +35,7 @@ namespace Emulators.Fanart
       if (args.Length < 3)
         return false;
 
-      FanArtConstants.FanArtType fanartType;
-      if (!Enum.TryParse(args[0], out fanartType))
-        return false;
+      string fanartType = args[0];
 
       int maxWidth;
       int maxHeight;
@@ -49,7 +48,7 @@ namespace Emulators.Fanart
 
       result = new FanArtImageSource
       {
-        FanArtMediaType = FanArtConstants.FanArtMediaType.Movie,
+        FanArtMediaType = FanartTypes.MEDIA_TYPE_GAME,
         FanArtName = id.Value.ToString(),
         FanArtType = fanartType,
         MaxWidth = maxWidth,
