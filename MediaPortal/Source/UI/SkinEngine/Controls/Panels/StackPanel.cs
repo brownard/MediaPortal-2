@@ -75,6 +75,11 @@ namespace MediaPortal.UI.SkinEngine.Controls.Panels
     // child denoted by the _actualFirstVisibleChildIndex.
     protected int _actualLastVisibleChildIndex = -1;
 
+    protected int _scrollOffset = 0;
+    protected int _currentIndex = 0;
+    protected int _currentOffsetFromFirst = 0;
+    protected int _currentOffsetFromLast = 0;
+
     #endregion
 
     #region Ctor
@@ -115,6 +120,7 @@ namespace MediaPortal.UI.SkinEngine.Controls.Panels
       Orientation = p.Orientation;
       LoopScroll = p.LoopScroll;
       DoScroll = p.DoScroll;
+      ScrollOffset = p.ScrollOffset;
       Attach();
     }
 
@@ -144,6 +150,12 @@ namespace MediaPortal.UI.SkinEngine.Controls.Panels
     {
       get { return (bool)_loopScrollProperty.GetValue(); }
       set { _loopScrollProperty.SetValue(value); }
+    }
+    
+    public int ScrollOffset
+    {
+      get { return _scrollOffset; }
+      set { _scrollOffset = value; }
     }
 
     #endregion
@@ -406,6 +418,11 @@ namespace MediaPortal.UI.SkinEngine.Controls.Panels
           {
             int oldFirstVisibleChild = _actualFirstVisibleChildIndex;
             int oldLastVisibleChild = _actualLastVisibleChildIndex;
+            //Calculate the current item's offset to first and last visible items
+            //Used in conjunction with ScrollOffset property to determine whether to scroll
+            _currentIndex = index;
+            _currentOffsetFromFirst = index - _actualFirstVisibleChildIndex;
+            _currentOffsetFromLast = _actualLastVisibleChildIndex - index;
             bool first;
             if (index < oldFirstVisibleChild)
               first = true;
@@ -526,7 +543,13 @@ namespace MediaPortal.UI.SkinEngine.Controls.Panels
       if (focusableChildren.Count == 0)
         return false;
       FrameworkElement nextElement = FindNextFocusElement(focusableChildren, currentFocusRect, direction);
-      return nextElement != null && nextElement.TrySetFocus(true);
+      if (nextElement != null && nextElement.TrySetFocus(true))
+      {
+        if (_scrollOffset > 0)
+          ScrollToOffset(direction);
+        return true;
+      }
+      return false;
     }
 
     /// <summary>
@@ -567,6 +590,22 @@ namespace MediaPortal.UI.SkinEngine.Controls.Panels
       SetScrollIndex(int.MaxValue, false);
       visibleChildren[visibleChildren.Count - 1].SetFocusPrio = SetFocusPriority.Default;
       return true;
+    }
+    
+    protected void ScrollToOffset(MoveFocusDirection direction)
+    {
+      if ((Orientation == Orientation.Vertical && direction == MoveFocusDirection.Up) ||
+        (Orientation == Orientation.Horizontal && direction == MoveFocusDirection.Left))
+      {
+        if (_currentIndex > _currentOffsetFromFirst && _currentOffsetFromFirst >= 0 && _currentOffsetFromFirst < _scrollOffset)
+          SetScrollIndex(_currentIndex - (_currentOffsetFromFirst + 1), true);
+      }
+      else if ((Orientation == Orientation.Vertical && direction == MoveFocusDirection.Down) ||
+        (Orientation == Orientation.Horizontal && direction == MoveFocusDirection.Right))
+      {
+        if (_currentOffsetFromLast >= 0 && _currentOffsetFromLast < _scrollOffset)
+          SetScrollIndex(_currentIndex + _currentOffsetFromLast + 1, false);
+      }
     }
 
     #endregion

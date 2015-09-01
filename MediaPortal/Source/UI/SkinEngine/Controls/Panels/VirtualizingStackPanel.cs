@@ -560,6 +560,9 @@ namespace MediaPortal.UI.SkinEngine.Controls.Panels
         {
           if (InVisualPath(currentChild, element))
           {
+            _currentIndex = index + arrangedStart;
+            _currentOffsetFromFirst = index - oldFirstViewableChild;
+            _currentOffsetFromLast = oldLastViewableChild - index;
             bool first;
             if (index < oldFirstViewableChild)
               first = true;
