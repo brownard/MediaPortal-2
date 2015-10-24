@@ -1,6 +1,7 @@
 ﻿using Emulators.Common.GoodMerge;
 using Emulators.Game;
 using Emulators.Models.Navigation;
+using Emulators.Models.Sorting;
 using MediaPortal.Common;
 using MediaPortal.Common.Commands;
 using MediaPortal.UiComponents.Media.Models;
@@ -45,7 +46,9 @@ namespace Emulators.MediaExtensions
         {
           _defaultScreen,
           new GameFilterByPlatformScreenData(),
-          new GameFilterByYearScreenData()
+          new GameFilterByYearScreenData(),
+          new GameFilterByGenreScreenData(),
+          new GameFilterByDeveloperScreenData()
         };
 
       //_defaultSorting = new SortByRecordingDateDesc();
@@ -53,25 +56,14 @@ namespace Emulators.MediaExtensions
         {
           //_defaultSorting,
           new SortByTitle(),
-          //new VideoSortByFirstGenre(),
-          //new VideoSortByDuration(),
-          //new VideoSortByFirstActor(),
-          //new VideoSortByFirstDirector(),
-          //new VideoSortByFirstWriter(),
-          //new VideoSortBySize(),
-          //new VideoSortByAspectRatio(),
-          //new SortBySystem(),
+          new SortByYear(),
+          new SortByRatingDesc()
         };
 
       var optionalMias = new Guid[]
       {
         GoodMergeAspect.ASPECT_ID
       }.Union(MediaNavigationModel.GetMediaSkinOptionalMIATypes(MediaNavigationMode));
-
-      //_customRootViewSpecification = new StackingViewSpecification(_viewName, null, _necessaryMias, optionalMias, true)
-      //{
-      //  MaxNumItems = Consts.MAX_NUM_ITEMS_VISIBLE
-      //};
 
       _customRootViewSpecification = new MediaLibraryQueryViewSpecification(_viewName, null, _necessaryMias, optionalMias, true);
     }

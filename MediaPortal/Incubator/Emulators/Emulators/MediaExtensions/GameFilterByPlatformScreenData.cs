@@ -14,7 +14,7 @@ namespace Emulators.MediaExtensions
   public class GameFilterByPlatformScreenData : AbstractFiltersScreenData<GameFilterItem>
   {
     public GameFilterByPlatformScreenData()
-      : base(EmulatorsConsts.SCREEN_GAMES_SHOW_ITEMS, EmulatorsConsts.RES_FILTER_BY_PLATFORM_MENU_ITEM, EmulatorsConsts.RES_FILTER_BY_PLATFORM_NAVBAR_DISPLAY_LABEL,
+      : base(EmulatorsConsts.SCREEN_GAMES_SHOW_ITEMS, EmulatorsConsts.RES_FILTER_BY_PLATFORM_MENU_ITEM, EmulatorsConsts.RES_FILTER_GAME_ITEMS_DISPLAY_LABEL,
           new SimpleMLFilterCriterion(GameAspect.ATTR_PLATFORM))
     {
 

@@ -5,7 +5,11 @@
   <string name="Emulators.ShowAllGameItemsMenuItem">Show all</string>
   <string name="Emulators.FilterByPlatformMenuItem">Filter by platform</string>
   <string name="Emulators.FilterByYearMenuItem">Filter by year</string>
+  <string name="Emulators.FilterByGenreMenuItem">Filter by genre</string>
+  <string name="Emulators.FilterByDeveloperMenuItem">Filter by developer</string>
   <string name="Emulators.FilterGameItemsNavbarDisplayLabel">{0}</string>
+  
+  <string name="Emulators.SortByRating">Sort by rating</string>
   
   <string name="Emulators.Platform">Platform</string>
   <string name="Emulators.Developer">Developer</string>
