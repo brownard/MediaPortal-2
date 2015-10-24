@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F7E3D356-1CF6-43A8-91F1-4BACA72F6637}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Emulators.Common</RootNamespace>
+    <AssemblyName>Emulators.Common</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="SharpCompress, Version=0.10.3.0, Culture=neutral, PublicKeyToken=beaf6f427e128133, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Packages\sharpcompress.0.11.1\lib\net40\SharpCompress.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Emulators\EmulatorConfiguration.cs" />
+    <Compile Include="GoodMergeMetadataExtractor.cs" />
+    <Compile Include="GoodMerge\ExtractorFactory.cs" />
+    <Compile Include="GoodMerge\GoodMergeAspect.cs" />
+    <Compile Include="GoodMerge\IExtractor.cs" />
+    <Compile Include="GoodMerge\SharpCompressExtractor.cs" />
+    <Compile Include="Settings\CommonSettings.cs" />
+    <Compile Include="WebRequests\Downloader.cs" />
+    <Compile Include="FanartProvider\FanartTypes.cs" />
+    <Compile Include="Games\GameAspect.cs" />
+    <Compile Include="Games\GameCategory.cs" />
+    <Compile Include="Games\GameInfo.cs" />
+    <Compile Include="Matchers\GameMatch.cs" />
+    <Compile Include="Matchers\GameMatcher.cs" />
+    <Compile Include="GameMetadataExtractor.cs" />
+    <Compile Include="IMediaCategoryHelper.cs" />
+    <Compile Include="NameProcessing\ITitleConverter.cs" />
+    <Compile Include="NameProcessing\MameTitleConverter.cs" />
+    <Compile Include="NameProcessing\NameProcessor.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TheGamesDb\GameResult.cs" />
+    <Compile Include="TheGamesDb\GameSearchResult.cs" />
+    <Compile Include="TheGamesDb\Platforms.cs" />
+    <Compile Include="TheGamesDb\TheGamesDbWrapper.cs" />
+    <Compile Include="WebRequests\CompressionWebClient.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Source\Core\MediaPortal.Common\MediaPortal.Common.csproj">
+      <Project>{ecf060e7-caa1-4466-851f-f80b857641ea}</Project>
+      <Name>MediaPortal.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Source\Core\MediaPortal.Utilities\MediaPortal.Utilities.csproj">
+      <Project>{4fe7b8ae-1330-424a-91a1-c68d7abf9cb8}</Project>
+      <Name>MediaPortal.Utilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Source\Extensions\MetadataExtractors\OnlineLibraries\OnlineLibraries.csproj">
+      <Project>{dca4d19e-75f4-4a8a-b70a-f3f4291dc62b}</Project>
+      <Name>OnlineLibraries</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="NameProcessing\MameTitlesList.txt" />
+    <EmbeddedResource Include="TheGamesDb\PlatformsList.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy "$(TargetPath)" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\Emulators\" /Y /E /I
+xcopy "$(TargetDir)$(TargetName).pdb" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\Emulators\" /Y /E /I
+
+xcopy "$(TargetPath)" "%25programfiles(x86)%25\Team MediaPortal\MP2-Server\Plugins\Emulators.Server\" /Y /E /I
+xcopy "$(TargetDir)$(TargetName).pdb" "%25programfiles(x86)%25\Team MediaPortal\MP2-Server\Plugins\Emulators.Server\" /Y /E /I</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

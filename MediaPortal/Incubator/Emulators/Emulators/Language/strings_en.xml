@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="Emulators.MenuItem">Games</string>
+  <string name="Emulators.GamesRootViewName">Games library</string>
+  <string name="Emulators.ShowAllGameItemsMenuItem">Show all</string>
+  <string name="Emulators.FilterByPlatformMenuItem">Filter by platform</string>
+  <string name="Emulators.FilterByYearMenuItem">Filter by year</string>
+  <string name="Emulators.FilterGameItemsNavbarDisplayLabel">{0}</string>
+  
+  <string name="Emulators.Platform">Platform</string>
+  <string name="Emulators.Developer">Developer</string>
+
+  <string name="Emulators.Config.PluginSettingsLabel">Emulators</string>
+  <string name="Emulators.Config.Setting.Advanced">Advanced</string>
+  <string name="Emulators.Config.Setting.ConfigureEmulators">Configure emulators</string>
+  <string name="Emulators.Config.Setting.ConfigureEmulators.Help">Add, edit and remove emulators</string>
+  
+  <string name="Emulators.Config.Setting.MinimiseOnStart">Minimise MediaPortal</string>
+  <string name="Emulators.Config.Setting.MinimiseOnStart.Help">Minimise MediaPortal whilst a game is running?</string>
+
+  <string name="Emulators.Config.Setting.ClearGoodMergeCache">Clear GoodMerge cache</string>
+  <string name="Emulators.Config.Setting.ClearGoodMergeCache.Help">Deletes previously extracted GoodMerge games from the file system</string>
+  <string name="Emulators.Config.Setting.ClearGoodMergeCache.Label">The following directory will be deleted</string>
+  
+  <string name="Emulators.Config.EmulatorConfigurations.Title">Emulators Configuration</string>
+  <string name="Emulators.Config.EmulatorConfigurations.Label">Emulators</string>
+  <string name="Emulators.Config.NoEmulatorsInThisView">No emulators in this view</string>
+
+  <string name="Emulators.Config.AddEmulatorConfiguration.Title">Add emulator</string>
+  <string name="Emulators.Config.EditEmulatorConfiguration.Title">Edit emulator</string>
+
+  <string name="Emulators.Config.RemoveEmulatorConfiguration.Title">Remove emulator</string>
+  <string name="Emulators.Config.RemoveEmulatorConfiguration.Label">Select emulators to remove</string>
+
+  <string name="Emulators.Config.ChooseEmulatorType.Title">Choose emulator type</string>
+  <string name="Emulators.Config.ChooseEmulatorType.Label">Choose the type of emulator you want to create. Choose Native for PC Games.</string>
+  <string name="Emulators.Config.EmulatorType.Emulator">Emulator</string>
+  <string name="Emulators.Config.EmulatorType.Native">Native</string>
+  
+  <string name="Emulators.Config.ChooseEmulatorPath.Title">Choose path</string>
+  <string name="Emulators.Config.ChooseEmulatorPath.Label">Choose the path to the emulator</string>
+
+  <string name="Emulators.Config.EditEmulatorName.Title">Edit name</string>
+  <string name="Emulators.Config.EditEmulatorName.Label">Choose a name for the emulator</string>
+
+  <string name="Emulators.Config.ChooseEmulatorCategory.Title">Choose platform</string>
+  <string name="Emulators.Config.ChooseEmulatorCategory.Label">Choose the platforms that this emulator supports</string>
+
+  <string name="Emulators.Config.AddFileExtension.Title">Add Extension</string>
+  <string name="Emulators.Config.RemoveFileExtension.Title">Remove Extension</string>
+  <string name="Emulators.Config.ChooseFileExtensions.Title">File extensions</string>
+  <string name="Emulators.Config.ChooseFileExtensions.Label">Edit the file extensions that this emulator supports</string>
+  
+  <string name="Emulators.Config.EditArguments.Title">Edit arguments</string>
+  <string name="Emulators.Config.EditArguments.Label">Edit the arguments to pass to the emulator</string>
+  <string name="Emulators.Config.UseQuotes.Label">Surround paths with quotes</string>
+  
+  <string name="Emulators.Config.AdvancedSettings.Label">Advanced Settings</string>
+  <string name="Emulators.Config.WorkingDirectory.Label">Working Directory</string>
+  <string name="Emulators.Config.CloseWithESC.Label">Send the ESC key when closing this emulator</string>
+  
+  <string name="Emulators.Config.InsertGameWildcard.Label">Insert wildcard</string>
+  <string name="Emulators.Config.SelectWildcard.Header">Choose Wildcard</string>
+  <string name="Emulators.Config.SelectWildcard.Game">Game path</string>
+  <string name="Emulators.Config.SelectWildcard.GameNoExt">Game filename without extension</string>
+  <string name="Emulators.Config.SelectWildcard.GameDir">Game directory</string>
+  
+  <string name="Emulators.SelectGoodmerge.Header">Choose GoodMerge file</string>
+  <string name="Emulators.ExtractGoodmerge.Header">Extracting GoodMerge file</string>
+  
+  <string name="Emulators.ConfigureEmulatorNow.Header">Add a new emulator?</string>
+  <string name="Emulators.ConfigureEmulatorNow.Label">You haven't added any emulators that can play this game. Do you want to add a new emulator now?</string>
+</resources>
