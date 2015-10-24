@@ -64,6 +64,8 @@
     <Compile Include="Input\KeyboardHook.cs" />
     <Compile Include="MediaCategoryHelper.cs" />
     <Compile Include="MediaExtensions\GameAspectWrapper.cs" />
+    <Compile Include="MediaExtensions\GameFilterByDeveloperScreenData.cs" />
+    <Compile Include="MediaExtensions\GameFilterByGenreScreenData.cs" />
     <Compile Include="MediaExtensions\GameFilterByYearScreenData.cs" />
     <Compile Include="MediaExtensions\GameFilterByPlatformScreenData.cs" />
     <Compile Include="MediaExtensions\GamesLibrary.cs" />
@@ -77,6 +79,7 @@
     <Compile Include="Models\Navigation\GameFilterItem.cs" />
     <Compile Include="Models\Navigation\GameItem.cs" />
     <Compile Include="Models\PathBrowser.cs" />
+    <Compile Include="Models\Sorting\SortByRatingDesc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings\Configuration\ClearGoodMergeCache.cs" />
     <Compile Include="Settings\Configuration\EmulatorsConfigSetting.cs" />

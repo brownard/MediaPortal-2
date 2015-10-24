@@ -14,7 +14,7 @@ namespace Emulators.MediaExtensions
   public class GameFilterByYearScreenData : AbstractFiltersScreenData<GameFilterItem>
   {
     public GameFilterByYearScreenData()
-      : base(EmulatorsConsts.SCREEN_GAMES_SHOW_ITEMS, EmulatorsConsts.RES_FILTER_BY_YEAR_MENU_ITEM, EmulatorsConsts.RES_FILTER_BY_YEAR_NAVBAR_DISPLAY_LABEL,
+      : base(EmulatorsConsts.SCREEN_GAMES_SHOW_ITEMS, EmulatorsConsts.RES_FILTER_BY_YEAR_MENU_ITEM, EmulatorsConsts.RES_FILTER_GAME_ITEMS_DISPLAY_LABEL,
           new SimpleMLFilterCriterion(GameAspect.ATTR_YEAR))
     {
 

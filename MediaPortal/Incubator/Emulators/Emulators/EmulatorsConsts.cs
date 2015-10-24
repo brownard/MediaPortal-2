@@ -24,13 +24,14 @@ namespace Emulators
     public const string SCREEN_GAMES_SHOW_ITEMS = "GameShowItems";
     public const string RES_SHOW_ALL_GAME_ITEMS_MENU_ITEM = "[Emulators.ShowAllGameItemsMenuItem]";
     public const string RES_SHOW_ALL_GAME_NAVBAR_DISPLAY_LABEL = "[Emulators.FilterGameItemsNavbarDisplayLabel]";
-
-    public const string SCREEN_GAMES_FILTER_BY_PLATFORM = "GameFilterByPlatform";
+    
+    public const string RES_FILTER_GAME_ITEMS_DISPLAY_LABEL = "[Emulators.FilterGameItemsNavbarDisplayLabel]";
     public const string RES_FILTER_BY_PLATFORM_MENU_ITEM = "[Emulators.FilterByPlatformMenuItem]";
-    public const string RES_FILTER_BY_PLATFORM_NAVBAR_DISPLAY_LABEL = "[Emulators.FilterGameItemsNavbarDisplayLabel]";
-
     public const string RES_FILTER_BY_YEAR_MENU_ITEM = "[Emulators.FilterByYearMenuItem]";
-    public const string RES_FILTER_BY_YEAR_NAVBAR_DISPLAY_LABEL = "[Emulators.FilterGameItemsNavbarDisplayLabel]";
+    public const string RES_FILTER_BY_GENRE_MENU_ITEM = "[Emulators.FilterByGenreMenuItem]";
+    public const string RES_FILTER_BY_DEVELOPER_MENU_ITEM = "[Emulators.FilterByDeveloperMenuItem]";
+
+    public const string RES_SORT_BY_RATING = "[Emulators.SortByRating]";
 
     public const string RES_ADD_EMULATOR_CONFIGURATION_TITLE = "[Emulators.Config.AddEmulatorConfiguration.Title]";
     public const string RES_EDIT_EMULATOR_CONFIGURATION_TITLE = "[Emulators.Config.EditEmulatorConfiguration.Title]";
