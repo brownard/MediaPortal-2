@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="www.team-mediaportal.com/2008/mpf/directx"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:system="clr-namespace:System"
+    xmlns:collections="clr-namespace:MediaPortal.UI.Presentation.DataObjects;assembly=MediaPortal.UI"
+    xmlns:mp_special_controls="clr-namespace:MediaPortal.UI.SkinEngine.SpecialElements.Controls;assembly=SkinEngine"
+    DependsOnStyleResources="Colors,Buttons,Consts,Brushes,OtherControls"
+    >
+  
+  <DataStringProvider x:Key="EmulatorItemDataStringProvider" Path="[Name]"/>
+  
+  <!-- Container style for a emulator item in a button -->
+  <Style x:Key="SelectableEmulatorContainerStyle" BasedOn="{ThemeResource DefaultItemContainerStyle}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ListViewItem}">
+          <Button Style="{ThemeResource ButtonWideStyle}" Command="{Binding Command}">
+            <Button.Triggers>
+              <Trigger Property="HasFocus" Value="True">
+                <Setter TargetName="EmulatorName" Property="Scroll" Value="Auto"/>
+                <Setter TargetName="EmulatorPath" Property="Scroll" Value="Auto"/>
+                <Setter Property="StackPanel.ZIndex" Value="100.0"/>
+              </Trigger>
+            </Button.Triggers>
+          </Button>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  
+  <!-- Container style for a emulator entry markable with a checkbox in the emulators list -->
+  <Style x:Key="MultiMarkableEmulatorContainerStyle" BasedOn="{ThemeResource DefaultItemContainerStyle}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ListViewItem}">
+          <CheckBox x:Name="ShareMarker" Margin="2,1,0,1"
+              IsChecked="{Binding Path=Selected,Mode=TwoWay}"
+              Content="{Binding}">
+            <CheckBox.Triggers>
+              <Trigger Property="HasFocus" Value="True">
+                <Setter TargetName="EmulatorName" Property="Scroll" Value="Auto"/>
+                <Setter TargetName="EmulatorPath" Property="Scroll" Value="Auto"/>
+                <Setter TargetName="ItemControl" Property="Background">
+                  <Setter.Value>
+                    <SolidColorBrush Color="{ThemeResource PassiveFocusBackgroundColor}"/>
+                  </Setter.Value>
+                </Setter>
+                <Setter Property="StackPanel.ZIndex" Value="100.0"/>
+              </Trigger>
+            </CheckBox.Triggers>
+          </CheckBox>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Data template for a simple emulator entry in the emulators list -->
+  <DataTemplate x:Key="EmulatorItemDataTemplate" DataType="{x:Type collections:ListItem}">
+    <Grid x:Name="ItemControl">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="200"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Label x:Name="EmulatorName" Grid.Column="0" Content="{Binding [Name]}" FontSize="{ThemeResource SmallFontSize}"
+          HorizontalAlignment="Left" VerticalAlignment="Center"
+          Color="{ThemeResource TextColor}"/>
+      <Label x:Name="EmulatorPath" Grid.Column="1" Content="{Binding [Path]}" FontSize="{ThemeResource SmallFontSize}"
+          HorizontalAlignment="Left" VerticalAlignment="Center"
+          Color="{ThemeResource HintTextColor}"/>
+      <!-- Additionally available properties to show here:
+      <Label x:Name="ShareProvider" Grid.Column="2" Content="{Binding AdditionalProperties[ResourceProviderMetadata].Name}"
+          Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}"/>
+      <Label x:Name="Categories" Grid.Column="3" Content="{Binding [Categories]}"
+          Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}"/>
+-->
+    </Grid>
+  </DataTemplate>
+
+  <!-- ListView style to be used for the emulators list -->
+  <Style x:Key="EmulatorsConfigListViewStyle" BasedOn="{ThemeResource ContentsMenuListViewStyle}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ListView}">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <ScrollViewer CanContentScroll="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                IsVisible="{Binding RelativeSource={RelativeSource TemplatedParent},Path=!IsEmpty}"
+                Background="{ThemeResource ItemsControlShadowBackgroundColor}">
+              <ItemsPresenter VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+            </ScrollViewer>
+            <Label Content="[Emulators.Config.NoEmulatorsInThisView]" IsVisible="{Binding RelativeSource={RelativeSource TemplatedParent},Path=IsEmpty}"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Color="{ThemeResource HintTextColor}" FontSize="{ThemeResource SmallFontSize}"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="ItemTemplate" Value="{ThemeResource EmulatorItemDataTemplate}"/>
+    <Setter Property="DataStringProvider" Value="{ThemeResource EmulatorItemDataStringProvider}"/>
+    <Setter Property="ItemContainerStyle" Value="{ThemeResource SelectableEmulatorContainerStyle}"/>
+  </Style>
+
+  <!-- ListView style to be used for the emulators list -->
+  <Style x:Key="MultiMarkableEmulatorsConfigListViewStyle" BasedOn="{ThemeResource ContentsMenuListViewStyle}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ListView}">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <ScrollViewer CanContentScroll="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                IsVisible="{Binding RelativeSource={RelativeSource TemplatedParent},Path=!IsEmpty}"
+                Background="{ThemeResource ItemsControlShadowBackgroundColor}">
+              <ItemsPresenter VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+            </ScrollViewer>
+            <Label Content="[Emulators.Config.NoEmulatorsInThisView]" IsVisible="{Binding RelativeSource={RelativeSource TemplatedParent},Path=IsEmpty}"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Color="{ThemeResource HintTextColor}" FontSize="{ThemeResource SmallFontSize}"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="ItemTemplate" Value="{ThemeResource EmulatorItemDataTemplate}"/>
+    <Setter Property="DataStringProvider" Value="{ThemeResource EmulatorItemDataStringProvider}"/>
+    <Setter Property="ItemContainerStyle" Value="{ThemeResource MultiMarkableEmulatorContainerStyle}"/>
+  </Style>
+
+</ResourceDictionary>
