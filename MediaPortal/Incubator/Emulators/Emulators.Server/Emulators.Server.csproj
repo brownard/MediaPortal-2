@@ -52,7 +52,6 @@
     <Compile Include="MediaCategoryHelper.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServerPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
