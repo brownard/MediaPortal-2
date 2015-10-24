@@ -1,5 +1,4 @@
-﻿using MediaPortal.Common.MediaManagement;
-using MediaPortal.Common.ResourceAccess;
+﻿using MediaPortal.Common.ResourceAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
