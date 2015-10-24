@@ -4,7 +4,6 @@
     PluginId="{FFAC513C-40B3-4FB0-8CBC-1683B4B7395C}"
     Author="Brownard"
     Copyright="GPL"
-    AutoActivate="true"
     Description="Frontend for the emulators plugin.">
   
   <Version
@@ -15,7 +14,6 @@
   <Runtime>
     <Assembly FileName="Emulators.dll"/>
     <Assembly FileName="Emulators.Common.dll"/>
-    <Assembly FileName="FanArtService.Interfaces.dll"/>
     <PluginStateTracker ClassName="Emulators.EmulatorsPlugin"/>
   </Runtime>
 

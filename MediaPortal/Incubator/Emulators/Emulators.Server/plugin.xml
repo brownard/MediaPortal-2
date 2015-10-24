@@ -4,8 +4,7 @@
     PluginId="{C98D7481-5E7B-4DD0-873A-192A4EAA922E}"
     Author = "Brownard"
     Copyright="GPL"
-    Description=""
-    AutoActivate="true">
+    Description="Backend for the emulators plugin">
 
   <Version
         PluginVersion="1.0"
@@ -15,11 +14,10 @@
   <Runtime>
     <Assembly FileName="Emulators.Server.dll"/>
     <Assembly FileName="Emulators.Common.dll"/>
-    <Assembly FileName="FanArtService.Interfaces.dll"/>
-    <PluginStateTracker ClassName="Emulators.Server.ServerPlugin"/>
   </Runtime>
 
   <DependsOn>
+    <PluginReference PluginId="{BDA68C24-EEA3-47D0-B43A-86E086E43AE1}" CompatibleAPI="1"/> <!-- FanartService -->
     <CoreDependency Name="MediaPortal.Common" CompatibleAPI="1" />
     <CoreDependency Name="MediaPortal.Backend" CompatibleAPI="1" />
   </DependsOn>
@@ -36,12 +34,12 @@
   <Register Location="/Services">
     <Service Id="GamesDbMatcher" RegistrationClassName="Emulators.Common.Matchers.GameMatcher"
         ServiceClassName="Emulators.Common.Matchers.GameMatcher"/>
+    <Service Id="IMediaCategoryHelper" RegistrationClassName="Emulators.Common.IMediaCategoryHelper"
+        ServiceClassName="Emulators.Server.MediaCategoryHelper"/>
   </Register>
   
-  <!-- We use our own local name here to avoid circular references to FanArtService -->
-  <Builder Name="GameFanartProviderBuilder" ClassName="MediaPortal.Extensions.UserServices.FanArtService.Interfaces.Providers.FanartProviderBuilder"/>
   <Register Location="/Fanart/Providers">
-    <GameFanartProviderBuilder Id="{CD23AA74-57E8-4FFE-93DB-9AC4C701F19A}" MediaTypes="Game" ClassName="Emulators.Common.FanartProvider.GameFanartProvider"/>
+    <FanartProviderBuilder Id="{CD23AA74-57E8-4FFE-93DB-9AC4C701F19A}" MediaTypes="Game" ClassName="Emulators.Common.FanartProvider.GameFanartProvider"/>
   </Register>
   
 </Plugin>
