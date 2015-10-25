@@ -1,4 +1,5 @@
 ﻿using Emulators.Common.Games;
+using Emulators.Common.NameProcessing;
 using Emulators.Common.TheGamesDb;
 using MediaPortal.Common;
 using System;
@@ -20,6 +21,7 @@ namespace Emulators.Common.Matchers
 
     public bool FindAndUpdateGame(GameInfo gameInfo)
     {
+      NameProcessor.CleanupTitle(gameInfo);
       return _onlineMatcher.TryGetBestMatch(gameInfo);
     }
   }
