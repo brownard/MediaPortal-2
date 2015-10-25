@@ -1,11 +1,12 @@
-﻿using Emulators.Common.Matchers;
+﻿using Emulators.Common.Games;
+using Emulators.Common.Matchers;
+using Emulators.Common.NameProcessing;
 using Emulators.Common.WebRequests;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.PathManager;
 using MediaPortal.Extensions.OnlineLibraries.Matches;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -19,16 +20,24 @@ using System.Xml.Serialization;
 
 namespace Emulators.Common.TheGamesDb
 {
-  public class TheGamesDbWrapper : BaseMatcher<GameMatch, int>
+  public class TheGamesDbWrapper : BaseMatcher<GameMatch, int>, IOnlineMatcher
   {
-    public static readonly string CACHE_PATH = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\TheGamesDB\");
-    public static readonly CultureInfo DATE_CULTURE = CultureInfo.CreateSpecificCulture("en-US");
+    #region Logger
+    protected static ILogger Logger
+    {
+      get { return ServiceRegistration.Get<ILogger>(); }
+    }
+    #endregion
 
+    public static readonly string CACHE_PATH = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\TheGamesDB\");
+    protected const int MAX_SEARCH_DISTANCE = 2;
     protected const string PLATFORMS_XML = "Emulators.Common.TheGamesDb.PlatformsList.xml";
     protected const string BASE_URL = "http://thegamesdb.net/api/";
     protected const string SEARCH_PATH = "GetGamesList.php";
     protected const string GET_PATH = "GetGame.php?id=";
-    protected static string _matchesSettingsFile = Path.Combine(CACHE_PATH, "Matches.xml");
+    protected static readonly CultureInfo DATE_CULTURE = CultureInfo.CreateSpecificCulture("en-US");
+    protected static readonly string _matchesSettingsFile = Path.Combine(CACHE_PATH, "Matches.xml");
+
     protected Downloader _downloader = new Downloader();
 
     #region Static Members
@@ -53,6 +62,37 @@ namespace Emulators.Common.TheGamesDb
     }
 
     #endregion
+
+    public bool TryGetBestMatch(GameInfo gameInfo)
+    {
+      GameResult result;
+      if (TryGetFromStorage(gameInfo.GameName, gameInfo.Platform, out result))
+      {
+        Logger.Debug("TheGamesDb: Retrieved from cache: '{0}' - '{1}'", gameInfo.GameName, gameInfo.Platform);
+        UpdateGameInfo(gameInfo, result);
+        return true;
+      }
+
+      List<GameSearchResult> results;
+      if (!Search(gameInfo.GameName, gameInfo.Platform, out results))
+      {
+        Logger.Debug("TheGamesDb: No results found for '{0}' - '{1}'", gameInfo.GameName, gameInfo.Platform);
+        return false;
+      }
+
+      Logger.Debug("TheGamesDb: Found {0} search results for '{1}' - '{2}'", results.Count, gameInfo.GameName, gameInfo.Platform);
+      results = results.FindAll(r => r.GameTitle == gameInfo.GameName || NameProcessor.GetLevenshteinDistance(r.GameTitle, gameInfo.GameName) <= MAX_SEARCH_DISTANCE);
+      if (results.Count == 0 || !Get(results[0].Id, out result))
+      {
+        Logger.Debug("TheGamesDb: No close match found for: '{0}' - '{1}'", gameInfo.GameName, gameInfo.Platform);
+        return false;
+      }
+
+      Logger.Debug("TheGamesDb: Matched '{0}' to '{1}' - '{2}'", results[0].GameTitle, gameInfo.GameName, gameInfo.Platform);
+      AddToStorage(gameInfo.GameName, gameInfo.Platform, result.Game.Id);
+      UpdateGameInfo(gameInfo, result);
+      return true;
+    }
 
     public bool Search(string searchTerm, string platform, out List<GameSearchResult> results)
     {
@@ -100,6 +140,24 @@ namespace Emulators.Common.TheGamesDb
         return Get(match.Id, out result);
       result = null;
       return false;
+    }
+
+    protected void UpdateGameInfo(GameInfo gameInfo, GameResult gameResult)
+    {
+      Game game = gameResult.Game;
+      gameInfo.GameName = game.GameTitle;
+      gameInfo.GamesDbId = game.Id;
+      gameInfo.Certification = game.ESRB;
+      gameInfo.Description = game.Overview;
+      gameInfo.Developer = game.Developer;
+      if (game.Genres != null && game.Genres.Genres != null)
+        gameInfo.Genres.AddRange(game.Genres.Genres);
+      gameInfo.Rating = game.Rating;
+      DateTime releaseDate;
+      if (DateTime.TryParse(game.ReleaseDate, DATE_CULTURE, DateTimeStyles.None, out releaseDate))
+        gameInfo.ReleaseDate = releaseDate;
+      if (game.Id > 0)
+        ScheduleDownload(game.Id);
     }
 
     protected override void DownloadFanArt(int itemId)

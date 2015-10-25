@@ -52,6 +52,7 @@
     <Compile Include="GoodMerge\GoodMergeAspect.cs" />
     <Compile Include="GoodMerge\IExtractor.cs" />
     <Compile Include="GoodMerge\SharpCompressExtractor.cs" />
+    <Compile Include="Matchers\IOnlineMatcher.cs" />
     <Compile Include="Settings\CommonSettings.cs" />
     <Compile Include="WebRequests\Downloader.cs" />
     <Compile Include="FanartProvider\FanartTypes.cs" />
