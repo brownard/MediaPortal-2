@@ -116,6 +116,12 @@ namespace Emulators.Common
     {
       var categories = ServiceRegistration.Get<IMediaCategoryHelper>().GetMediaCategories(lfsra.CanonicalLocalResourcePath);
       string platform = categories.FirstOrDefault(s => _platformCategories.ContainsKey(s));
+      if (string.IsNullOrEmpty(platform))
+      {
+        Logger.Warn("GamesMetadataExtractor: Unable to import {0}, no platform categories have been selected", lfsra.LocalFileSystemPath);
+        return false;
+      }
+
       var configurations = ServiceRegistration.Get<ISettingsManager>().Load<CommonSettings>().ConfiguredEmulators;
       if (!HasGameExtension(lfsra.LocalFileSystemPath, platform, configurations))
         return false;
