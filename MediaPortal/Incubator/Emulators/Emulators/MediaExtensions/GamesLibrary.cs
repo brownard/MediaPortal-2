@@ -51,11 +51,10 @@ namespace Emulators.MediaExtensions
           new GameFilterByDeveloperScreenData()
         };
 
-      //_defaultSorting = new SortByRecordingDateDesc();
+      _defaultSorting = new SortByTitle();
       _availableSortings = new List<Sorting>
         {
-          //_defaultSorting,
-          new SortByTitle(),
+          _defaultSorting,
           new SortByYear(),
           new SortByRatingDesc()
         };
