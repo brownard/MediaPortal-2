@@ -100,8 +100,8 @@ namespace Emulators.Models
 
     protected void Extract(string archivePath, string selectedItem, Action<ExtractionCompletedEventArgs> completedDlgt)
     {
-      string extractedPath;
-      if (GoodMergeExtractor.IsExtracted(archivePath, selectedItem, out extractedPath))
+      string extractedPath = null;
+      if (string.IsNullOrEmpty(selectedItem) || GoodMergeExtractor.IsExtracted(archivePath, selectedItem, out extractedPath))
       {
         if (completedDlgt != null)
           completedDlgt(new ExtractionCompletedEventArgs(selectedItem, extractedPath));
