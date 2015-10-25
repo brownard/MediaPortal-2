@@ -43,20 +43,9 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*"/>
-              <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label x:Name="Year" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left"
                 Content="{Binding Path=RecordingTime, Converter={StaticResource DateFormatConverter}, ConverterParameter=yyyy}" Color="{ThemeResource TextColor}"/>
-            <Image HorizontalAlignment="Right" VerticalAlignment="Center" Stretch="Fill" Width="37" Height="24" Grid.Row="0" Grid.Column="1" Margin="0,0,20,0" >
-              <Image.Source>
-                <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} ? {1} : {2}">
-                  <Binding Path="PlayCount"/>
-                  <Binding Source=""/>
-                  <Binding Source="unwatched_icon.png"/>
-                </MultiBinding>
-              </Image.Source>
-            </Image>
-
           </Grid>
         </ControlTemplate>
       </media:MediaAspectWrapper.Template>

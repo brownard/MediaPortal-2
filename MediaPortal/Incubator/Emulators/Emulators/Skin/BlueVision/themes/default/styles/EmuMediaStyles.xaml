@@ -43,37 +43,10 @@
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="*"/>
-        <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
-        <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-      <Label x:Name="ItemLabel" Grid.Row="0" Grid.Column="1" Content="{Binding SimpleTitle}" FontSize="{ThemeResource SmallFontSize}" Color="{ThemeResource TextColor}" FontFamily="DefaultBold">
-        <Label.Opacity>
-          <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} ? {1} : {2}">
-            <Binding RelativeSource="{RelativeSource Mode=FindAncestor,AncestorType={x:Type Button}}" Path="HasFocus"/>
-            <Binding Source="1.0"/>
-            <Binding Source="0.4"/>
-          </MultiBinding>
-        </Label.Opacity>
-      </Label>
-      <Image HorizontalAlignment="Left" VerticalAlignment="Center" Stretch="Fill" Width="37" Height="24" Grid.Row="0" Grid.Column="2"  >
-        <Image.Opacity>
-          <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} ? {1} : {2}">
-            <Binding RelativeSource="{RelativeSource Mode=FindAncestor,AncestorType={x:Type Button}}" Path="HasFocus"/>
-            <Binding Source="0"/>
-            <Binding Source="0.15"/>
-          </MultiBinding>
-        </Image.Opacity>
-        <Image.Source>
-          <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} ? {1} : {2}">
-            <Binding Path="PlayCount"/>
-            <Binding Source=""/>
-            <Binding Source="unwatched_icon.png"/>
-          </MultiBinding>
-        </Image.Source>
-      </Image>
 
       <Control x:Name="ListViewCover" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Margin="0,0,8,0"
                Template="{ThemeResource GameCoverTemplate}" RenderTransformOrigin="0.5,0.5"
@@ -100,63 +73,65 @@
         </Control.LayoutTransform>
       </Control>
 
-      <Grid x:Name="FocusDetails" Grid.Row="1" Grid.Column="1" Margin="0,0,30,0"
+      <StackPanel Grid.Column="1" Orientation="Vertical">
+        <Label x:Name="ItemLabel" Content="{Binding SimpleTitle}" FontSize="{ThemeResource SmallFontSize}" Color="{ThemeResource TextColor}" FontFamily="DefaultBold">
+          <Label.Opacity>
+            <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} ? {1} : {2}">
+              <Binding RelativeSource="{RelativeSource Mode=FindAncestor,AncestorType={x:Type Button}}" Path="HasFocus"/>
+              <Binding Source="1.0"/>
+              <Binding Source="0.4"/>
+            </MultiBinding>
+          </Label.Opacity>
+        </Label>
+
+        <Grid x:Name="FocusDetails" Margin="0,0,30,0"
             HorizontalAlignment="Stretch" 
             IsVisible="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type Button}},Path=HasFocus}">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="40"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Image HorizontalAlignment="Right" VerticalAlignment="Center" Stretch="Fill" Width="37" Height="24" Grid.Row="0" Grid.Column="2" Margin="67,0,-67,0"  >
-          <Image.Source>
-            <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} ? {1} : {2}">
-              <Binding Path="PlayCount"/>
-              <Binding Source=""/>
-              <Binding Source="unwatched_icon.png"/>
-            </MultiBinding>
-          </Image.Source>
-        </Image>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+          </Grid.RowDefinitions>
 
-        <emunavitems:GameAspectWrapper MediaItem="{Binding MediaItem}" Grid.Column="0">
-          <emunavitems:GameAspectWrapper.Template>
-            <ControlTemplate>
-              <Grid DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}">
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*"/>
-                  <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Label x:Name="Genre" Grid.Row="0" Grid.Column="0" Content="{Binding Genres}" Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallerFontSize}" FontFamily="DefaultBold" Margin="0,0,0,0"/>
-              </Grid>
-            </ControlTemplate>
-          </emunavitems:GameAspectWrapper.Template>
-        </emunavitems:GameAspectWrapper>
+          <emunavitems:GameAspectWrapper MediaItem="{Binding MediaItem}" Grid.Column="0">
+            <emunavitems:GameAspectWrapper.Template>
+              <ControlTemplate>
+                <Grid DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}">
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                  </Grid.RowDefinitions>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                  </Grid.ColumnDefinitions>
+                  <Label x:Name="Platform" Grid.Row="0" Grid.Column="0" Content="{Binding Platform}" Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallerFontSize}" FontFamily="DefaultBold" Margin="0,0,0,0"/>
+                </Grid>
+              </ControlTemplate>
+            </emunavitems:GameAspectWrapper.Template>
+          </emunavitems:GameAspectWrapper>
 
-        <emunavitems:GameAspectWrapper MediaItem="{Binding MediaItem}" Grid.Column="1" HorizontalAlignment="Right">
-          <emunavitems:GameAspectWrapper.Template>
-            <ControlTemplate>
-              <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}"  Margin="30,0,-30,0">
-                <StarRatingPanel x:Name="RatingReadOnly" IsReadOnly="True" StarReadOnlyTemplate="{StaticResource StarReadOnlyTemplate}"
+          <emunavitems:GameAspectWrapper MediaItem="{Binding MediaItem}" Grid.Column="1" HorizontalAlignment="Right">
+            <emunavitems:GameAspectWrapper.Template>
+              <ControlTemplate>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}"  Margin="30,0,-30,0">
+                  <StarRatingPanel x:Name="RatingReadOnly" IsReadOnly="True" StarReadOnlyTemplate="{StaticResource StarReadOnlyTemplate}"
                                Maximum="10"
                                Value="{Binding Rating}">
-                  <StarRatingPanel.LayoutTransform>
-                    <TransformGroup>
-                      <ScaleTransform ScaleX="1.6" ScaleY="1.4"/>
-                    </TransformGroup>
-                  </StarRatingPanel.LayoutTransform>
-                </StarRatingPanel>
-              </StackPanel>
-            </ControlTemplate>
-          </emunavitems:GameAspectWrapper.Template>
-        </emunavitems:GameAspectWrapper>
+                    <StarRatingPanel.LayoutTransform>
+                      <TransformGroup>
+                        <ScaleTransform ScaleX="1.6" ScaleY="1.4"/>
+                      </TransformGroup>
+                    </StarRatingPanel.LayoutTransform>
+                  </StarRatingPanel>
+                </StackPanel>
+              </ControlTemplate>
+            </emunavitems:GameAspectWrapper.Template>
+          </emunavitems:GameAspectWrapper>
 
-      </Grid>
+        </Grid>
+      </StackPanel>
     </Grid>
   </ControlTemplate>
 
@@ -186,15 +161,6 @@
               <Binding Source="0.8"/>
             </MultiBinding>
           </Image.Opacity>
-        </Image>
-        <Image HorizontalAlignment="Left" VerticalAlignment="Top">
-          <Image.Source>
-            <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} == 0 ? {1} : {2}">
-              <Binding Path="PlayCount"/>
-              <Binding Source="UnwatchedTab_small.png"/>
-              <Binding Source=""/>
-            </MultiBinding>
-          </Image.Source>
         </Image>
       </Grid>
     </Grid>
@@ -273,15 +239,6 @@
               <Binding Source="0.8"/>
             </MultiBinding>
           </Image.Opacity>
-        </Image>
-        <Image HorizontalAlignment="Left" VerticalAlignment="Top">
-          <Image.Source>
-            <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} == 0 ? {1} : {2}">
-              <Binding Path="PlayCount"/>
-              <Binding Source="UnwatchedTab_small.png"/>
-              <Binding Source=""/>
-            </MultiBinding>
-          </Image.Source>
         </Image>
       </Grid>
     </Grid>
