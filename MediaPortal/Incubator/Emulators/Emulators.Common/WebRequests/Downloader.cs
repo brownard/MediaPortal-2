@@ -15,6 +15,14 @@ namespace Emulators.Common.WebRequests
 {
   public class Downloader
   {
+    protected Encoding _encoding = Encoding.Default;
+
+    public Encoding Encoding
+    {
+      get { return _encoding; }
+      set { _encoding = value; }
+    }
+
     public T Download<T>(string url, string cachePath = null)
     {
       string xml;
@@ -34,6 +42,7 @@ namespace Emulators.Common.WebRequests
       try
       {
         WebClient webClient = new CompressionWebClient();
+        webClient.Encoding = _encoding;
         webClient.DownloadFile(url, downloadFile);
         return true;
       }
@@ -56,6 +65,7 @@ namespace Emulators.Common.WebRequests
       try
       {
         WebClient webClient = new CompressionWebClient();
+        webClient.Encoding = _encoding;
         return webClient.DownloadString(url);
       }
       catch(Exception ex)

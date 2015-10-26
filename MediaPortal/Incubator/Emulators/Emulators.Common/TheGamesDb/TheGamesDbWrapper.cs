@@ -38,7 +38,7 @@ namespace Emulators.Common.TheGamesDb
     protected static readonly CultureInfo DATE_CULTURE = CultureInfo.CreateSpecificCulture("en-US");
     protected static readonly string _matchesSettingsFile = Path.Combine(CACHE_PATH, "Matches.xml");
 
-    protected Downloader _downloader = new Downloader();
+    protected Downloader _downloader = new Downloader() { Encoding = Encoding.UTF8 };
 
     #region Static Members
 
