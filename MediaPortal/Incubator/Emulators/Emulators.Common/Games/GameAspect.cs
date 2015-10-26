@@ -24,6 +24,18 @@ namespace Emulators.Common.Games
         MediaItemAspectMetadata.CreateAttributeSpecification("TGDBID", typeof(int), Cardinality.Inline, false);
 
     /// <summary>
+    /// Contains the id of the matcher that matched the game.
+    /// </summary>
+    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_MATCHER_ID =
+        MediaItemAspectMetadata.CreateAttributeSpecification("MatcherId", typeof(Guid), Cardinality.Inline, false);
+
+    /// <summary>
+    /// Contains the online id of the game.
+    /// </summary>
+    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_ONLINE_ID =
+        MediaItemAspectMetadata.CreateStringAttributeSpecification("OnlineId", 100, Cardinality.Inline, false);
+
+    /// <summary>
     /// Contains the platform of the game.
     /// </summary>
     public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_PLATFORM =
@@ -70,6 +82,8 @@ namespace Emulators.Common.Games
       ASPECT_ID, "GameItem", new[] {
             ATTR_GAME_NAME,
             ATTR_TGDB_ID,
+            ATTR_MATCHER_ID,
+            ATTR_ONLINE_ID,
             ATTR_PLATFORM,
             ATTR_YEAR,
             ATTR_DESCRIPTION,

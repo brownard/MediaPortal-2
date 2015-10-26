@@ -29,7 +29,12 @@ namespace Emulators.Common.TheGamesDb
     }
     #endregion
 
+    protected static readonly Guid MATCHER_ID = new Guid("32047FBF-9080-4236-AE05-2E6DC1BF3A9F");
     public static readonly string CACHE_PATH = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\TheGamesDB\");
+    protected const string COVERS_DIRECTORY = "Covers";
+    protected const string COVERS_FRONT = "front";
+    protected const string COVERS_BACK = "back";
+    protected const string FANART_DIRECTORY = "Fanart";
     protected const int MAX_SEARCH_DISTANCE = 2;
     protected const string PLATFORMS_XML = "Emulators.Common.TheGamesDb.PlatformsList.xml";
     protected const string BASE_URL = "http://thegamesdb.net/api/";
@@ -59,6 +64,11 @@ namespace Emulators.Common.TheGamesDb
     protected override string MatchesSettingsFile
     {
       get { return _matchesSettingsFile; }
+    }
+
+    public Guid MatcherId
+    {
+      get { return MATCHER_ID; }
     }
 
     #endregion
@@ -94,6 +104,28 @@ namespace Emulators.Common.TheGamesDb
       return true;
     }
 
+    public bool TryGetImagePath(string id, ImageType imageType, out string path)
+    {
+      path = null;
+      if (string.IsNullOrEmpty(id))
+        return false;
+
+      switch (imageType)
+      {
+        case ImageType.FrontCover:
+          path = Path.Combine(CACHE_PATH, id, COVERS_DIRECTORY, COVERS_FRONT);
+          return true;
+        case ImageType.BackCover:
+          path = Path.Combine(CACHE_PATH, id, COVERS_DIRECTORY, COVERS_BACK);
+          return true;
+        case ImageType.Fanart:
+          path = Path.Combine(CACHE_PATH, id, FANART_DIRECTORY);
+          return true;
+        default:
+          return false;
+      }
+    }
+
     public bool Search(string searchTerm, string platform, out List<GameSearchResult> results)
     {
       results = null;
@@ -118,35 +150,13 @@ namespace Emulators.Common.TheGamesDb
       return result != null;
     }
 
-    public void AddToStorage(string searchTerm, string platform, int id)
-    {
-      var onlineMatch = new GameMatch
-      {
-        Id = id,
-        ItemName = searchTerm,
-        Platform = platform
-      };
-      _storage.TryAddMatch(onlineMatch);
-    }
-
-    public bool TryGetFromStorage(string searchTerm, string platform, out GameResult result)
-    {
-      List<GameMatch> matches = _storage.GetMatches();
-      GameMatch match = matches.Find(m =>
-          string.Equals(m.ItemName, searchTerm, StringComparison.OrdinalIgnoreCase) &&
-          string.Equals(m.Platform, platform, StringComparison.OrdinalIgnoreCase));
-
-      if (match != null && match.Id > 0)
-        return Get(match.Id, out result);
-      result = null;
-      return false;
-    }
-
     protected void UpdateGameInfo(GameInfo gameInfo, GameResult gameResult)
     {
       Game game = gameResult.Game;
       gameInfo.GameName = game.GameTitle;
       gameInfo.GamesDbId = game.Id;
+      gameInfo.MatcherId = MatcherId;
+      gameInfo.OnlineId = game.Id.ToString();
       gameInfo.Certification = game.ESRB;
       gameInfo.Description = game.Overview;
       gameInfo.Developer = game.Developer;
@@ -182,7 +192,7 @@ namespace Emulators.Common.TheGamesDb
     {
       string url = baseUrl + image.Value;
       string filename = Path.GetFileName(new Uri(url).LocalPath);
-      string downloadFile = CreateAndGetCacheName(id, "Covers\\" + image.Side, filename);
+      string downloadFile = CreateAndGetCacheName(id, Path.Combine(COVERS_DIRECTORY, image.Side), filename);
       _downloader.DownloadFile(url, downloadFile);
     }
 
@@ -190,15 +200,39 @@ namespace Emulators.Common.TheGamesDb
     {
       string url = baseUrl + image.Original.Value;
       string filename = Path.GetFileName(new Uri(url).LocalPath);
-      string downloadFile = CreateAndGetCacheName(id, "Fanart", filename);
+      string downloadFile = CreateAndGetCacheName(id, FANART_DIRECTORY, filename);
       _downloader.DownloadFile(url, downloadFile);
+    }
+
+    protected void AddToStorage(string searchTerm, string platform, int id)
+    {
+      var onlineMatch = new GameMatch
+      {
+        Id = id,
+        ItemName = searchTerm,
+        Platform = platform
+      };
+      _storage.TryAddMatch(onlineMatch);
+    }
+
+    protected bool TryGetFromStorage(string searchTerm, string platform, out GameResult result)
+    {
+      List<GameMatch> matches = _storage.GetMatches();
+      GameMatch match = matches.Find(m =>
+          string.Equals(m.ItemName, searchTerm, StringComparison.OrdinalIgnoreCase) &&
+          string.Equals(m.Platform, platform, StringComparison.OrdinalIgnoreCase));
+
+      if (match != null && match.Id > 0)
+        return Get(match.Id, out result);
+      result = null;
+      return false;
     }
 
     protected string CreateAndGetCacheName(int id, string category, string filename)
     {
       try
       {
-        string folder = Path.Combine(CACHE_PATH, string.Format(@"{0}\{1}", id, category));
+        string folder = Path.Combine(CACHE_PATH, id.ToString(), category);
         if (!Directory.Exists(folder))
           Directory.CreateDirectory(folder);
         return Path.Combine(folder, filename);
