@@ -45,11 +45,6 @@ namespace Emulators.Common
       miatr.RegisterLocallyKnownMediaItemAspectType(GameAspect.Metadata);
     }
 
-    public static MediaCategory GameMediaCategory
-    {
-      get { return _gameCategory; }
-    }
-
     public GameMetadataExtractor()
     {
       _metadata = new MetadataExtractorMetadata(METADATAEXTRACTOR_ID, "Games metadata extractor", MetadataExtractorPriority.External, true,
@@ -59,29 +54,13 @@ namespace Emulators.Common
                 GameAspect.Metadata
               });
 
-      _settingsWatcher.SettingsChanged += settingsChanged;
-      updateMediaCategories(_settingsWatcher.Settings.ConfiguredEmulators);
+      _settingsWatcher.SettingsChanged += SettingsChanged;
+      UpdateMediaCategories(_settingsWatcher.Settings.ConfiguredEmulators);
     }
 
-    void settingsChanged(object sender, EventArgs e)
+    public static MediaCategory GameMediaCategory
     {
-      updateMediaCategories(_settingsWatcher.Settings.ConfiguredEmulators);
-    }
-
-    void updateMediaCategories(List<EmulatorConfiguration> configurations)
-    {
-      if (configurations == null || configurations.Count == 0)
-        return;
-
-      IMediaAccessor mediaAccessor = ServiceRegistration.Get<IMediaAccessor>();
-      foreach (EmulatorConfiguration configuration in configurations)
-        foreach (string platform in configuration.Platforms)
-          if (!mediaAccessor.MediaCategories.ContainsKey(platform))
-          {
-            Logger.Debug("GamesMetadataExtractor: Adding Game Category {0}", platform);
-            MediaCategory category = mediaAccessor.RegisterMediaCategory(platform, new[] { _gameCategory });
-            _platformCategories.TryAdd(platform, category);
-          }
+      get { return _gameCategory; }
     }
 
     public MetadataExtractorMetadata Metadata
@@ -135,21 +114,34 @@ namespace Emulators.Common
       };
 
       GameMatcher matcher = GameMatcher.Instance;
-      if (matcher.FindAndUpdateGame(gameInfo))
-      {
-        gameInfo.SetMetadata(extractedAspectData);
-      }
-      else
+      if (!matcher.FindAndUpdateGame(gameInfo))
       {
         Logger.Debug("GamesMetadataExtractor: No match found for game: '{0}', '{1}'", lfsra.LocalFileSystemPath, platform);
-        gameInfo = new GameInfo()
-        {
-          GameName = name,
-          Platform = platform
-        };
-        gameInfo.SetMetadata(extractedAspectData);
+        gameInfo.GameName = name;
       }
+      gameInfo.SetMetadata(extractedAspectData);
       return true;
+    }
+
+    protected void SettingsChanged(object sender, EventArgs e)
+    {
+      UpdateMediaCategories(_settingsWatcher.Settings.ConfiguredEmulators);
+    }
+
+    protected void UpdateMediaCategories(List<EmulatorConfiguration> configurations)
+    {
+      if (configurations == null || configurations.Count == 0)
+        return;
+
+      IMediaAccessor mediaAccessor = ServiceRegistration.Get<IMediaAccessor>();
+      foreach (EmulatorConfiguration configuration in configurations)
+        foreach (string platform in configuration.Platforms)
+          if (!mediaAccessor.MediaCategories.ContainsKey(platform))
+          {
+            Logger.Debug("GamesMetadataExtractor: Adding Game Category {0}", platform);
+            MediaCategory category = mediaAccessor.RegisterMediaCategory(platform, new[] { _gameCategory });
+            _platformCategories.TryAdd(platform, category);
+          }
     }
 
     protected static bool HasGameExtension(string fileName, string platform, List<EmulatorConfiguration> configurations)
