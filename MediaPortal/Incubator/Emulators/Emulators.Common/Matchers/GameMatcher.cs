@@ -24,5 +24,10 @@ namespace Emulators.Common.Matchers
       NameProcessor.CleanupTitle(gameInfo);
       return _onlineMatcher.TryGetBestMatch(gameInfo);
     }
+
+    public bool TryGetImagePath(Guid matcherId, string onlineId, ImageType imageType, out string path)
+    {
+      return _onlineMatcher.TryGetImagePath(onlineId, imageType, out path);
+    }
   }
 }

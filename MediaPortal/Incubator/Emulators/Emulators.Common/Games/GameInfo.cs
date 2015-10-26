@@ -10,6 +10,8 @@ namespace Emulators.Common.Games
 {
   public class GameInfo
   {
+    public Guid MatcherId { get; set; }
+    public string OnlineId { get; set; }
     public int GamesDbId { get; set; }
     public string GameName { get; set; }
     public string Platform { get; set; }
@@ -49,6 +51,9 @@ namespace Emulators.Common.Games
         MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_RECORDINGTIME, ReleaseDate); 
         MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_YEAR, ReleaseDate.Value.Year);
       }
+
+      if (MatcherId != Guid.Empty) MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_MATCHER_ID, MatcherId);
+      if(!string.IsNullOrEmpty(OnlineId)) MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_ONLINE_ID, OnlineId);
       if (GamesDbId > 0) MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_TGDB_ID, GamesDbId);
       if (!string.IsNullOrEmpty(Description)) MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_DESCRIPTION, Description);
       if (!string.IsNullOrEmpty(Certification)) MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_CERTIFICATION, Certification);

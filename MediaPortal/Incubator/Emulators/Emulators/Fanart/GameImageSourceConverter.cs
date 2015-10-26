@@ -21,11 +21,7 @@ namespace Emulators.Fanart
       result = null;
       MediaItem mediaItem = val as MediaItem;
       MediaItemAspect aspect;
-      if (mediaItem == null || !mediaItem.Aspects.TryGetValue(GameAspect.ASPECT_ID, out aspect))
-        return false;
-
-      int? id = (int?)aspect[GameAspect.ATTR_TGDB_ID];
-      if (!id.HasValue)
+      if (mediaItem == null || mediaItem.MediaItemId == Guid.Empty || !mediaItem.Aspects.ContainsKey(GameAspect.ASPECT_ID))
         return false;
 
       string param = parameter as string;
@@ -52,7 +48,7 @@ namespace Emulators.Fanart
       result = new FanArtImageSource
       {
         FanArtMediaType = FanArtConstants.FanArtMediaType.Undefined, //FanartTypes.MEDIA_TYPE_GAME,
-        FanArtName = id.Value.ToString(),
+        FanArtName = mediaItem.MediaItemId.ToString(),
         FanArtType = FanArtConstants.FanArtType.Thumbnail, //fanartType,
         MaxWidth = maxWidth,
         MaxHeight = maxHeight,

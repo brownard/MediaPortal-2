@@ -1,4 +1,5 @@
 ﻿using Emulators.Common.Games;
+using Emulators.Common.Matchers;
 using Emulators.Common.TheGamesDb;
 using MediaPortal.Backend.MediaLibrary;
 using MediaPortal.Common;
@@ -26,24 +27,9 @@ namespace Emulators.Common.FanartProvider
       result = null;
       if (mediaType != FanArtConstants.FanArtMediaType.Undefined && fanArtType == FanArtConstants.FanArtType.Thumbnail)
         return false;
-
-      int gameDbId;
-      if (!TryGetGameDbId(name, out gameDbId))
+      string path;
+      if (!TryGetImagePath(name, fanArtType, out path))
         return false;
-
-      string path = Path.Combine(TheGamesDbWrapper.CACHE_PATH, gameDbId.ToString());
-      switch (fanArtType)
-      {
-        case FanArtConstants.FanArtType.Thumbnail:
-        case FanArtConstants.FanArtType.Poster:
-          path = Path.Combine(path, @"Covers\front");
-          break;
-        case FanArtConstants.FanArtType.FanArt:
-          path = Path.Combine(path, @"Fanart");
-          break;
-        default:
-          return false;
-      }
 
       List<IResourceLocator> files = new List<IResourceLocator>();
       try
@@ -67,12 +53,57 @@ namespace Emulators.Common.FanartProvider
       return false;
     }
 
+    protected bool TryGetImagePath(string name, FanArtConstants.FanArtType fanartType, out string path)
+    {
+      path = null;
+      MediaItem mediaItem;
+      if (!TryGetMediaItem(name, out mediaItem))
+        return false;
+      Guid matcherId;
+      string onlineId;
+      if (!MediaItemAspect.TryGetAttribute(mediaItem.Aspects, GameAspect.ATTR_MATCHER_ID, out matcherId) ||
+        !MediaItemAspect.TryGetAttribute(mediaItem.Aspects, GameAspect.ATTR_ONLINE_ID, out onlineId))
+        return false;
+
+      ImageType imageType;
+      switch (fanartType)
+      {
+        case FanArtConstants.FanArtType.Poster:
+        case FanArtConstants.FanArtType.Thumbnail:
+          imageType = ImageType.FrontCover;
+          break;
+        case FanArtConstants.FanArtType.FanArt:
+          imageType = ImageType.Fanart;
+          break;
+        default:
+          return false;
+      }
+      return GameMatcher.Instance.TryGetImagePath(matcherId, onlineId, imageType, out path);
+    }
+
+    protected bool TryGetMediaItem(string name, out MediaItem mediaItem)
+    {
+      mediaItem = null;
+      Guid mediaItemId;
+      if (!Guid.TryParse(name, out mediaItemId) || mediaItemId == Guid.Empty)
+        return false;
+      IMediaLibrary mediaLibrary = ServiceRegistration.Get<IMediaLibrary>(false);
+      if (mediaLibrary == null)
+        return false;
+      IFilter filter = new MediaItemIdFilter(mediaItemId);
+      IList<MediaItem> items = mediaLibrary.Search(new MediaItemQuery(NECESSARY_MIAS, filter), false);
+      if (items == null || items.Count == 0)
+        return false;
+      mediaItem = items.First();
+      return true;
+    }
+
     //public bool TryGetFanArt(string mediaType, string fanArtType, string name, int maxWidth, int maxHeight, bool singleRandom, out IList<IResourceLocator> result)
     //{
     //  result = null;
     //  if (mediaType != FanartTypes.MEDIA_TYPE_GAME && mediaType != FanArtMediaTypes.Undefined && fanArtType == FanArtTypes.Thumbnail)
     //    return false;
-      
+
     //  int gameDbId;
     //  if (!TryGetGameDbId(name, out gameDbId))
     //    return false;
@@ -112,32 +143,6 @@ namespace Emulators.Common.FanartProvider
     //  catch (Exception) { }
     //  return false;
     //}
-
-    protected bool TryGetGameDbId(string name, out int gameDbId)
-    {
-      gameDbId = 0;
-      Guid mediaItemId;
-      if (Guid.TryParse(name, out mediaItemId) && mediaItemId != Guid.Empty)
-      {
-        IMediaLibrary mediaLibrary = ServiceRegistration.Get<IMediaLibrary>(false);
-        if (mediaLibrary == null)
-          return false;
-
-        IFilter filter = new MediaItemIdFilter(mediaItemId);
-        IList<MediaItem> items = mediaLibrary.Search(new MediaItemQuery(NECESSARY_MIAS, filter), false);
-        if (items == null || items.Count == 0)
-          return false;
-
-        MediaItem mediaItem = items.First();
-        if (MediaItemAspect.TryGetAttribute(mediaItem.Aspects, GameAspect.ATTR_TGDB_ID, out gameDbId))
-          return true;
-      }
-      else if (int.TryParse(name, out gameDbId))
-      {
-        return true;
-      }
-      return false;
-    }
 
     protected string[] GetPatterns(FanArtConstants.FanArtType fanArtType)
     {
