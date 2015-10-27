@@ -86,8 +86,10 @@ namespace Emulators.Models
       _items.Clear();
       if (archiveFiles != null)
       {
+        List<string> sortedFiles = new List<string>(archiveFiles);
+        sortedFiles.Sort();
         string prefix = DosPathHelper.GetFileNameWithoutExtension(archivePath);
-        foreach (string file in archiveFiles)
+        foreach (string file in sortedFiles)
         {
           string name = GetDisplayName(file, prefix);
           ListItem item = new ListItem(Consts.KEY_NAME, name);
