@@ -40,6 +40,7 @@ namespace Emulators.MediaExtensions
       {
         Command = new MethodDelegateCommand(() => ServiceRegistration.Get<IGameLauncher>().LaunchGame(mi))
       };
+      _genericPlayableItemCreatorDelegate = picd;
 
       _defaultScreen = new GamesShowItemsScreenData(picd);
       _availableScreens = new List<AbstractScreenData>
