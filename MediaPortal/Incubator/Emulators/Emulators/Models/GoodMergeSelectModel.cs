@@ -49,17 +49,17 @@ namespace Emulators.Models
       set { _progressProperty.SetValue(value); }
     }
 
-    public void Extract(string archivePath, IEnumerable<string> archiveItems, string selectedItem, Action<ExtractionCompletedEventArgs> completedDlgt)
+    public void Extract(ILocalFsResourceAccessor accessor, IEnumerable<string> archiveItems, string selectedItem, Action<ExtractionCompletedEventArgs> completedDlgt)
     {
       _selectedItem = selectedItem;
       if (string.IsNullOrEmpty(selectedItem))
       {
-        CreateListItems(archiveItems, archivePath);
-        ServiceRegistration.Get<IScreenManager>().ShowDialog(DIALOG_GOODMERGE_SELECT, (a, b) => Extract(archivePath, _selectedItem, completedDlgt));
+        CreateListItems(archiveItems, accessor.LocalFileSystemPath);
+        ServiceRegistration.Get<IScreenManager>().ShowDialog(DIALOG_GOODMERGE_SELECT, (a, b) => Extract(accessor, _selectedItem, completedDlgt));
       }
       else
       {
-        Extract(archivePath, selectedItem, completedDlgt);
+        Extract(accessor, selectedItem, completedDlgt);
       }
     }
 
@@ -100,10 +100,10 @@ namespace Emulators.Models
       _items.FireChange();
     }
 
-    protected void Extract(string archivePath, string selectedItem, Action<ExtractionCompletedEventArgs> completedDlgt)
+    protected void Extract(ILocalFsResourceAccessor accessor, string selectedItem, Action<ExtractionCompletedEventArgs> completedDlgt)
     {
       string extractedPath = null;
-      if (string.IsNullOrEmpty(selectedItem) || GoodMergeExtractor.IsExtracted(archivePath, selectedItem, out extractedPath))
+      if (string.IsNullOrEmpty(selectedItem) || GoodMergeExtractor.IsExtracted(accessor, selectedItem, out extractedPath))
       {
         if (completedDlgt != null)
           completedDlgt(new ExtractionCompletedEventArgs(selectedItem, extractedPath));
@@ -121,7 +121,7 @@ namespace Emulators.Models
       };
 
       _extractionDialogHandle = ServiceRegistration.Get<IScreenManager>().ShowDialog(DIALOG_GOODMERGE_EXTRACT);
-      _goodMergeExtractor.Extract(archivePath, selectedItem);
+      _goodMergeExtractor.Extract(accessor, selectedItem);
     }
 
     protected void CloseDialog()

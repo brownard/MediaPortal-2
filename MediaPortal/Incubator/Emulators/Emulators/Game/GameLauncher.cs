@@ -88,16 +88,16 @@ namespace Emulators.Game
         {
           string selectedItem;
           MediaItemAspect.TryGetAttribute(mediaItem.Aspects, GoodMergeAspect.ATTR_LAST_PLAYED_ITEM, out selectedItem);
-          LaunchGoodmergeGame(_resourceAccessor.LocalFileSystemPath, goodmergeItems, selectedItem, configuration);
+          LaunchGoodmergeGame(_resourceAccessor, goodmergeItems, selectedItem, configuration);
           return true;
         }
         return LaunchGame(_resourceAccessor.LocalFileSystemPath, configuration);
       }
     }
 
-    protected void LaunchGoodmergeGame(string archivePath, IEnumerable<string> goodmergeItems, string lastPlayedItem, EmulatorConfiguration configuration)
+    protected void LaunchGoodmergeGame(ILocalFsResourceAccessor accessor, IEnumerable<string> goodmergeItems, string lastPlayedItem, EmulatorConfiguration configuration)
     {
-      GoodMergeSelectModel.Instance().Extract(archivePath, goodmergeItems, lastPlayedItem, e => OnExtractionCompleted(e, configuration));
+      GoodMergeSelectModel.Instance().Extract(accessor, goodmergeItems, lastPlayedItem, e => OnExtractionCompleted(e, configuration));
     }
 
     protected void OnExtractionCompleted(ExtractionCompletedEventArgs e, EmulatorConfiguration configuration)

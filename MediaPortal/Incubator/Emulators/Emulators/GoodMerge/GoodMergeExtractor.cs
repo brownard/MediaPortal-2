@@ -1,6 +1,7 @@
 ﻿using Emulators.Common.GoodMerge;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
+using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Common.Threading;
 using System;
 using System.Collections.Generic;
@@ -50,11 +51,11 @@ namespace Emulators.GoodMerge
         handler(this, e);
     }
 
-    public void Extract(string archivePath, string selectedItem)
+    public void Extract(ILocalFsResourceAccessor accessor, string selectedItem)
     {
-      if (string.IsNullOrEmpty(archivePath) || string.IsNullOrEmpty(selectedItem))
-        return;
-      _extractionThread = ServiceRegistration.Get<IThreadPool>().Add(() => DoExtract(archivePath, selectedItem));
+      if (accessor == null || string.IsNullOrEmpty(selectedItem))
+        return;      
+      _extractionThread = ServiceRegistration.Get<IThreadPool>().Add(() => DoExtract(accessor, selectedItem));
     }
 
     public void WaitForExtractionThread()
@@ -63,12 +64,13 @@ namespace Emulators.GoodMerge
         Thread.Sleep(100);
     }
 
-    protected void DoExtract(string archivePath, string selectedItem)
+    protected void DoExtract(ILocalFsResourceAccessor accessor, string selectedItem)
     {
-      string extractionPath = GetExtractionPath(archivePath, selectedItem);
-      Logger.Debug("GoodMergeExtractor: Extracting '{0}' from '{1}' to '{2}'", selectedItem, archivePath, extractionPath);
+      string resourcePath = accessor.CanonicalLocalResourcePath.LastPathSegment.Path;
+      string extractionPath = GetExtractionPath(resourcePath, selectedItem);
+      Logger.Debug("GoodMergeExtractor: Extracting '{0}' from '{1}' to '{2}'", selectedItem, resourcePath, extractionPath);
       string extractedPath;
-      using (IExtractor extractor = ExtractorFactory.Create(archivePath))
+      using (IExtractor extractor = ExtractorFactory.Create(accessor.LocalFileSystemPath))
       {
         extractor.ExtractionProgress += OnExtractionProgress;
         extractedPath = extractor.ExtractArchiveFile(selectedItem, extractionPath);
@@ -77,9 +79,9 @@ namespace Emulators.GoodMerge
       OnExtractionCompleted(new ExtractionCompletedEventArgs(selectedItem, extractedPath));
     }
 
-    public static bool IsExtracted(string archivePath, string selectedItem, out string extractedPath)
+    public static bool IsExtracted(ILocalFsResourceAccessor accessor, string selectedItem, out string extractedPath)
     {
-      extractedPath = GetExtractionPath(archivePath, selectedItem);
+      extractedPath = GetExtractionPath(accessor.CanonicalLocalResourcePath.LastPathSegment.Path, selectedItem);
       return File.Exists(extractedPath);
     }
 
