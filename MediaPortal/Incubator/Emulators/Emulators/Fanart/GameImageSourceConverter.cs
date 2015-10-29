@@ -20,7 +20,6 @@ namespace Emulators.Fanart
     {
       result = null;
       MediaItem mediaItem = val as MediaItem;
-      MediaItemAspect aspect;
       if (mediaItem == null || mediaItem.MediaItemId == Guid.Empty || !mediaItem.Aspects.ContainsKey(GameAspect.ASPECT_ID))
         return false;
 
