@@ -42,24 +42,30 @@ namespace Emulators.Common.TheGamesDb
     protected const string GET_PATH = "GetGame.php?id=";
     protected static readonly CultureInfo DATE_CULTURE = CultureInfo.CreateSpecificCulture("en-US");
     protected static readonly string _matchesSettingsFile = Path.Combine(CACHE_PATH, "Matches.xml");
+    protected static readonly object _platformsSync = new object();
+    protected static Platform[] _platforms;
 
     protected Downloader _downloader = new Downloader() { Encoding = Encoding.UTF8 };
 
     #region Static Members
 
-    static TheGamesDbWrapper()
-    {
-      LoadPlatforms();
-    }
-
-    static void LoadPlatforms()
+    protected static Platform[] LoadPlatforms()
     {
       XmlSerializer serializer = new XmlSerializer(typeof(PlatformsList));
       using (XmlReader reader = XmlReader.Create(Assembly.GetExecutingAssembly().GetManifestResourceStream(PLATFORMS_XML)))
-        Platforms = ((PlatformsList)serializer.Deserialize(reader)).Platforms;
+        return ((PlatformsList)serializer.Deserialize(reader)).Platforms;
     }
 
-    public static Platform[] Platforms { get; internal set; }
+    public static List<Platform> Platforms
+    {
+      get
+      {
+        lock (_platformsSync)
+          if (_platforms == null)
+            _platforms = LoadPlatforms();
+        return new List<Platform>(_platforms);
+      }
+    }
 
     protected override string MatchesSettingsFile
     {
