@@ -76,10 +76,10 @@ namespace Emulators.Common.GoodMerge
       return _extractor.Entries.Where(e => !e.IsDirectory).Select(e => e.Key).ToList();
     }
 
-    public string ExtractArchiveFile(string archiveFile, string extractionPath)
+    public bool ExtractArchiveFile(string archiveFile, string extractionPath)
     {
       if (!Init() || _extractor.Entries == null)
-        return null;
+        return false;
 
       IArchiveEntry entry = _extractor.Entries.FirstOrDefault(a => a.Key == archiveFile);
       if (entry != null)
@@ -91,14 +91,14 @@ namespace Emulators.Common.GoodMerge
             Directory.CreateDirectory(extractionDirectory);
           _currentEntrySize = entry.Size;
           entry.WriteToFile(extractionPath);
-          return extractionPath;
+          return true;
         }
         catch (Exception ex)
         {
           Logger.Error("Extractor: Failed to extract '{0}' to '{1}': {2}", entry.Key, extractionPath, ex);
         }
       }
-      return null;
+      return false;
     }
 
     protected void ExtractorCompressedBytesRead(object sender, CompressedBytesReadEventArgs e)

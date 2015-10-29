@@ -106,7 +106,7 @@ namespace Emulators.Models
       if (string.IsNullOrEmpty(selectedItem) || GoodMergeExtractor.IsExtracted(accessor, selectedItem, out extractedPath))
       {
         if (completedDlgt != null)
-          completedDlgt(new ExtractionCompletedEventArgs(selectedItem, extractedPath));
+          completedDlgt(new ExtractionCompletedEventArgs(selectedItem, extractedPath, !string.IsNullOrEmpty(selectedItem)));
         return;
       }
 

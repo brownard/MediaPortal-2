@@ -21,7 +21,7 @@ namespace Emulators.Common.GoodMerge
     event EventHandler<ExtractionEventArgs> ExtractionProgress;
     event EventHandler ExtractionComplete;
     List<string> GetArchiveFiles();
-    string ExtractArchiveFile(string archiveFile, string extractionDir);
+    bool ExtractArchiveFile(string archiveFile, string extractionPath);
     bool IsArchive();
   }
 }

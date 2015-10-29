@@ -16,13 +16,15 @@ namespace Emulators.GoodMerge
 {
   public class ExtractionCompletedEventArgs : EventArgs
   {
-    public ExtractionCompletedEventArgs(string extractedItem, string extractedPath)
+    public ExtractionCompletedEventArgs(string extractedItem, string extractedPath, bool success)
     {
       ExtractedItem = extractedItem;
       ExtractedPath = extractedPath;
+      Success = success;
     }
     public string ExtractedItem { get; private set; }
     public string ExtractedPath { get; private set; }
+    public bool Success { get; private set; }
   }
 
   public class GoodMergeExtractor
@@ -54,7 +56,7 @@ namespace Emulators.GoodMerge
     public void Extract(ILocalFsResourceAccessor accessor, string selectedItem)
     {
       if (accessor == null || string.IsNullOrEmpty(selectedItem))
-        return;      
+        return;
       _extractionThread = ServiceRegistration.Get<IThreadPool>().Add(() => DoExtract(accessor, selectedItem));
     }
 
@@ -69,14 +71,17 @@ namespace Emulators.GoodMerge
       string resourcePath = accessor.CanonicalLocalResourcePath.LastPathSegment.Path;
       string extractionPath = GetExtractionPath(resourcePath, selectedItem);
       Logger.Debug("GoodMergeExtractor: Extracting '{0}' from '{1}' to '{2}'", selectedItem, resourcePath, extractionPath);
-      string extractedPath;
+      bool result;
       using (IExtractor extractor = ExtractorFactory.Create(accessor.LocalFileSystemPath))
       {
         extractor.ExtractionProgress += OnExtractionProgress;
-        extractedPath = extractor.ExtractArchiveFile(selectedItem, extractionPath);
+        result = extractor.ExtractArchiveFile(selectedItem, extractionPath);
       }
+      if (!result)
+        //Sometimes an empty file has been created when extraction fails
+        DeleteExtractedFile(extractionPath);
       _extractionThread = null;
-      OnExtractionCompleted(new ExtractionCompletedEventArgs(selectedItem, extractedPath));
+      OnExtractionCompleted(new ExtractionCompletedEventArgs(selectedItem, extractionPath, result));
     }
 
     public static bool IsExtracted(ILocalFsResourceAccessor accessor, string selectedItem, out string extractedPath)
@@ -102,6 +107,17 @@ namespace Emulators.GoodMerge
       catch (Exception ex)
       {
         Logger.Warn("GoodMergeExtractor: Unable to delete extraction directory '{0}': {1}", extractionDirectory, ex);
+      }
+    }
+
+    protected static void DeleteExtractedFile(string extractedFile)
+    {
+      try
+      {
+        File.Delete(extractedFile);
+      }
+      catch
+      {
       }
     }
 

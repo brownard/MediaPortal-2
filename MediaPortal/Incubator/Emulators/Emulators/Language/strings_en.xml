@@ -8,9 +8,9 @@
   <string name="Emulators.FilterByGenreMenuItem">Filter by genre</string>
   <string name="Emulators.FilterByDeveloperMenuItem">Filter by developer</string>
   <string name="Emulators.FilterGameItemsNavbarDisplayLabel">{0}</string>
-  
+
   <string name="Emulators.SortByRating">Sort by rating</string>
-  
+
   <string name="Emulators.Platform">Platform</string>
   <string name="Emulators.Developer">Developer</string>
 
@@ -18,14 +18,14 @@
   <string name="Emulators.Config.Setting.Advanced">Advanced</string>
   <string name="Emulators.Config.Setting.ConfigureEmulators">Configure emulators</string>
   <string name="Emulators.Config.Setting.ConfigureEmulators.Help">Add, edit and remove emulators</string>
-  
+
   <string name="Emulators.Config.Setting.MinimiseOnStart">Minimise MediaPortal</string>
   <string name="Emulators.Config.Setting.MinimiseOnStart.Help">Minimise MediaPortal whilst a game is running?</string>
 
   <string name="Emulators.Config.Setting.ClearGoodMergeCache">Clear GoodMerge cache</string>
   <string name="Emulators.Config.Setting.ClearGoodMergeCache.Help">Deletes previously extracted GoodMerge games from the file system</string>
   <string name="Emulators.Config.Setting.ClearGoodMergeCache.Label">The following directory will be deleted</string>
-  
+
   <string name="Emulators.Config.EmulatorConfigurations.Title">Emulators Configuration</string>
   <string name="Emulators.Config.EmulatorConfigurations.Label">Emulators</string>
   <string name="Emulators.Config.NoEmulatorsInThisView">No emulators in this view</string>
@@ -40,7 +40,7 @@
   <string name="Emulators.Config.ChooseEmulatorType.Label">Choose the type of emulator you want to create. Choose Native for PC Games.</string>
   <string name="Emulators.Config.EmulatorType.Emulator">Emulator</string>
   <string name="Emulators.Config.EmulatorType.Native">Native</string>
-  
+
   <string name="Emulators.Config.ChooseEmulatorPath.Title">Choose path</string>
   <string name="Emulators.Config.ChooseEmulatorPath.Label">Choose the path to the emulator</string>
 
@@ -54,24 +54,28 @@
   <string name="Emulators.Config.RemoveFileExtension.Title">Remove Extension</string>
   <string name="Emulators.Config.ChooseFileExtensions.Title">File extensions</string>
   <string name="Emulators.Config.ChooseFileExtensions.Label">Edit the file extensions that this emulator supports</string>
-  
+
   <string name="Emulators.Config.EditArguments.Title">Edit arguments</string>
   <string name="Emulators.Config.EditArguments.Label">Edit the arguments to pass to the emulator</string>
   <string name="Emulators.Config.UseQuotes.Label">Surround paths with quotes</string>
-  
+
   <string name="Emulators.Config.AdvancedSettings.Label">Advanced Settings</string>
   <string name="Emulators.Config.WorkingDirectory.Label">Working Directory</string>
   <string name="Emulators.Config.CloseWithESC.Label">Send the ESC key when closing this emulator</string>
-  
+
   <string name="Emulators.Config.InsertGameWildcard.Label">Insert wildcard</string>
   <string name="Emulators.Config.SelectWildcard.Header">Choose Wildcard</string>
   <string name="Emulators.Config.SelectWildcard.Game">Game path</string>
   <string name="Emulators.Config.SelectWildcard.GameNoExt">Game filename without extension</string>
   <string name="Emulators.Config.SelectWildcard.GameDir">Game directory</string>
-  
+
   <string name="Emulators.SelectGoodmerge.Header">Choose GoodMerge file</string>
   <string name="Emulators.ExtractGoodmerge.Header">Extracting GoodMerge file</string>
-  
+
   <string name="Emulators.ConfigureEmulatorNow.Header">Add a new emulator?</string>
   <string name="Emulators.ConfigureEmulatorNow.Label">You haven't added any emulators that can play this game. Do you want to add a new emulator now?</string>
+
+  <string name="Emulators.Dialog.Error.Header">Error</string>
+  <string name="Emulators.LaunchError.Label">Unable to start the game. Check the log for details.</string>
+  <string name="Emulators.ExtractionError.Label">Unable to extract the archive. Check the log for details.</string>
 </resources>

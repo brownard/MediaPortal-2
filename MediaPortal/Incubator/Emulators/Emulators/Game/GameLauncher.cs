@@ -105,10 +105,14 @@ namespace Emulators.Game
       lock (_syncRoot)
       {
         Cleanup();
-        if (!string.IsNullOrEmpty(e.ExtractedPath))
+        if (e.Success)
         {
           UpdateMediaItem(_mediaItem, GoodMergeAspect.ATTR_LAST_PLAYED_ITEM, e.ExtractedItem);
           LaunchGame(e.ExtractedPath, configuration);
+        }
+        else
+        {
+          ShowErrorDialog("[Emulators.ExtractionError.Label]");
         }
       }
     }
@@ -119,9 +123,14 @@ namespace Emulators.Game
       _emulatorProcess.Exited += ProcessExited;
       bool result = TryStartProcess();
       if (result)
+      {
         OnGameStarted();
+      }
       else
+      {
         Cleanup();
+        ShowErrorDialog("[Emulators.LaunchError.Label]");
+      }
       return result;
     }
 
@@ -181,6 +190,11 @@ namespace Emulators.Game
         return;
       MediaItemAspect.SetAttribute(mediaItem.Aspects, attribute, value);
       cd.AddOrUpdateMediaItem(parentDirectoryId, rl.NativeSystemId, rl.NativeResourcePath, mediaItem.Aspects.Values);
+    }
+
+    protected void ShowErrorDialog(string text)
+    {
+      ServiceRegistration.Get<IDialogManager>().ShowDialog("[Emulators.Dialog.Error.Header]", text, DialogType.OkDialog, false, DialogButtonType.Ok);
     }
 
     protected void ShowNoConfigurationDialog()
