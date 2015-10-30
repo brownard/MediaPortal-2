@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Emulators.Common.Matchers
 {
-  public class GameMatch : BaseMatch<int>
+  public class GameMatch<T> : BaseMatch<T>
   {
     public string Platform;
 

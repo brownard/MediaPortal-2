@@ -54,8 +54,16 @@
     <Compile Include="GoodMerge\SharpCompressExtractor.cs" />
     <Compile Include="Matchers\ImageType.cs" />
     <Compile Include="Matchers\IOnlineMatcher.cs" />
+    <Compile Include="MobyGames\AbstractMobyGamesResult.cs" />
+    <Compile Include="MobyGames\IMobyGamesResult.cs" />
+    <Compile Include="MobyGames\MobyGamesCoverArt.cs" />
+    <Compile Include="MobyGames\MobyGamesDownloader.cs" />
+    <Compile Include="MobyGames\MobyGamesResult.cs" />
+    <Compile Include="MobyGames\MobyGamesSearchResults.cs" />
+    <Compile Include="MobyGames\MobyGamesWrapper.cs" />
     <Compile Include="Settings\CommonSettings.cs" />
-    <Compile Include="WebRequests\Downloader.cs" />
+    <Compile Include="WebRequests\AbstractDownloader.cs" />
+    <Compile Include="WebRequests\XmlDownloader.cs" />
     <Compile Include="FanartProvider\FanartTypes.cs" />
     <Compile Include="Games\GameAspect.cs" />
     <Compile Include="Games\GameCategory.cs" />
@@ -97,6 +105,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(TargetPath)" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\Emulators\" /Y /E /I

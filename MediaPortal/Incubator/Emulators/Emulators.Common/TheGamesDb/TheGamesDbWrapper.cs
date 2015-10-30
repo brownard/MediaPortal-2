@@ -20,7 +20,7 @@ using System.Xml.Serialization;
 
 namespace Emulators.Common.TheGamesDb
 {
-  public class TheGamesDbWrapper : BaseMatcher<GameMatch, int>, IOnlineMatcher
+  public class TheGamesDbWrapper : BaseMatcher<GameMatch<int>, int>, IOnlineMatcher
   {
     #region Logger
     protected static ILogger Logger
@@ -45,7 +45,7 @@ namespace Emulators.Common.TheGamesDb
     protected static readonly object _platformsSync = new object();
     protected static Platform[] _platforms;
 
-    protected Downloader _downloader = new Downloader() { Encoding = Encoding.UTF8 };
+    protected XmlDownloader _downloader = new XmlDownloader() { Encoding = Encoding.UTF8 };
 
     #region Static Members
 
@@ -212,7 +212,7 @@ namespace Emulators.Common.TheGamesDb
 
     protected void AddToStorage(string searchTerm, string platform, int id)
     {
-      var onlineMatch = new GameMatch
+      var onlineMatch = new GameMatch<int>
       {
         Id = id,
         ItemName = searchTerm,
@@ -223,8 +223,8 @@ namespace Emulators.Common.TheGamesDb
 
     protected bool TryGetFromStorage(string searchTerm, string platform, out GameResult result)
     {
-      List<GameMatch> matches = _storage.GetMatches();
-      GameMatch match = matches.Find(m =>
+      List<GameMatch<int>> matches = _storage.GetMatches();
+      GameMatch<int> match = matches.Find(m =>
           string.Equals(m.ItemName, searchTerm, StringComparison.OrdinalIgnoreCase) &&
           string.Equals(m.Platform, platform, StringComparison.OrdinalIgnoreCase));
 
