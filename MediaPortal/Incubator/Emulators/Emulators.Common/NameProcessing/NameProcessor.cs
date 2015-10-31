@@ -19,8 +19,6 @@ namespace Emulators.Common.NameProcessing
     public static readonly IList<Regex> REGEXP_CLEANUPS = new List<Regex>
       {
         new Regex(@"[(\[].*?[)\]]", RegexOptions.IgnoreCase),
-        new Regex(@",\s*the\b", RegexOptions.IgnoreCase),
-        new Regex(@"^the\b", RegexOptions.IgnoreCase),
         new Regex(@"[/,'°]", RegexOptions.IgnoreCase),
         new Regex(@"(\s|-)*$", RegexOptions.IgnoreCase), 
         // Can be extended
