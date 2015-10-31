@@ -75,6 +75,12 @@ namespace Emulators.Common.FanartProvider
         case FanArtConstants.FanArtType.FanArt:
           imageType = ImageType.Fanart;
           break;
+        case FanArtConstants.FanArtType.Banner:
+          imageType = ImageType.Banner;
+          break;
+        case FanArtConstants.FanArtType.ClearArt:
+          imageType = ImageType.ClearLogo;
+          break;
         default:
           return false;
       }

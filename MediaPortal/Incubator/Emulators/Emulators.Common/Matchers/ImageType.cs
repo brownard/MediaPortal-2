@@ -10,7 +10,9 @@ namespace Emulators.Common.Matchers
   {
     FrontCover,
     BackCover,
-    Screen,
-    Fanart
+    Screenshot,
+    Fanart,
+    ClearLogo,
+    Banner
   }
 }

@@ -5,6 +5,7 @@ using Emulators.Common.WebRequests;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.PathManager;
+using MediaPortal.Common.Settings;
 using MediaPortal.Extensions.OnlineLibraries.Matches;
 using System;
 using System.Collections.Generic;
@@ -30,43 +31,39 @@ namespace Emulators.Common.TheGamesDb
     }
     #endregion
 
+    #region Consts
+    protected const int API_VERSION = 1;
     protected static readonly Guid MATCHER_ID = new Guid("32047FBF-9080-4236-AE05-2E6DC1BF3A9F");
-    public static readonly string CACHE_PATH = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\TheGamesDB\");
+    protected static readonly string CACHE_PATH = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\TheGamesDB\");
     protected const string COVERS_DIRECTORY = "Covers";
     protected const string COVERS_FRONT = "front";
     protected const string COVERS_BACK = "back";
     protected const string FANART_DIRECTORY = "Fanart";
+    protected const string BANNERS_DIRECTORY = "Banners";
+    protected const string CLEARLOGO_DIRECTORY = "ClearLogos";
+    protected const string SCREENSHOT_DIRECTORY = "Screenshots";
     protected const int MAX_SEARCH_DISTANCE = 2;
-    protected const string PLATFORMS_XML = "Emulators.Common.TheGamesDb.PlatformsList.xml";
     protected const string BASE_URL = "http://thegamesdb.net/api/";
     protected const string SEARCH_PATH = "GetGamesList.php";
     protected const string GET_PATH = "GetGame.php?id=";
     protected static readonly CultureInfo DATE_CULTURE = CultureInfo.CreateSpecificCulture("en-US");
+    protected static readonly Regex REGEX_ID = new Regex(@"\(g(\d+)\)");
     protected static readonly string _matchesSettingsFile = Path.Combine(CACHE_PATH, "Matches.xml");
+    protected const string PLATFORMS_XML = "Emulators.Common.TheGamesDb.PlatformsList.xml";
+    #endregion
+
+    #region Protected Members 
     protected static readonly object _platformsSync = new object();
     protected static Platform[] _platforms;
-    protected static readonly Regex REGEX_ID = new Regex(@"\(g(\d+)\)");
-
     protected XmlDownloader _downloader = new XmlDownloader() { Encoding = Encoding.UTF8 };
+    #endregion
 
-    #region Static Members
-
+    #region Static Methods
     protected static Platform[] LoadPlatforms()
     {
       XmlSerializer serializer = new XmlSerializer(typeof(PlatformsList));
       using (XmlReader reader = XmlReader.Create(Assembly.GetExecutingAssembly().GetManifestResourceStream(PLATFORMS_XML)))
         return ((PlatformsList)serializer.Deserialize(reader)).Platforms;
-    }
-
-    public static List<Platform> Platforms
-    {
-      get
-      {
-        lock (_platformsSync)
-          if (_platforms == null)
-            _platforms = LoadPlatforms();
-        return new List<Platform>(_platforms);
-      }
     }
 
     public static bool TryGetTGDBId(GameInfo gameInfo)
@@ -81,10 +78,18 @@ namespace Emulators.Common.TheGamesDb
       }
       return false;
     }
+    #endregion
 
-    protected override string MatchesSettingsFile
+    #region Public Properties
+    public static List<Platform> Platforms
     {
-      get { return _matchesSettingsFile; }
+      get
+      {
+        lock (_platformsSync)
+          if (_platforms == null)
+            _platforms = LoadPlatforms();
+        return new List<Platform>(_platforms);
+      }
     }
 
     public Guid MatcherId
@@ -92,7 +97,37 @@ namespace Emulators.Common.TheGamesDb
       get { return MATCHER_ID; }
     }
 
+    protected override string MatchesSettingsFile
+    {
+      get { return _matchesSettingsFile; }
+    }
     #endregion
+
+    #region Public Methods
+    public override bool Init()
+    {
+      if (_storage == null)
+      {
+        //This is a workaround for the fact that more image types were added after the initial release of this plugin.
+        //Force all images to be redownloaded if the they were completed before the changes.
+        var settingsManager = ServiceRegistration.Get<ISettingsManager>();
+        var settings = settingsManager.Load<TheGamesDbSettings>();
+        if (settings.APIVersion < API_VERSION)
+        {
+          _storage = new MatchStorage<GameMatch<int>, int>(MatchesSettingsFile);
+          var results = _storage.GetMatches();
+          foreach (var result in results)
+          {
+            result.FanArtDownloadStarted = null;
+            result.FanArtDownloadFinished = null;
+          }
+          _storage.SaveMatches();
+          settings.APIVersion = API_VERSION;
+          settingsManager.Save(settings);
+        }
+      }
+      return base.Init();
+    }
 
     public bool TryGetBestMatch(GameInfo gameInfo)
     {
@@ -142,6 +177,15 @@ namespace Emulators.Common.TheGamesDb
         case ImageType.Fanart:
           path = Path.Combine(CACHE_PATH, id, FANART_DIRECTORY);
           return true;
+        case ImageType.Screenshot:
+          path = Path.Combine(CACHE_PATH, id, SCREENSHOT_DIRECTORY);
+          return true;
+        case ImageType.Banner:
+          path = Path.Combine(CACHE_PATH, id, BANNERS_DIRECTORY);
+          return true;
+        case ImageType.ClearLogo:
+          path = Path.Combine(CACHE_PATH, id, CLEARLOGO_DIRECTORY);
+          return true;
         default:
           return false;
       }
@@ -173,7 +217,9 @@ namespace Emulators.Common.TheGamesDb
       result = _downloader.Download<GameResult>(url, cache);
       return result != null;
     }
+    #endregion
 
+    #region Protected Methods
     protected void UpdateGameInfo(GameInfo gameInfo, GameResult gameResult)
     {
       Game game = gameResult.Game;
@@ -202,12 +248,23 @@ namespace Emulators.Common.TheGamesDb
 
       GameImages images = result.Game.Images;
       ServiceRegistration.Get<ILogger>().Debug("GameTheGamesDbWrapper Download: Begin saving images for IDd{0}", itemId);
+
       if (images.Boxart != null)
-        foreach (GameImageBoxart image in result.Game.Images.Boxart)
+        foreach (GameImageBoxart image in images.Boxart)
           DownloadCover(itemId, image, result.BaseImgUrl);
       if (images.Fanart != null)
-        foreach (GameImage fanart in result.Game.Images.Fanart)
-          DownloadGameFanart(itemId, fanart, result.BaseImgUrl);
+        foreach (GameImage fanart in images.Fanart)
+          DownloadImage(itemId, fanart.Original, result.BaseImgUrl, FANART_DIRECTORY);
+      if (images.Banner != null)
+        foreach (GameImageOriginal banner in images.Banner)
+          DownloadImage(itemId, banner, result.BaseImgUrl, BANNERS_DIRECTORY);
+      if (images.ClearLogo != null)
+        foreach (GameImageOriginal clearLogo in images.ClearLogo)
+          DownloadImage(itemId, clearLogo, result.BaseImgUrl, CLEARLOGO_DIRECTORY);
+      if (images.Screenshot != null)
+        foreach (GameImage screenshot in images.Screenshot)
+          DownloadImage(itemId, screenshot.Original, result.BaseImgUrl, SCREENSHOT_DIRECTORY);
+
       ServiceRegistration.Get<ILogger>().Debug("GameTheGamesDbWrapper Download: Finished saving images for IDd{0}", itemId);
       FinishDownloadFanArt(itemId);
     }
@@ -220,14 +277,16 @@ namespace Emulators.Common.TheGamesDb
       _downloader.DownloadFile(url, downloadFile);
     }
 
-    protected void DownloadGameFanart(int id, GameImage image, string baseUrl)
+    protected void DownloadImage(int id, GameImageOriginal image, string baseUrl, string category)
     {
-      string url = baseUrl + image.Original.Value;
+      string url = baseUrl + image.Value;
       string filename = Path.GetFileName(new Uri(url).LocalPath);
-      string downloadFile = CreateAndGetCacheName(id, FANART_DIRECTORY, filename);
+      string downloadFile = CreateAndGetCacheName(id, category, filename);
       _downloader.DownloadFile(url, downloadFile);
     }
+    #endregion
 
+    #region Storage
     protected void AddToStorage(string searchTerm, string platform, int id)
     {
       var onlineMatch = new GameMatch<int>
@@ -283,5 +342,6 @@ namespace Emulators.Common.TheGamesDb
         return null;
       }
     }
+    #endregion
   }
 }
