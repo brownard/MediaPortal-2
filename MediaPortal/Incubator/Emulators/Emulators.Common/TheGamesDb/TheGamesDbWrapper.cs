@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
@@ -44,6 +45,7 @@ namespace Emulators.Common.TheGamesDb
     protected static readonly string _matchesSettingsFile = Path.Combine(CACHE_PATH, "Matches.xml");
     protected static readonly object _platformsSync = new object();
     protected static Platform[] _platforms;
+    protected static readonly Regex REGEX_ID = new Regex(@"\(g(\d+)\)");
 
     protected XmlDownloader _downloader = new XmlDownloader() { Encoding = Encoding.UTF8 };
 
@@ -67,6 +69,19 @@ namespace Emulators.Common.TheGamesDb
       }
     }
 
+    public static bool TryGetTGDBId(GameInfo gameInfo)
+    {
+      if (string.IsNullOrEmpty(gameInfo.GameName))
+        return false;
+      Match m = REGEX_ID.Match(gameInfo.GameName);
+      if (m.Success)
+      {
+        gameInfo.GamesDbId = int.Parse(m.Groups[1].Value);
+        return true;
+      }
+      return false;
+    }
+
     protected override string MatchesSettingsFile
     {
       get { return _matchesSettingsFile; }
@@ -82,9 +97,9 @@ namespace Emulators.Common.TheGamesDb
     public bool TryGetBestMatch(GameInfo gameInfo)
     {
       GameResult result;
-      if (TryGetFromStorage(gameInfo.GameName, gameInfo.Platform, out result))
+      if (Get(gameInfo.GamesDbId, out result) || TryGetFromStorage(gameInfo.GameName, gameInfo.Platform, out result))
       {
-        Logger.Debug("TheGamesDb: Retrieved from cache: '{0}' - '{1}'", gameInfo.GameName, gameInfo.Platform);
+        Logger.Debug("TheGamesDb: Matched '{0}' to '{1}' - '{2}'", result.Game.GameTitle, gameInfo.GameName, gameInfo.Platform);
         UpdateGameInfo(gameInfo, result);
         return true;
       }
@@ -150,6 +165,9 @@ namespace Emulators.Common.TheGamesDb
 
     public bool Get(int id, out GameResult result)
     {
+      result = null;
+      if (id < 1)
+        return false;
       string cache = CreateAndGetCacheName(id);
       string url = string.Format("{0}{1}{2}", BASE_URL, GET_PATH, id);
       result = _downloader.Download<GameResult>(url, cache);
