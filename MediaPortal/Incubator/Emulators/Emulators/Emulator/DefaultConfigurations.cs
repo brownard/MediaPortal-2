@@ -38,7 +38,7 @@ namespace Emulators.Emulator
 
     static bool IsMatch(DefaultConfiguration configuration, string fileName)
     {
-      if (configuration.Path.Equals(fileName, StringComparison.InvariantCultureIgnoreCase))
+      if (configuration.Path != null && configuration.Path.Equals(fileName, StringComparison.InvariantCultureIgnoreCase))
         return true;
       return configuration.PathRegex != null && Regex.IsMatch(fileName, configuration.PathRegex);
     }
