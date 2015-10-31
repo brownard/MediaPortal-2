@@ -137,7 +137,7 @@ namespace Emulators.Emulator
         Name = "Kega Fusion",
         Path = "fusion.exe",
         Platforms = new HashSet<string> { "Sega 32X", "Sega CD", "Sega Genesis", "Sega Master System", "Sega Mega Drive", "Sega Game Gear" },
-        FileExtensions = new HashSet<string> { ".bin", ".smd" }
+        FileExtensions = new HashSet<string> { ".bin", ".smd", ".md" }
       },
 
       new DefaultConfiguration()
@@ -145,7 +145,7 @@ namespace Emulators.Emulator
         Name = "Snes9x",
         Path = "snes9xw.exe",
         Platforms = new HashSet<string> { "Super Nintendo (SNES)" },
-        FileExtensions = new HashSet<string> { ".smc" }
+        FileExtensions = new HashSet<string> { ".smc", ".sfc" }
       },
 
       new DefaultConfiguration()
@@ -153,7 +153,7 @@ namespace Emulators.Emulator
         Name = "Snes9x",
         Path = "snes9x.exe",
         Platforms = new HashSet<string> { "Super Nintendo (SNES)" },
-        FileExtensions = new HashSet<string> { ".smc", ".fig", ".bin" }
+        FileExtensions = new HashSet<string> { ".smc", ".fig", ".bin", ".sfc" }
       },
 
       new DefaultConfiguration()
@@ -161,7 +161,7 @@ namespace Emulators.Emulator
         Name = "ZSNES",
         Path = "zsnesw.exe",
         Platforms = new HashSet<string> { "Super Nintendo (SNES)" },
-        FileExtensions = new HashSet<string> { ".smc", ".fig" }
+        FileExtensions = new HashSet<string> { ".smc", ".fig", ".sfc" }
       },
 
       new DefaultConfiguration()
