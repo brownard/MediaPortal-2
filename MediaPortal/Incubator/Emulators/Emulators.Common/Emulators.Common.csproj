@@ -62,6 +62,7 @@
     <Compile Include="MobyGames\MobyGamesSearchResults.cs" />
     <Compile Include="MobyGames\MobyGamesWrapper.cs" />
     <Compile Include="Settings\CommonSettings.cs" />
+    <Compile Include="TheGamesDb\TheGamesDbSettings.cs" />
     <Compile Include="WebRequests\AbstractDownloader.cs" />
     <Compile Include="WebRequests\XmlDownloader.cs" />
     <Compile Include="FanartProvider\FanartTypes.cs" />
