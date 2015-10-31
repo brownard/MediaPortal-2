@@ -21,6 +21,7 @@ namespace Emulators.Common.Matchers
 
     public bool FindAndUpdateGame(GameInfo gameInfo)
     {
+      TheGamesDbWrapper.TryGetTGDBId(gameInfo);
       NameProcessor.CleanupTitle(gameInfo);
       return _onlineMatcher.TryGetBestMatch(gameInfo);
     }
