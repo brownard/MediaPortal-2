@@ -47,7 +47,7 @@ namespace Emulators.Common.TheGamesDb
     protected const string SEARCH_PATH = "GetGamesList.php";
     protected const string GET_PATH = "GetGame.php?id=";
     protected static readonly CultureInfo DATE_CULTURE = CultureInfo.CreateSpecificCulture("en-US");
-    protected static readonly Regex REGEX_ID = new Regex(@"\(g(\d+)\)");
+    protected static readonly Regex REGEX_ID = new Regex(@"[\[\(]gg(\d+)[\)\]]", RegexOptions.IgnoreCase);
     protected static readonly string _matchesSettingsFile = Path.Combine(CACHE_PATH, "Matches.xml");
     protected const string PLATFORMS_XML = "Emulators.Common.TheGamesDb.PlatformsList.xml";
     #endregion
