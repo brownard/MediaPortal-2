@@ -130,20 +130,27 @@ namespace Emulators.Common.TheGamesDb
       return base.Init();
     }
 
-    public bool TryGetBestMatch(GameInfo gameInfo)
+    public bool FindAndUpdateGame(GameInfo gameInfo)
     {
       GameResult result;
-      if (!TryGetFromStorage(gameInfo, out result))
-      {
-        if (Get(gameInfo.GamesDbId, out result))
-          AddToStorage(result.Game.GameTitle, result.Game.Platform, result.Game.Id);
-        else if (TryGetClosestMatch(gameInfo, out result))
-          AddToStorage(gameInfo.GameName, gameInfo.Platform, result.Game.Id);
-        else
-          return false;
-      }            
-      Logger.Debug("TheGamesDb: Matched '{0}' to '{1}'", result.Game.GameTitle, gameInfo.GameName);
-      UpdateGameInfo(gameInfo, result);
+      if (!TryGetBestMatch(gameInfo, out result))
+        return false;
+      Game game = result.Game;
+      gameInfo.GameName = game.GameTitle;
+      gameInfo.GamesDbId = game.Id;
+      gameInfo.MatcherId = MatcherId;
+      gameInfo.OnlineId = game.Id.ToString();
+      gameInfo.Certification = game.ESRB;
+      gameInfo.Description = game.Overview;
+      gameInfo.Developer = game.Developer;
+      if (game.Genres != null && game.Genres.Genres != null)
+        gameInfo.Genres.AddRange(game.Genres.Genres);
+      gameInfo.Rating = game.Rating;
+      DateTime releaseDate;
+      if (DateTime.TryParse(game.ReleaseDate, DATE_CULTURE, DateTimeStyles.None, out releaseDate))
+        gameInfo.ReleaseDate = releaseDate;
+      if (game.Id > 0)
+        ScheduleDownload(game.Id);
       return true;
     }
 
@@ -177,8 +184,41 @@ namespace Emulators.Common.TheGamesDb
           return false;
       }
     }
+    #endregion
 
-    public bool Search(string searchTerm, string platform, out List<GameSearchResult> results)
+    #region Protected Methods
+    protected bool TryGetBestMatch(GameInfo gameInfo, out GameResult result)
+    {
+      result = null;
+      try
+      {
+        if (gameInfo.GamesDbId > 0 && Get(gameInfo.GamesDbId, out result))
+        {
+          AddToStorage(result.Game.GameTitle, result.Game.Platform, result.Game.Id);
+          return true;
+        }
+
+        GameMatch<int> match;
+        if (TryGetFromStorage(gameInfo, out match))
+        {
+          return match.Id > 0 && Get(match.Id, out result);
+        }
+        else if (TryGetClosestMatch(gameInfo, out result))
+        {
+          AddToStorage(gameInfo.GameName, gameInfo.Platform, result.Game.Id);
+          return true;
+        }
+        AddToStorage(gameInfo.GameName, gameInfo.Platform, 0);
+        return false;
+      }
+      catch (Exception ex)
+      {
+        Logger.Debug("TheGamesDb: Exception processing game '{0}'", ex, gameInfo.GameName);
+        return false;
+      }
+    }
+
+    protected bool Search(string searchTerm, string platform, out List<GameSearchResult> results)
     {
       results = null;
       if (string.IsNullOrEmpty(searchTerm))
@@ -197,7 +237,7 @@ namespace Emulators.Common.TheGamesDb
       return results != null;
     }
 
-    public bool Get(int id, out GameResult result)
+    protected bool Get(int id, out GameResult result)
     {
       result = null;
       if (id < 1)
@@ -215,9 +255,6 @@ namespace Emulators.Common.TheGamesDb
       return false;
     }
 
-    #endregion
-
-    #region Protected Methods
     protected bool TryGetClosestMatch(GameInfo gameInfo, out GameResult result)
     {
       List<GameSearchResult> results;
@@ -230,26 +267,6 @@ namespace Emulators.Common.TheGamesDb
       Logger.Debug("TheGamesDb: No match found for: '{0}'", gameInfo.GameName);
       result = null;
       return false;
-    }
-
-    protected void UpdateGameInfo(GameInfo gameInfo, GameResult gameResult)
-    {
-      Game game = gameResult.Game;
-      gameInfo.GameName = game.GameTitle;
-      gameInfo.GamesDbId = game.Id;
-      gameInfo.MatcherId = MatcherId;
-      gameInfo.OnlineId = game.Id.ToString();
-      gameInfo.Certification = game.ESRB;
-      gameInfo.Description = game.Overview;
-      gameInfo.Developer = game.Developer;
-      if (game.Genres != null && game.Genres.Genres != null)
-        gameInfo.Genres.AddRange(game.Genres.Genres);
-      gameInfo.Rating = game.Rating;
-      DateTime releaseDate;
-      if (DateTime.TryParse(game.ReleaseDate, DATE_CULTURE, DateTimeStyles.None, out releaseDate))
-        gameInfo.ReleaseDate = releaseDate;
-      if (game.Id > 0)
-        ScheduleDownload(game.Id);
     }
 
     protected override void DownloadFanArt(int itemId)
@@ -304,22 +321,20 @@ namespace Emulators.Common.TheGamesDb
       var onlineMatch = new GameMatch<int>
       {
         Id = id,
-        ItemName = searchTerm,
+        ItemName = string.Format("{0}:{1}", searchTerm, platform),
+        GameName = searchTerm,
         Platform = platform
       };
       _storage.TryAddMatch(onlineMatch);
     }
 
-    protected bool TryGetFromStorage(GameInfo gameInfo, out GameResult result)
+    protected bool TryGetFromStorage(GameInfo gameInfo, out GameMatch<int> match)
     {
-      result = null;
       List<GameMatch<int>> matches = _storage.GetMatches();
-      GameMatch<int> match = gameInfo.GamesDbId > 0 ? matches.FirstOrDefault(m => m.Id == gameInfo.GamesDbId) : null;
-      if (match == null)
-        match = matches.Find(m =>
-            string.Equals(m.ItemName, gameInfo.GameName, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(m.Platform, gameInfo.Platform, StringComparison.OrdinalIgnoreCase));
-      return match != null && match.Id > 0 && Get(match.Id, out result);
+      match = matches.Find(m =>
+          string.Equals(m.GameName, gameInfo.GameName, StringComparison.OrdinalIgnoreCase) &&
+          string.Equals(m.Platform, gameInfo.Platform, StringComparison.OrdinalIgnoreCase));
+      return match != null;
     }
 
     protected string CreateAndGetCacheName(int id, string category, string filename)

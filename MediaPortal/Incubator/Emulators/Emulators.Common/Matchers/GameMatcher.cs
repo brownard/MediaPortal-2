@@ -23,7 +23,7 @@ namespace Emulators.Common.Matchers
     {
       TheGamesDbWrapper.TryGetTGDBId(gameInfo);
       NameProcessor.CleanupTitle(gameInfo);
-      return _onlineMatcher.TryGetBestMatch(gameInfo);
+      return _onlineMatcher.FindAndUpdateGame(gameInfo);
     }
 
     public bool TryGetImagePath(Guid matcherId, string onlineId, ImageType imageType, out string path)

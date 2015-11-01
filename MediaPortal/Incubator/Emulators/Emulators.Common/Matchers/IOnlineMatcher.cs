@@ -10,7 +10,7 @@ namespace Emulators.Common.Matchers
   interface IOnlineMatcher
   {
     Guid MatcherId { get; }
-    bool TryGetBestMatch(GameInfo gameInfo);
+    bool FindAndUpdateGame(GameInfo gameInfo);
     bool TryGetImagePath(string id, ImageType imageType, out string path);
   }
 }

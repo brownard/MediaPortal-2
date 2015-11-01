@@ -49,7 +49,7 @@ namespace Emulators.Common.MobyGames
       get { return _matchesSettingsFile; }
     }
 
-    public bool TryGetBestMatch(GameInfo gameInfo)
+    public bool FindAndUpdateGame(GameInfo gameInfo)
     {
       MobyGamesResult result;
       if (TryGetFromStorage(gameInfo.GameName, gameInfo.Platform, out result))
