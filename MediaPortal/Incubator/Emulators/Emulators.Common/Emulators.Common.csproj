@@ -54,6 +54,7 @@
     <Compile Include="GoodMerge\SharpCompressExtractor.cs" />
     <Compile Include="Matchers\ImageType.cs" />
     <Compile Include="Matchers\IOnlineMatcher.cs" />
+    <Compile Include="Matchers\MemoryCache.cs" />
     <Compile Include="MobyGames\AbstractMobyGamesResult.cs" />
     <Compile Include="MobyGames\IMobyGamesResult.cs" />
     <Compile Include="MobyGames\MobyGamesCoverArt.cs" />

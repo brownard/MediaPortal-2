@@ -56,6 +56,7 @@ namespace Emulators.Common.TheGamesDb
     protected static readonly object _platformsSync = new object();
     protected static Platform[] _platforms;
     protected XmlDownloader _downloader = new XmlDownloader() { Encoding = Encoding.UTF8 };
+    protected MemoryCache<int, GameResult> _memoryCache = new MemoryCache<int, GameResult>();
     #endregion
 
     #region Static Methods
@@ -132,30 +133,16 @@ namespace Emulators.Common.TheGamesDb
     public bool TryGetBestMatch(GameInfo gameInfo)
     {
       GameResult result;
-      if (Get(gameInfo.GamesDbId, out result) || TryGetFromStorage(gameInfo.GameName, gameInfo.Platform, out result))
+      if (!TryGetFromStorage(gameInfo, out result))
       {
-        Logger.Debug("TheGamesDb: Matched '{0}' to '{1}' - '{2}'", result.Game.GameTitle, gameInfo.GameName, gameInfo.Platform);
-        UpdateGameInfo(gameInfo, result);
-        return true;
-      }
-
-      List<GameSearchResult> results;
-      if (!Search(gameInfo.GameName, gameInfo.Platform, out results))
-      {
-        Logger.Debug("TheGamesDb: No results found for '{0}' - '{1}'", gameInfo.GameName, gameInfo.Platform);
-        return false;
-      }
-
-      Logger.Debug("TheGamesDb: Found {0} search results for '{1}' - '{2}'", results.Count, gameInfo.GameName, gameInfo.Platform);
-      results = results.FindAll(r => r.GameTitle == gameInfo.GameName || NameProcessor.GetLevenshteinDistance(r.GameTitle, gameInfo.GameName) <= MAX_SEARCH_DISTANCE);
-      if (results.Count == 0 || !Get(results[0].Id, out result))
-      {
-        Logger.Debug("TheGamesDb: No close match found for: '{0}' - '{1}'", gameInfo.GameName, gameInfo.Platform);
-        return false;
-      }
-
-      Logger.Debug("TheGamesDb: Matched '{0}' to '{1}' - '{2}'", results[0].GameTitle, gameInfo.GameName, gameInfo.Platform);
-      AddToStorage(gameInfo.GameName, gameInfo.Platform, result.Game.Id);
+        if (Get(gameInfo.GamesDbId, out result))
+          AddToStorage(result.Game.GameTitle, result.Game.Platform, result.Game.Id);
+        else if (TryGetClosestMatch(gameInfo, out result))
+          AddToStorage(gameInfo.GameName, gameInfo.Platform, result.Game.Id);
+        else
+          return false;
+      }            
+      Logger.Debug("TheGamesDb: Matched '{0}' to '{1}'", result.Game.GameTitle, gameInfo.GameName);
       UpdateGameInfo(gameInfo, result);
       return true;
     }
@@ -203,7 +190,10 @@ namespace Emulators.Common.TheGamesDb
       string url = string.Format("{0}{1}{2}", BASE_URL, SEARCH_PATH, query);
       GameSearchResults searchResults = _downloader.Download<GameSearchResults>(url);
       if (searchResults != null && searchResults.Results != null && searchResults.Results.Length > 0)
+      {
         results = new List<GameSearchResult>(searchResults.Results);
+        Logger.Debug("TheGamesDb: Found {0} search results for '{1}'", results.Count, searchTerm);
+      }
       return results != null;
     }
 
@@ -212,14 +202,36 @@ namespace Emulators.Common.TheGamesDb
       result = null;
       if (id < 1)
         return false;
+      if (_memoryCache.TryGetValue(id, out result))
+        return true;
       string cache = CreateAndGetCacheName(id);
       string url = string.Format("{0}{1}{2}", BASE_URL, GET_PATH, id);
       result = _downloader.Download<GameResult>(url, cache);
-      return result != null;
+      if (result != null)
+      {
+        _memoryCache.Add(id, result);
+        return true;
+      }
+      return false;
     }
+
     #endregion
 
     #region Protected Methods
+    protected bool TryGetClosestMatch(GameInfo gameInfo, out GameResult result)
+    {
+      List<GameSearchResult> results;
+      if (Search(gameInfo.GameName, gameInfo.Platform, out results))
+      {
+        results = results.FindAll(r => r.GameTitle == gameInfo.GameName || NameProcessor.GetLevenshteinDistance(r.GameTitle, gameInfo.GameName) <= MAX_SEARCH_DISTANCE);
+        if (results.Count > 0 && Get(results[0].Id, out result))
+          return true;
+      }
+      Logger.Debug("TheGamesDb: No match found for: '{0}'", gameInfo.GameName);
+      result = null;
+      return false;
+    }
+
     protected void UpdateGameInfo(GameInfo gameInfo, GameResult gameResult)
     {
       Game game = gameResult.Game;
@@ -298,17 +310,16 @@ namespace Emulators.Common.TheGamesDb
       _storage.TryAddMatch(onlineMatch);
     }
 
-    protected bool TryGetFromStorage(string searchTerm, string platform, out GameResult result)
+    protected bool TryGetFromStorage(GameInfo gameInfo, out GameResult result)
     {
-      List<GameMatch<int>> matches = _storage.GetMatches();
-      GameMatch<int> match = matches.Find(m =>
-          string.Equals(m.ItemName, searchTerm, StringComparison.OrdinalIgnoreCase) &&
-          string.Equals(m.Platform, platform, StringComparison.OrdinalIgnoreCase));
-
-      if (match != null && match.Id > 0)
-        return Get(match.Id, out result);
       result = null;
-      return false;
+      List<GameMatch<int>> matches = _storage.GetMatches();
+      GameMatch<int> match = gameInfo.GamesDbId > 0 ? matches.FirstOrDefault(m => m.Id == gameInfo.GamesDbId) : null;
+      if (match == null)
+        match = matches.Find(m =>
+            string.Equals(m.ItemName, gameInfo.GameName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(m.Platform, gameInfo.Platform, StringComparison.OrdinalIgnoreCase));
+      return match != null && match.Id > 0 && Get(match.Id, out result);
     }
 
     protected string CreateAndGetCacheName(int id, string category, string filename)
