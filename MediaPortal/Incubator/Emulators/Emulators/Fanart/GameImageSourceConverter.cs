@@ -47,7 +47,7 @@ namespace Emulators.Fanart
       result = new FanArtImageSource
       {
         FanArtMediaType = FanArtConstants.FanArtMediaType.Undefined, //FanartTypes.MEDIA_TYPE_GAME,
-        FanArtName = mediaItem.MediaItemId.ToString(),
+        FanArtName = string.Format("{0}//{1}", mediaItem.MediaItemId, fanartType),
         FanArtType = FanArtConstants.FanArtType.Thumbnail, //fanartType,
         MaxWidth = maxWidth,
         MaxHeight = maxHeight,
