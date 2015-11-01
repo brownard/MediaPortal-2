@@ -9,11 +9,12 @@ namespace Emulators.Common.Matchers
 {
   public class GameMatch<T> : BaseMatch<T>
   {
+    public string GameName;
     public string Platform;
 
     public override string ToString()
     {
-      return string.Format("{0}: {1} [{2}]", ItemName, Platform, Id);
+      return string.Format("{0}: {1} [{2}]", GameName, Platform, Id);
     }
   }
 }
