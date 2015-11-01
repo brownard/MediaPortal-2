@@ -25,7 +25,7 @@ namespace Emulators.Common.FanartProvider
     public bool TryGetFanArt(FanArtConstants.FanArtMediaType mediaType, FanArtConstants.FanArtType fanArtType, string name, int maxWidth, int maxHeight, bool singleRandom, out IList<IResourceLocator> result)
     {
       result = null;
-      if (mediaType != FanArtConstants.FanArtMediaType.Undefined && fanArtType == FanArtConstants.FanArtType.Thumbnail)
+      if (mediaType != FanArtConstants.FanArtMediaType.Undefined)
         return false;
       string path;
       if (!TryGetImagePath(name, fanArtType, out path))
@@ -56,9 +56,11 @@ namespace Emulators.Common.FanartProvider
     protected bool TryGetImagePath(string name, FanArtConstants.FanArtType fanartType, out string path)
     {
       path = null;
+      Guid mediaItemId;
       MediaItem mediaItem;
-      if (!TryGetMediaItem(name, out mediaItem))
+      if (!TryGetIdAndType(name, ref fanartType, out mediaItemId) || !TryGetMediaItem(mediaItemId, out mediaItem))
         return false;
+
       Guid matcherId;
       string onlineId;
       if (!MediaItemAspect.TryGetAttribute(mediaItem.Aspects, GameAspect.ATTR_MATCHER_ID, out matcherId) ||
@@ -87,11 +89,10 @@ namespace Emulators.Common.FanartProvider
       return GameMatcher.Instance.TryGetImagePath(matcherId, onlineId, imageType, out path);
     }
 
-    protected bool TryGetMediaItem(string name, out MediaItem mediaItem)
+    protected bool TryGetMediaItem(Guid mediaItemId, out MediaItem mediaItem)
     {
       mediaItem = null;
-      Guid mediaItemId;
-      if (!Guid.TryParse(name, out mediaItemId) || mediaItemId == Guid.Empty)
+      if (mediaItemId == Guid.Empty)
         return false;
       IMediaLibrary mediaLibrary = ServiceRegistration.Get<IMediaLibrary>(false);
       if (mediaLibrary == null)
@@ -101,6 +102,18 @@ namespace Emulators.Common.FanartProvider
       if (items == null || items.Count == 0)
         return false;
       mediaItem = items.First();
+      return true;
+    }
+
+    protected bool TryGetIdAndType(string name, ref FanArtConstants.FanArtType fanartType, out Guid id)
+    {
+      id = Guid.Empty;
+      string[] arguments = name.Split(new[] { "//" }, StringSplitOptions.RemoveEmptyEntries);
+      if (arguments.Length == 0 || !Guid.TryParse(arguments[0], out id))
+        return false;
+      FanArtConstants.FanArtType fanartArgument;
+      if (arguments.Length > 1 && Enum.TryParse(arguments[1], out fanartArgument))
+        fanartType = fanartArgument;
       return true;
     }
 
