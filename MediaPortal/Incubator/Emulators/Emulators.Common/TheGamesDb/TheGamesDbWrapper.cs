@@ -272,38 +272,41 @@ namespace Emulators.Common.TheGamesDb
     protected override void DownloadFanArt(int itemId)
     {
       GameResult result;
-      if (!Get(itemId, out result) || result.Game == null || result.Game.Images == null)
+      if (!Get(itemId, out result) || result.Game == null)
         return;
-
       GameImages images = result.Game.Images;
+      if (images == null)
+        return;
+      string baseUrl = result.BaseImgUrl;
       ServiceRegistration.Get<ILogger>().Debug("GameTheGamesDbWrapper Download: Begin saving images for IDd{0}", itemId);
-
-      if (images.Boxart != null)
-        foreach (GameImageBoxart image in images.Boxart)
-          DownloadCover(itemId, image, result.BaseImgUrl);
-      if (images.Fanart != null)
-        foreach (GameImage fanart in images.Fanart)
-          DownloadImage(itemId, fanart.Original, result.BaseImgUrl, FANART_DIRECTORY);
-      if (images.Banner != null)
-        foreach (GameImageOriginal banner in images.Banner)
-          DownloadImage(itemId, banner, result.BaseImgUrl, BANNERS_DIRECTORY);
-      if (images.ClearLogo != null)
-        foreach (GameImageOriginal clearLogo in images.ClearLogo)
-          DownloadImage(itemId, clearLogo, result.BaseImgUrl, CLEARLOGO_DIRECTORY);
-      if (images.Screenshot != null)
-        foreach (GameImage screenshot in images.Screenshot)
-          DownloadImage(itemId, screenshot.Original, result.BaseImgUrl, SCREENSHOT_DIRECTORY);
-
+      DownloadImages(itemId, images.Boxart, baseUrl, COVERS_DIRECTORY);
+      DownloadImages(itemId, images.Fanart, baseUrl, FANART_DIRECTORY);
+      DownloadImages(itemId, images.Banner, baseUrl, BANNERS_DIRECTORY);
+      DownloadImages(itemId, images.ClearLogo, baseUrl, CLEARLOGO_DIRECTORY);
+      DownloadImages(itemId, images.Screenshot, baseUrl, SCREENSHOT_DIRECTORY);
       ServiceRegistration.Get<ILogger>().Debug("GameTheGamesDbWrapper Download: Finished saving images for IDd{0}", itemId);
       FinishDownloadFanArt(itemId);
     }
 
-    protected void DownloadCover(int id, GameImageBoxart image, string baseUrl)
+    protected void DownloadImages(int id, IEnumerable<GameImageBoxart> images, string baseUrl, string category)
     {
-      string url = baseUrl + image.Value;
-      string filename = Path.GetFileName(new Uri(url).LocalPath);
-      string downloadFile = CreateAndGetCacheName(id, Path.Combine(COVERS_DIRECTORY, image.Side), filename);
-      _downloader.DownloadFile(url, downloadFile);
+      if (images != null)
+        foreach (GameImageBoxart image in images)
+          DownloadImage(id, image, baseUrl, Path.Combine(category, image.Side));
+    }
+
+    protected void DownloadImages(int id, IEnumerable<GameImage> images, string baseUrl, string category)
+    {
+      if (images != null)
+        foreach (GameImage image in images)
+          DownloadImage(id, image.Original, baseUrl, category);
+    }
+
+    protected void DownloadImages(int id, IEnumerable<GameImageOriginal> images, string baseUrl, string category)
+    {
+      if (images != null)
+        foreach (GameImageOriginal image in images)
+          DownloadImage(id, image, baseUrl, category);
     }
 
     protected void DownloadImage(int id, GameImageOriginal image, string baseUrl, string category)
