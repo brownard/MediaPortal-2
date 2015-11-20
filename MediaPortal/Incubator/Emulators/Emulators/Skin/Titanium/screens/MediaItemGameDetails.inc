@@ -5,12 +5,11 @@
   xmlns:fanart="clr-namespace:MediaPortal.Extensions.UserServices.FanArtService.Client;assembly=FanArtService.Client"
   xmlns:media="clr-namespace:MediaPortal.UiComponents.Media.Models.AspectWrappers;assembly=Media"
   xmlns:emulators="clr-namespace:Emulators.MediaExtensions;assembly=Emulators"
-  xmlns:emufanart="clr-namespace:Emulators.Fanart;assembly=Emulators"
   Grid.Column="2" Grid.Row="0" x:Name="MediaItemDetails"
   HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 
   <Grid.Resources>
-    <emufanart:GameImageSourceConverter x:Key="GameImageSourceConverter"/>
+    <fanart:FanArtImageSourceConverter x:Key="FanArtImageSourceConverter"/>
   </Grid.Resources>
   <Grid.RowDefinitions>
     <RowDefinition Height="*"/>
@@ -88,6 +87,6 @@
 
   <Image Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Uniform" Margin="5"
       Width="380" Height="560"
-      Source="{Binding Source={StaticResource FanArtBackgroundModel}, Path=MediaItem, Converter={StaticResource GameImageSourceConverter}, ConverterParameter=Poster;380;560}">
+      Source="{Binding Source={StaticResource FanArtBackgroundModel}, Path=ImageSource, Converter={StaticResource FanArtImageSourceConverter}, ConverterParameter=Poster;380;560}">
   </Image>
 </Grid>

@@ -46,7 +46,7 @@
 
     <!-- Control template for the MediaItem details (cover, thumbs, duration, genres...)-->
     <ControlTemplate x:Key="Media_Details_Template">
-      <Include Source="screens\GameItemFanArt.inc"/>
+      <Include Source="screens\MediaItemFanArt.inc"/>
     </ControlTemplate>
 
     <ControlTemplate x:Key="Alternative_Footer_Template">

@@ -55,7 +55,7 @@
     <Compile Include="Emulator\EmulatorConfigurationManager.cs" />
     <Compile Include="Emulator\EmulatorProcess.cs" />
     <Compile Include="Emulator\IEmulatorManager.cs" />
-    <Compile Include="Fanart\GameImageSourceConverter.cs" />
+    <Compile Include="Fanart\GameFanartImageProvider.cs" />
     <Compile Include="Game\GameLauncher.cs" />
     <Compile Include="Game\IGameLauncher.cs" />
     <Compile Include="GoodMerge\GoodMergeExtractor.cs" />
@@ -276,9 +276,6 @@
     <Content Include="Skin\ApolloOne\screens\emulator_config_master.xaml">
       <SubType>Designer</SubType>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Skin\BlueVision\screens\GameItemFanArt.inc" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

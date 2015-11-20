@@ -9,11 +9,8 @@
     xmlns:aspect="clr-namespace:MediaPortal.Common.MediaManagement.DefaultItemAspects;assembly=MediaPortal.Common"
     xmlns:fanart="clr-namespace:MediaPortal.Extensions.UserServices.FanArtService.Client;assembly=FanArtService.Client"
     xmlns:emu="clr-namespace:Emulators.Models.Navigation;assembly=Emulators"
-    xmlns:emufanart="clr-namespace:Emulators.Fanart;assembly=Emulators"
     DependsOnStyleResources="MediaStyles,MediaButtons,MediaColors,MediaConsts,Consts,Colors,Buttons,OtherControls,Widgets"
     >
-
-  <emufanart:GameImageSourceConverter x:Key="GameImageSourceConverter"/>
 
   <ResourceWrapper x:Key="GAME_POSTER_WIDTH" Resource="200"/>
   <ResourceWrapper x:Key="GAME_POSTER_HEIGHT" Resource="240"/>
@@ -42,22 +39,19 @@
         </Label.Color>
       </Label>
       <Image x:Name="ItemTypeSmall" Stretch="Uniform"
-            Source="{Binding Path=MediaItem, Converter={StaticResource GameImageSourceConverter}, ConverterParameter=Poster;380;560}"
-             FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
+            Source="{Binding MediaItem}" FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
         <Image.IsVisible>
           <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
         </Image.IsVisible>
       </Image>
       <Image x:Name="ItemTypeMedium" Stretch="Uniform"
-            Source="{Binding Path=MediaItem, Converter={StaticResource GameImageSourceConverter}, ConverterParameter=Poster;380;560}"
-             FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
+            Source="{Binding MediaItem}" FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
         <Image.IsVisible>
           <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Medium}"/>
         </Image.IsVisible>
       </Image>
       <Image x:Name="ItemTypeLarge" Stretch="Uniform"
-            Source="{Binding Path=MediaItem, Converter={StaticResource GameImageSourceConverter}, ConverterParameter=Poster;380;560}"
-             FallbackSource="VideoLarge.png" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
+            Source="{Binding MediaItem}" FallbackSource="VideoLarge.png" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
         <Image.IsVisible>
           <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Large}"/>
         </Image.IsVisible>
@@ -88,7 +82,7 @@
         </Label.Color>
       </Label>
       <Image Width="{StaticResource GAME_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}" Stretch="Uniform"
-             Source="{Binding Path=MediaItem, Converter={StaticResource GameImageSourceConverter}, ConverterParameter=Poster;380;560}" FallbackSource="VideoLarge.png"
+             Source="{Binding MediaItem}" FallbackSource="VideoLarge.png"
              Grid.Row="0" Grid.Column="1"/>
     </Grid>
   </ControlTemplate>
@@ -147,7 +141,7 @@
           <ResourceWrapper x:Key="ControlHeight" Resource="{StaticResource REFLEXION_HEIGHT}"/>
           <ControlTemplate x:Key="MakeReflexion">
             <Image Stretch="Uniform"
-                   Source="{Binding Path=MediaItem, Converter={StaticResource GameImageSourceConverter}, ConverterParameter=Poster;380;560}" FallbackSource="VideoLarge.png"/>
+                   Source="{Binding MediaItem}" FallbackSource="VideoLarge.png"/>
           </ControlTemplate>
         </Control.Resources>
       </Control>
