@@ -20,12 +20,13 @@ namespace Emulators.Common.FanartProvider
 {
   public class GameFanartProvider : IFanArtProvider
   {
-    private static readonly Guid[] NECESSARY_MIAS = { ProviderResourceAspect.ASPECT_ID, GameAspect.ASPECT_ID };
+    protected static readonly Guid[] NECESSARY_MIAS = { ProviderResourceAspect.ASPECT_ID, GameAspect.ASPECT_ID };
+    protected static readonly string[] IMAGE_PATTERNS = { "*.jpg", "*.png" };
 
-    public bool TryGetFanArt(FanArtConstants.FanArtMediaType mediaType, FanArtConstants.FanArtType fanArtType, string name, int maxWidth, int maxHeight, bool singleRandom, out IList<IResourceLocator> result)
+    public bool TryGetFanArt(string mediaType, string fanArtType, string name, int maxWidth, int maxHeight, bool singleRandom, out IList<IResourceLocator> result)
     {
       result = null;
-      if (mediaType != FanArtConstants.FanArtMediaType.Undefined)
+      if (mediaType != GameFanartTypes.MEDIA_TYPE_GAME && mediaType != FanArtMediaTypes.Undefined && fanArtType == FanArtTypes.Thumbnail)
         return false;
       string path;
       if (!TryGetImagePath(name, fanArtType, out path))
@@ -37,7 +38,7 @@ namespace Emulators.Common.FanartProvider
         DirectoryInfo directoryInfo = new DirectoryInfo(path);
         if (directoryInfo.Exists)
         {
-          foreach (string pattern in GetPatterns(fanArtType))
+          foreach (string pattern in IMAGE_PATTERNS)
           {
             files.AddRange(directoryInfo.GetFiles(pattern)
               .Select(f => f.FullName)
@@ -53,12 +54,11 @@ namespace Emulators.Common.FanartProvider
       return false;
     }
 
-    protected bool TryGetImagePath(string name, FanArtConstants.FanArtType fanartType, out string path)
+    protected bool TryGetImagePath(string name, string fanartType, out string path)
     {
       path = null;
-      Guid mediaItemId;
       MediaItem mediaItem;
-      if (!TryGetIdAndType(name, ref fanartType, out mediaItemId) || !TryGetMediaItem(mediaItemId, out mediaItem))
+      if (!TryGetMediaItem(name, out mediaItem))
         return false;
 
       Guid matcherId;
@@ -70,17 +70,17 @@ namespace Emulators.Common.FanartProvider
       ImageType imageType;
       switch (fanartType)
       {
-        case FanArtConstants.FanArtType.Poster:
-        case FanArtConstants.FanArtType.Thumbnail:
+        case FanArtTypes.Poster:
+        case FanArtTypes.Thumbnail:
           imageType = ImageType.FrontCover;
           break;
-        case FanArtConstants.FanArtType.FanArt:
+        case FanArtTypes.FanArt:
           imageType = ImageType.Fanart;
           break;
-        case FanArtConstants.FanArtType.Banner:
+        case FanArtTypes.Banner:
           imageType = ImageType.Banner;
           break;
-        case FanArtConstants.FanArtType.ClearArt:
+        case FanArtTypes.ClearArt:
           imageType = ImageType.ClearLogo;
           break;
         default:
@@ -89,10 +89,11 @@ namespace Emulators.Common.FanartProvider
       return GameMatcher.Instance.TryGetImagePath(matcherId, onlineId, imageType, out path);
     }
 
-    protected bool TryGetMediaItem(Guid mediaItemId, out MediaItem mediaItem)
+    protected bool TryGetMediaItem(string name, out MediaItem mediaItem)
     {
       mediaItem = null;
-      if (mediaItemId == Guid.Empty)
+      Guid mediaItemId;
+      if (!Guid.TryParse(name, out mediaItemId) || mediaItemId == Guid.Empty)
         return false;
       IMediaLibrary mediaLibrary = ServiceRegistration.Get<IMediaLibrary>(false);
       if (mediaLibrary == null)
@@ -103,69 +104,6 @@ namespace Emulators.Common.FanartProvider
         return false;
       mediaItem = items.First();
       return true;
-    }
-
-    protected bool TryGetIdAndType(string name, ref FanArtConstants.FanArtType fanartType, out Guid id)
-    {
-      id = Guid.Empty;
-      string[] arguments = name.Split(new[] { "//" }, StringSplitOptions.RemoveEmptyEntries);
-      if (arguments.Length == 0 || !Guid.TryParse(arguments[0], out id))
-        return false;
-      FanArtConstants.FanArtType fanartArgument;
-      if (arguments.Length > 1 && Enum.TryParse(arguments[1], out fanartArgument))
-        fanartType = fanartArgument;
-      return true;
-    }
-
-    //public bool TryGetFanArt(string mediaType, string fanArtType, string name, int maxWidth, int maxHeight, bool singleRandom, out IList<IResourceLocator> result)
-    //{
-    //  result = null;
-    //  if (mediaType != FanartTypes.MEDIA_TYPE_GAME && mediaType != FanArtMediaTypes.Undefined && fanArtType == FanArtTypes.Thumbnail)
-    //    return false;
-
-    //  int gameDbId;
-    //  if (!TryGetGameDbId(name, out gameDbId))
-    //    return false;
-
-    //  string path = Path.Combine(TheGamesDbWrapper.CACHE_PATH, gameDbId.ToString());
-    //  switch (fanArtType)
-    //  {
-    //    case FanArtTypes.Thumbnail:
-    //    case FanArtTypes.Poster:
-    //      path = Path.Combine(path, @"Covers\front");
-    //      break;
-    //    case FanArtTypes.FanArt:
-    //      path = Path.Combine(path, @"Fanart");
-    //      break;
-    //    default:
-    //      return false;
-    //  }
-
-    //  List<IResourceLocator> files = new List<IResourceLocator>();
-    //  try
-    //  {
-    //    DirectoryInfo directoryInfo = new DirectoryInfo(path);
-    //    if (directoryInfo.Exists)
-    //    {
-    //      foreach (string pattern in GetPatterns(fanArtType))
-    //      {
-    //        files.AddRange(directoryInfo.GetFiles(pattern)
-    //          .Select(f => f.FullName)
-    //          .Select(fileName => new ResourceLocator(ResourcePath.BuildBaseProviderPath(LocalFsResourceProviderBase.LOCAL_FS_RESOURCE_PROVIDER_ID, fileName)))
-    //          );
-    //        result = files;
-    //        if (result.Count > 0)
-    //          return true;
-    //      }
-    //    }
-    //  }
-    //  catch (Exception) { }
-    //  return false;
-    //}
-
-    protected string[] GetPatterns(FanArtConstants.FanArtType fanArtType)
-    {
-      return new string[] { "*.jpg", "*.png" };
     }
   }
 }
