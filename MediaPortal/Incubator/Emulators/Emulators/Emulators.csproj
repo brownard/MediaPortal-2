@@ -12,6 +12,8 @@
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -35,8 +37,23 @@
   <ItemGroup>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SharpDXPackageBinDir)\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D9, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SharpDXPackageBinDir)\SharpDX.Direct3D9.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DirectSound">
+      <HintPath>$(SharpDXPackageBinDir)\SharpDX.DirectSound.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.XInput">
+      <HintPath>$(SharpDXPackageBinDir)\SharpDX.XInput.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
@@ -61,6 +78,15 @@
     <Compile Include="GoodMerge\GoodMergeExtractor.cs" />
     <Compile Include="Input\InputHandler.cs" />
     <Compile Include="Input\KeyboardHook.cs" />
+    <Compile Include="LibRetro\Controllers\Keyboard.cs" />
+    <Compile Include="LibRetro\Controllers\KeyboardController.cs" />
+    <Compile Include="LibRetro\SoundProviders\ISoundOutput.cs" />
+    <Compile Include="LibRetro\SoundProviders\LibRetroDirectSound.cs" />
+    <Compile Include="LibRetro\LibRetroPlayer.cs" />
+    <Compile Include="LibRetro\LibRetroPlayerBuilder.cs" />
+    <Compile Include="LibRetro\VideoProviders\ITextureProvider.cs" />
+    <Compile Include="LibRetro\VideoProviders\LibRetroTextureWrapper.cs" />
+    <Compile Include="LibRetro\Controllers\XboxController.cs" />
     <Compile Include="MediaCategoryHelper.cs" />
     <Compile Include="MediaExtensions\GameAspectWrapper.cs" />
     <Compile Include="MediaExtensions\GameFilterByDeveloperScreenData.cs" />
@@ -102,6 +128,10 @@
       <Project>{dca4d19e-75f4-4a8a-b70a-f3f4291dc62b}</Project>
       <Name>OnlineLibraries</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Source\UI\Players\VideoPlayer\VideoPlayers.csproj">
+      <Project>{ed9a8a29-91dd-4b21-8cb8-a8b0f3eff61c}</Project>
+      <Name>VideoPlayers</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Source\UI\SkinEngine\SkinEngine.csproj">
       <Project>{7e943389-3589-40c9-b481-2e223554cc49}</Project>
       <Name>SkinEngine</Name>
@@ -129,6 +159,10 @@
     <ProjectReference Include="..\Emulators.Common\Emulators.Common.csproj">
       <Project>{f7e3d356-1cf6-43a8-91f1-4baca72f6637}</Project>
       <Name>Emulators.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SharpRetro\SharpRetro.csproj">
+      <Project>{cba289bc-deb5-4542-9564-4f0d646717da}</Project>
+      <Name>SharpRetro</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -277,6 +311,9 @@
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(TargetPath)" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\Emulators\" /Y /E /I
@@ -285,6 +322,13 @@ xcopy "$(ProjectDir)plugin.xml" "%25programfiles(x86)%25\Team MediaPortal\MP2-Cl
 xcopy "$(ProjectDir)Skin" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\Emulators\Skin" /Y /E /I
 xcopy "$(ProjectDir)Language" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\Emulators\Language" /Y /E /I</PostBuildEvent>
   </PropertyGroup>
+  <Import Project="..\..\..\Packages\SharpDX.2.6.3\build\SharpDX.targets" Condition="Exists('..\..\..\Packages\SharpDX.2.6.3\build\SharpDX.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\..\Packages\SharpDX.2.6.3\build\SharpDX.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\Packages\SharpDX.2.6.3\build\SharpDX.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

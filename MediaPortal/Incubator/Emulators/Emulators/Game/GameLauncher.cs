@@ -16,6 +16,7 @@ using MediaPortal.UI.Control.InputManager;
 using MediaPortal.UI.Presentation.Screens;
 using MediaPortal.UI.Presentation.Workflow;
 using MediaPortal.UI.ServerCommunication;
+using MediaPortal.UiComponents.Media.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -68,6 +69,9 @@ namespace Emulators.Game
 
     public bool LaunchGame(MediaItem mediaItem)
     {
+      mediaItem.Aspects[VideoAspect.Metadata.AspectId] = new MediaItemAspect(VideoAspect.Metadata);
+      PlayItemsModel.CheckQueryPlayAction(mediaItem);
+      return true;
       _mediaItem = mediaItem;
       EmulatorConfiguration configuration;
       if (!TryGetConfiguration(mediaItem, out configuration))

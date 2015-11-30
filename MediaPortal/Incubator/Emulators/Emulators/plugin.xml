@@ -47,6 +47,10 @@
         ServiceClassName="Emulators.Common.Matchers.GameMatcher"/>
   </Register>
 
+  <Register Location="/Players/Builders">
+    <PlayerBuilder Id="45976CB8-7CB7-4F7D-9766-DDEC12A6D42C" ClassName="Emulators.LibRetro.LibRetroPlayerBuilder"/>
+  </Register>
+
   <Register Location="/Media/Extensions">
     <MediaItemActionBuilder Id="F6B516D8-E342-423D-ABE4-91ECD2E59446" Caption="[Emulators.SelectGoodmerge.Header]" Sort="A.01" ClassName="Emulators.MediaExtensions.MediaItemActions.SelectGoodMergeAction"/>
   </Register>
