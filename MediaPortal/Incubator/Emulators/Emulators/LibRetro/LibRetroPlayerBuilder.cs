@@ -13,10 +13,11 @@ namespace Emulators.LibRetro
   {
     public IPlayer GetPlayer(MediaItem mediaItem)
     {
-      if (!mediaItem.Aspects.ContainsKey(GameAspect.ASPECT_ID))
+      LibRetroMediaItem retroItem = mediaItem as LibRetroMediaItem;
+      if (retroItem == null)
         return null;
       var player = new LibRetroPlayer();
-      player.Play();
+      player.Play(mediaItem);
       return player;
     }
   }

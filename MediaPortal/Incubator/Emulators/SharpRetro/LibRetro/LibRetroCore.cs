@@ -13,7 +13,7 @@ namespace SharpRetro.LibRetro
 	/// <summary>
 	/// libretro related shims
 	/// </summary>
-	public class LibRetro : IDisposable
+	public class LibRetroCore : IDisposable
 	{
 		public const int RETRO_API_VERSION = 1;
 
@@ -59,9 +59,14 @@ namespace SharpRetro.LibRetro
 			 DUMMY = Int32.MaxValue
 		};
 
+    public enum RETRO_DEVICE_INDEX_ANALOG
+    {
+      LEFT = 0,
+      RIGHT = 1
+    };
+
 		public enum RETRO_DEVICE_ID_ANALOG
 		{
-			// LEFT / RIGHT?
 			X = 0,
 			Y = 1
 		};
@@ -350,13 +355,16 @@ namespace SharpRetro.LibRetro
 			 RETRO_HW_CONTEXT_DUMMY = Int32.MaxValue
 		};
 
-		public struct retro_hw_render_callback
+    public const int RETRO_HW_FRAME_BUFFER_VALID = -1;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_hw_render_callback
 		{
 			public uint context_type; //retro_hw_context_type
 			public IntPtr context_reset; //retro_hw_context_reset_t
-			public IntPtr get_current_framebuffer; //retro_hw_get_current_framebuffer_t
-			public IntPtr get_proc_address; //retro_hw_get_proc_address_t
-			[MarshalAs(UnmanagedType.U1)] public byte depth;
+      public IntPtr get_current_framebuffer; //retro_hw_get_current_framebuffer_t
+      public IntPtr get_proc_address; //retro_hw_get_proc_address_t
+			[MarshalAs(UnmanagedType.U1)] public bool depth;
 			[MarshalAs(UnmanagedType.U1)] public bool stencil;
 			[MarshalAs(UnmanagedType.U1)] public bool bottom_left_origin;
 			public uint version_major;
@@ -370,22 +378,24 @@ namespace SharpRetro.LibRetro
 		public delegate void retro_hw_context_reset_t();
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		public delegate UIntPtr retro_hw_get_current_framebuffer_t();
+		public delegate uint retro_hw_get_current_framebuffer_t();
 
     //not used
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void retro_proc_address_t();
 
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-		public delegate IntPtr retro_hw_get_proc_address_t(string sym);
-
-		struct retro_memory_map
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		public delegate IntPtr retro_hw_get_proc_address_t(IntPtr sym);
+    
+    [StructLayout(LayoutKind.Sequential)]
+    struct retro_memory_map
 		{
 			public IntPtr descriptors; //retro_memory_descriptor *
 			public uint num_descriptors;
 		};
 
-		struct retro_memory_descriptor
+    [StructLayout(LayoutKind.Sequential)]
+    struct retro_memory_descriptor
 		{
 			ulong flags;
 			IntPtr ptr;
@@ -394,7 +404,7 @@ namespace SharpRetro.LibRetro
 			IntPtr select; //size_t
 			IntPtr disconnect; //size_t
 			IntPtr len; //size_t
-			string addrspace;
+			IntPtr addrspace;
 		};
 
 		public enum RETRO_PIXEL_FORMAT
@@ -404,20 +414,23 @@ namespace SharpRetro.LibRetro
 			RGB565 = 2
 		};
 
-		public struct retro_message
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_message
 		{
 			public string msg;
 			public uint frames;
 		}
 
-		public struct retro_input_descriptor
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_input_descriptor
 		{
 			public uint port;
 			public uint device;
 			public uint index;
 			public uint id;
 		}
-    
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct retro_system_info
     {
       public IntPtr library_name;
@@ -429,6 +442,7 @@ namespace SharpRetro.LibRetro
       public bool block_extract;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     public struct retro_game_geometry
 		{
 			public uint base_width;
@@ -438,25 +452,29 @@ namespace SharpRetro.LibRetro
 			public float aspect_ratio;
 		}
 
-		public struct retro_system_timing
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_system_timing
 		{
 			public double fps;
 			public double sample_rate;
 		}
 
-		public struct retro_system_av_info
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_system_av_info
 		{
 			public retro_game_geometry geometry;
 			public retro_system_timing timing;
 		}
 
-		public struct retro_variable
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_variable
 		{
 			public string key;
 			public string value;
 		}
 
-		public struct retro_game_info
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_game_info
 		{
 			public string path;
 			public IntPtr data;
@@ -464,8 +482,9 @@ namespace SharpRetro.LibRetro
 			public string meta;
 		}
 
-		//untested
-		public struct retro_perf_counter
+    //untested
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_perf_counter
 		{
 			public string ident;
 			public ulong start;
@@ -492,8 +511,9 @@ namespace SharpRetro.LibRetro
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		public delegate void retro_perf_stop_t(ref retro_perf_counter counter);
 
-		//for GET_PERF_INTERFACE
-		public struct retro_perf_callback
+    //for GET_PERF_INTERFACE
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_perf_callback
 		{
 			public retro_perf_get_time_usec_t get_time_usec;
 			public retro_get_cpu_features_t get_cpu_features;
@@ -617,7 +637,7 @@ namespace SharpRetro.LibRetro
 		}
 
 		InstanceDll dll;
-		public LibRetro(string modulename)
+		public LibRetroCore(string modulename)
 		{
 			dll = new InstanceDll(modulename);
 			if (!ConnectAllEntryPoints())
@@ -629,7 +649,7 @@ namespace SharpRetro.LibRetro
 
 		private static IEnumerable<FieldInfo> GetAllEntryPoints()
 		{
-			return typeof(LibRetro).GetFields().Where((field) => field.FieldType.Name.StartsWith("epretro"));
+			return typeof(LibRetroCore).GetFields().Where((field) => field.FieldType.Name.StartsWith("epretro"));
 		}
 
 		private void ClearAllEntryPoints()

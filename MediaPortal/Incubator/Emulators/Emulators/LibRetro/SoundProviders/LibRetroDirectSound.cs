@@ -1,4 +1,7 @@
-﻿using SharpDX.DirectSound;
+﻿using MediaPortal.Common;
+using MediaPortal.Common.Settings;
+using MediaPortal.UI.Players.Video.Settings;
+using SharpDX.DirectSound;
 using SharpDX.Multimedia;
 using System;
 using System.Collections.Generic;
@@ -45,8 +48,11 @@ namespace Emulators.LibRetro.SoundProviders
 
     void InitializeDirectSound(IntPtr windowHandler)
     {
-      // Initialize the direct sound interface pointer for the default sound device.
-      _directSound = new DirectSound();
+      VideoSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<VideoSettings>();
+      if (settings == null || settings.AudioRenderer == null || string.IsNullOrEmpty(settings.AudioRenderer.CLSID))
+        _directSound = new DirectSound();
+      else
+        _directSound = new DirectSound(new Guid(settings.AudioRenderer.CLSID));
       // Set the cooperative level to priority so the format of the primary sound buffer can be modified.
       _directSound.SetCooperativeLevel(windowHandler, CooperativeLevel.Priority);
     }
@@ -74,9 +80,10 @@ namespace Emulators.LibRetro.SoundProviders
     
     public void WriteSamples(short[] samples, int count, bool synchronise)
     {
+      if (count == 0)
+        return;
       if (synchronise)
         Synchronize(count);
-
       int bytes = GetPlayedSize();
       if (bytes < 1)
         return;
@@ -110,10 +117,11 @@ namespace Emulators.LibRetro.SoundProviders
     protected void Synchronize(int count)
     {
       int samplesNeeded = GetSamplesNeeded();
+      //ServiceRegistration.Get<MediaPortal.Common.Logging.ILogger>().Info("************Audio count {0} samplesneeded {1} total size {2}", count, samplesNeeded, _bufferBytes);
       while (samplesNeeded < count)
       {
-        int sleepTime = (count - samplesNeeded) / (_sampleRate / 1000);
-        Thread.Sleep(sleepTime / 4);
+        double sleepTime = (count - samplesNeeded) / (_sampleRate / 1000d);
+        Thread.Sleep((int)(sleepTime / 4));
         samplesNeeded = GetSamplesNeeded();
       }
     }

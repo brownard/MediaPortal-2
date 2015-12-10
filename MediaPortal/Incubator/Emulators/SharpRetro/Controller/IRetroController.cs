@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharpRetro.LibRetro;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,12 +13,17 @@ namespace SharpRetro.Controller
 
   public interface IRetroPad : IRetroController
   {
-    bool IsButtonPressed(int port, LibRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD button);
+    bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button);
+  }
+
+  public interface IRetroAnalog : IRetroController
+  {
+    short GetAnalog(uint port, LibRetroCore.RETRO_DEVICE_INDEX_ANALOG index, LibRetroCore.RETRO_DEVICE_ID_ANALOG direction);
   }
 
   public interface IRetroKeyboard : IRetroController
   {
-    bool IsKeyPressed(LibRetro.LibRetro.RETRO_KEY key);
+    bool IsKeyPressed(LibRetroCore.RETRO_KEY key);
   }
 
   public interface IRetroPointer : IRetroController

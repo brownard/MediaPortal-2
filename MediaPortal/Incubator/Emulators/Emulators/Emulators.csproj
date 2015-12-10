@@ -51,6 +51,14 @@
     <Reference Include="SharpDX.XInput">
       <HintPath>$(SharpDXPackageBinDir)\SharpDX.XInput.dll</HintPath>
     </Reference>
+    <Reference Include="SharpGL, Version=2.4.0.0, Culture=neutral, PublicKeyToken=27fc851303210b27, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Packages\SharpGL.2.4.0.0\lib\net40\SharpGL.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SharpGL.SceneGraph, Version=2.4.0.0, Culture=neutral, PublicKeyToken=27fc851303210b27, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Packages\SharpGL.2.4.0.0\lib\net40\SharpGL.SceneGraph.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -80,13 +88,16 @@
     <Compile Include="Input\KeyboardHook.cs" />
     <Compile Include="LibRetro\Controllers\Keyboard.cs" />
     <Compile Include="LibRetro\Controllers\KeyboardController.cs" />
+    <Compile Include="LibRetro\LibRetroMediaItem.cs" />
+    <Compile Include="LibRetro\Renderers\GlContextProvider.cs" />
+    <Compile Include="LibRetro\Renderers\OpenGLHelper.cs" />
     <Compile Include="LibRetro\SoundProviders\ISoundOutput.cs" />
     <Compile Include="LibRetro\SoundProviders\LibRetroDirectSound.cs" />
     <Compile Include="LibRetro\LibRetroPlayer.cs" />
     <Compile Include="LibRetro\LibRetroPlayerBuilder.cs" />
     <Compile Include="LibRetro\VideoProviders\ITextureProvider.cs" />
     <Compile Include="LibRetro\VideoProviders\LibRetroTextureWrapper.cs" />
-    <Compile Include="LibRetro\Controllers\XboxController.cs" />
+    <Compile Include="LibRetro\Controllers\XInputController.cs" />
     <Compile Include="MediaCategoryHelper.cs" />
     <Compile Include="MediaExtensions\GameAspectWrapper.cs" />
     <Compile Include="MediaExtensions\GameFilterByDeveloperScreenData.cs" />
@@ -314,6 +325,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(TargetPath)" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\Emulators\" /Y /E /I

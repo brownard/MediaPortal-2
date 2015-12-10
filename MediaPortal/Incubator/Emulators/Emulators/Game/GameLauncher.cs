@@ -2,6 +2,7 @@
 using Emulators.Common.GoodMerge;
 using Emulators.Emulator;
 using Emulators.GoodMerge;
+using Emulators.LibRetro;
 using Emulators.Models;
 using Emulators.Settings;
 using MediaPortal.Common;
@@ -69,8 +70,8 @@ namespace Emulators.Game
 
     public bool LaunchGame(MediaItem mediaItem)
     {
-      mediaItem.Aspects[VideoAspect.Metadata.AspectId] = new MediaItemAspect(VideoAspect.Metadata);
-      PlayItemsModel.CheckQueryPlayAction(mediaItem);
+      LibRetroMediaItem libRetroItem = new LibRetroMediaItem(mediaItem.Aspects);
+      PlayItemsModel.CheckQueryPlayAction(libRetroItem);
       return true;
       _mediaItem = mediaItem;
       EmulatorConfiguration configuration;
@@ -97,7 +98,7 @@ namespace Emulators.Game
         }
         return LaunchGame(_resourceAccessor.LocalFileSystemPath, configuration);
       }
-    }
+    }    
 
     protected void LaunchGoodmergeGame(ILocalFsResourceAccessor accessor, IEnumerable<string> goodmergeItems, string lastPlayedItem, EmulatorConfiguration configuration)
     {
@@ -122,7 +123,7 @@ namespace Emulators.Game
     }
 
     protected bool LaunchGame(string path, EmulatorConfiguration configuration)
-    {
+    {      
       _emulatorProcess = new EmulatorProcess(path, configuration, _mappedKey);
       _emulatorProcess.Exited += ProcessExited;
       bool result = TryStartProcess();

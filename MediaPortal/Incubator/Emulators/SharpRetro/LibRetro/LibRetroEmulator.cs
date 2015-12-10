@@ -1,4 +1,5 @@
 ﻿using SharpRetro.Controller;
+using SharpRetro.OpenGL;
 using SharpRetro.Utils;
 using System;
 using System.Collections.Generic;
@@ -11,19 +12,6 @@ using System.Threading.Tasks;
 namespace SharpRetro.LibRetro
 {
   #region Helper Classes
-  public class VariableDescription
-  {
-    public string Name { get; set; }
-    public string Description { get; set; }
-    public string[] Options { get; set; }
-    public string DefaultOption { get { return Options[0]; } }
-
-    public override string ToString()
-    {
-      return string.Format("{0} ({1}) = ({2})", Name, Description, string.Join("|", Options));
-    }
-  }
-
   public class VideoInfo
   {
     public float DAR { get; set; }
@@ -90,23 +78,24 @@ namespace SharpRetro.LibRetro
   public unsafe class LibRetroEmulator : IDisposable
   {
     #region LibRetro Callbacks
-    LibRetro.retro_environment_t retro_environment_cb;
-    LibRetro.retro_video_refresh_t retro_video_refresh_cb;
-    LibRetro.retro_audio_sample_t retro_audio_sample_cb;
-    LibRetro.retro_audio_sample_batch_t retro_audio_sample_batch_cb;
-    LibRetro.retro_input_poll_t retro_input_poll_cb;
-    LibRetro.retro_input_state_t retro_input_state_cb;
-    LibRetro.retro_log_printf_t retro_log_printf_cb;
-    LibRetro.retro_perf_callback retro_perf_callback = new LibRetro.retro_perf_callback();
-    LibRetro.retro_hw_get_current_framebuffer_t retro_hw_get_current_framebuffer_cb;
-    LibRetro.retro_hw_get_proc_address_t retro_hw_get_proc_address_cb;
+    LibRetroCore.retro_environment_t retro_environment_cb;
+    LibRetroCore.retro_video_refresh_t retro_video_refresh_cb;
+    LibRetroCore.retro_audio_sample_t retro_audio_sample_cb;
+    LibRetroCore.retro_audio_sample_batch_t retro_audio_sample_batch_cb;
+    LibRetroCore.retro_input_poll_t retro_input_poll_cb;
+    LibRetroCore.retro_input_state_t retro_input_state_cb;
+    LibRetroCore.retro_log_printf_t retro_log_printf_cb;
+    LibRetroCore.retro_perf_callback retro_perf_callback = new LibRetroCore.retro_perf_callback();
+    LibRetroCore.retro_hw_get_current_framebuffer_t retro_hw_get_current_framebuffer_cb;
+    LibRetroCore.retro_hw_get_proc_address_t retro_hw_get_proc_address_cb;
+    LibRetroCore.retro_hw_context_reset_t retro_hw_context_reset_cb;
     #endregion
 
     #region Protected Members
     protected string _corePath;
-    protected LibRetro _retro;
+    protected LibRetroCore _retro;
     protected UnmanagedResourceHeap _unmanagedResources = new UnmanagedResourceHeap();
-    protected Dictionary<string, VariableDescription> _variables = new Dictionary<string, VariableDescription>();
+    protected LibRetroVariables _variables = new LibRetroVariables();
 
     protected string _systemDirectory;
     protected IntPtr _systemDirectoryAtom;
@@ -114,6 +103,11 @@ namespace SharpRetro.LibRetro
     protected IntPtr _saveDirectoryAtom;
 
     protected int[] _videoBuffer;
+    protected int _maxVideoWidth;
+    protected int _maxVideoHeight;
+    protected bool _depthBuffer;
+    protected bool _stencilBuffer;
+    protected bool _bottomLeftOrigin;
     protected AudioBuffer _audioBuffer;
     protected byte[] _saveBuffer;
     protected byte[] _saveBuffer2;
@@ -121,47 +115,54 @@ namespace SharpRetro.LibRetro
     protected SystemInfo _systemInfo;
     protected VideoInfo _videoInfo;
     protected TimingInfo _timingInfo;
-    protected LibRetro.RETRO_PIXEL_FORMAT _pixelFormat = LibRetro.RETRO_PIXEL_FORMAT.XRGB1555;
+    protected LibRetroCore.RETRO_PIXEL_FORMAT _pixelFormat = LibRetroCore.RETRO_PIXEL_FORMAT.XRGB1555;
+
+    protected IGLContext _glContext;
+
+    protected IRetroController _retroController;
+    protected IRetroPad _retroPad;
+    protected IRetroAnalog _retroAnalog;
+    protected IRetroKeyboard _retroKeyboard;
+    protected IRetroPointer _retroPointer;
+
     #endregion
 
     #region Init
-    public LibRetroEmulator(string corePath, Action<string> logDlgt = null)
+    public LibRetroEmulator(string corePath)
     {
       _corePath = corePath;
-      LogDelegate = logDlgt;
-      retro_environment_cb = new LibRetro.retro_environment_t(retro_environment);
-      retro_video_refresh_cb = new LibRetro.retro_video_refresh_t(retro_video_refresh);
-      retro_audio_sample_cb = new LibRetro.retro_audio_sample_t(retro_audio_sample);
-      retro_audio_sample_batch_cb = new LibRetro.retro_audio_sample_batch_t(retro_audio_sample_batch);
-      retro_input_poll_cb = new LibRetro.retro_input_poll_t(retro_input_poll);
-      retro_input_state_cb = new LibRetro.retro_input_state_t(retro_input_state);
-      retro_log_printf_cb = new LibRetro.retro_log_printf_t(retro_log_printf);
-      retro_hw_get_current_framebuffer_cb = new LibRetro.retro_hw_get_current_framebuffer_t(retro_hw_get_current_framebuffer);
-      retro_hw_get_proc_address_cb = new LibRetro.retro_hw_get_proc_address_t(retro_hw_get_proc_address);
+      retro_environment_cb = new LibRetroCore.retro_environment_t(retro_environment);
+      retro_video_refresh_cb = new LibRetroCore.retro_video_refresh_t(retro_video_refresh);
+      retro_audio_sample_cb = new LibRetroCore.retro_audio_sample_t(retro_audio_sample);
+      retro_audio_sample_batch_cb = new LibRetroCore.retro_audio_sample_batch_t(retro_audio_sample_batch);
+      retro_input_poll_cb = new LibRetroCore.retro_input_poll_t(retro_input_poll);
+      retro_input_state_cb = new LibRetroCore.retro_input_state_t(retro_input_state);
+      retro_log_printf_cb = new LibRetroCore.retro_log_printf_t(retro_log_printf);
+      retro_hw_get_current_framebuffer_cb = new LibRetroCore.retro_hw_get_current_framebuffer_t(retro_hw_get_current_framebuffer);
+      retro_hw_get_proc_address_cb = new LibRetroCore.retro_hw_get_proc_address_t(retro_hw_get_proc_address);
 
       //no way (need new mechanism) to check for SSSE3, MMXEXT, SSE4, SSE42
-      retro_perf_callback.get_cpu_features = new LibRetro.retro_get_cpu_features_t(() => (ulong)(
-          (Win32PInvokes.IsProcessorFeaturePresent(Win32PInvokes.ProcessorFeature.InstructionsXMMIAvailable) ? LibRetro.RETRO_SIMD.SSE : 0) |
-          (Win32PInvokes.IsProcessorFeaturePresent(Win32PInvokes.ProcessorFeature.InstructionsXMMI64Available) ? LibRetro.RETRO_SIMD.SSE2 : 0) |
-          (Win32PInvokes.IsProcessorFeaturePresent(Win32PInvokes.ProcessorFeature.InstructionsSSE3Available) ? LibRetro.RETRO_SIMD.SSE3 : 0) |
-          (Win32PInvokes.IsProcessorFeaturePresent(Win32PInvokes.ProcessorFeature.InstructionsMMXAvailable) ? LibRetro.RETRO_SIMD.MMX : 0)
+      retro_perf_callback.get_cpu_features = new LibRetroCore.retro_get_cpu_features_t(() => (ulong)(
+          (Win32PInvokes.IsProcessorFeaturePresent(Win32PInvokes.ProcessorFeature.InstructionsXMMIAvailable) ? LibRetroCore.RETRO_SIMD.SSE : 0) |
+          (Win32PInvokes.IsProcessorFeaturePresent(Win32PInvokes.ProcessorFeature.InstructionsXMMI64Available) ? LibRetroCore.RETRO_SIMD.SSE2 : 0) |
+          (Win32PInvokes.IsProcessorFeaturePresent(Win32PInvokes.ProcessorFeature.InstructionsSSE3Available) ? LibRetroCore.RETRO_SIMD.SSE3 : 0) |
+          (Win32PInvokes.IsProcessorFeaturePresent(Win32PInvokes.ProcessorFeature.InstructionsMMXAvailable) ? LibRetroCore.RETRO_SIMD.MMX : 0)
         ));
-      retro_perf_callback.get_perf_counter = new LibRetro.retro_perf_get_counter_t(() => System.Diagnostics.Stopwatch.GetTimestamp());
-      retro_perf_callback.get_time_usec = new LibRetro.retro_perf_get_time_usec_t(() => DateTime.Now.Ticks / 10);
-      retro_perf_callback.perf_log = new LibRetro.retro_perf_log_t(() => { });
-      retro_perf_callback.perf_register = new LibRetro.retro_perf_register_t((ref LibRetro.retro_perf_counter counter) => { });
-      retro_perf_callback.perf_start = new LibRetro.retro_perf_start_t((ref LibRetro.retro_perf_counter counter) => { });
-      retro_perf_callback.perf_stop = new LibRetro.retro_perf_stop_t((ref LibRetro.retro_perf_counter counter) => { });
-      Init();
+      retro_perf_callback.get_perf_counter = new LibRetroCore.retro_perf_get_counter_t(() => System.Diagnostics.Stopwatch.GetTimestamp());
+      retro_perf_callback.get_time_usec = new LibRetroCore.retro_perf_get_time_usec_t(() => DateTime.Now.Ticks / 10);
+      retro_perf_callback.perf_log = new LibRetroCore.retro_perf_log_t(() => { });
+      retro_perf_callback.perf_register = new LibRetroCore.retro_perf_register_t((ref LibRetroCore.retro_perf_counter counter) => { });
+      retro_perf_callback.perf_start = new LibRetroCore.retro_perf_start_t((ref LibRetroCore.retro_perf_counter counter) => { });
+      retro_perf_callback.perf_stop = new LibRetroCore.retro_perf_stop_t((ref LibRetroCore.retro_perf_counter counter) => { });
     }
 
-    protected void Init()
+    public void Init()
     {
-      _retro = new LibRetro(_corePath);
+      _retro = new LibRetroCore(_corePath);
       try
       {
         //this series of steps may be mystical.
-        LibRetro.retro_system_info system_info = new LibRetro.retro_system_info();
+        LibRetroCore.retro_system_info system_info = new LibRetroCore.retro_system_info();
         _retro.retro_get_system_info(ref system_info);
 
         _systemInfo = new SystemInfo()
@@ -173,11 +174,11 @@ namespace SharpRetro.LibRetro
           BlockExtract = system_info.block_extract
         };
 
-        //the dosbox core calls GET_SYSTEM_DIRECTORY and GET_SAVE_DIRECTORY from retro_set_environment.
-        //so, lets set some temporary values (which we'll replace)
-        _systemDirectory = Path.GetDirectoryName(_corePath) + "\\";
+        if (string.IsNullOrEmpty(_systemDirectory))
+          _systemDirectory = Path.GetDirectoryName(_corePath);
         _systemDirectoryAtom = _unmanagedResources.StringToHGlobalAnsi(_systemDirectory);
-        _saveDirectory = Path.GetDirectoryName(_corePath) + "\\";
+        if (string.IsNullOrEmpty(_saveDirectory))
+          _saveDirectory = Path.GetDirectoryName(_corePath);
         _saveDirectoryAtom = _unmanagedResources.StringToHGlobalAnsi(_saveDirectory);
         _retro.retro_set_environment(retro_environment_cb);
 
@@ -196,9 +197,65 @@ namespace SharpRetro.LibRetro
     }
     #endregion
 
+    #region Events
+    public event EventHandler VideoReady;
+    protected virtual void OnVideoReady()
+    {
+      var handler = VideoReady;
+      if (handler != null)
+        handler(this, EventArgs.Empty);
+    }
+
+    public event EventHandler FrameBufferReady;
+    protected virtual void OnFrameBufferReady()
+    {
+      var handler = FrameBufferReady;
+      if (handler != null)
+        handler(this, EventArgs.Empty);
+    }
+
+    public event EventHandler AudioReady;
+    protected virtual void OnAudioReady()
+    {
+      var handler = AudioReady;
+      if (handler != null)
+        handler(this, EventArgs.Empty);
+    }
+    #endregion
+
     #region Public Properties
-    public IRetroController Controller { get; set; }
     public Action<string> LogDelegate { get; set; }
+
+    public IGLContext GLContext
+    {
+      get { return _glContext; }
+      set { _glContext = value; }
+    }
+
+    public IRetroController Controller
+    {
+      get { return _retroController; }
+      set
+      {
+        _retroController = value;
+        _retroPad = value as IRetroPad;
+        _retroAnalog = value as IRetroAnalog;
+        _retroKeyboard = value as IRetroKeyboard;
+        _retroPointer = value as IRetroPointer;
+      }
+    }
+
+    public string SystemDirectory
+    {
+      get { return _systemDirectory; }
+      set { _systemDirectory = value; }
+    }
+
+    public string SaveDirectory
+    {
+      get { return _saveDirectory; }
+      set { _saveDirectory = value; }
+    }
 
     public SystemInfo SystemInfo
     {
@@ -227,14 +284,14 @@ namespace SharpRetro.LibRetro
     #endregion
 
     #region Load
-    public bool LoadGame(byte[] data)
+    public bool LoadGame(byte[] data, string path = "")
     {
-      LibRetro.retro_game_info gameInfo = new LibRetro.retro_game_info();
+      LibRetroCore.retro_game_info gameInfo = new LibRetroCore.retro_game_info();
       fixed (byte* p = &data[0])
       {
         gameInfo.data = (IntPtr)p;
         gameInfo.meta = "";
-        gameInfo.path = "";
+        gameInfo.path = path;
         gameInfo.size = (uint)data.Length;
         return Load(gameInfo);
       }
@@ -242,12 +299,12 @@ namespace SharpRetro.LibRetro
 
     public bool LoadGame(string path)
     {
-      LibRetro.retro_game_info gameInfo = new LibRetro.retro_game_info();
+      LibRetroCore.retro_game_info gameInfo = new LibRetroCore.retro_game_info();
       gameInfo.path = path; //is this the right encoding? seems to be ok
       return Load(gameInfo);
     }
 
-    protected bool Load(LibRetro.retro_game_info gameInfo)
+    protected bool Load(LibRetroCore.retro_game_info gameInfo)
     {
       _retro.retro_set_environment(retro_environment_cb);
       _retro.retro_init();
@@ -262,7 +319,7 @@ namespace SharpRetro.LibRetro
       _saveBuffer = new byte[_retro.retro_serialize_size()];
       _saveBuffer2 = new byte[_saveBuffer.Length + 13];
 
-      LibRetro.retro_system_av_info av = new LibRetro.retro_system_av_info();
+      LibRetroCore.retro_system_av_info av = new LibRetroCore.retro_system_av_info();
       _retro.retro_get_system_av_info(ref av);
 
       _videoInfo = new VideoInfo()
@@ -279,65 +336,76 @@ namespace SharpRetro.LibRetro
         VSyncDen = 10000000
       };
 
-      _videoBuffer = new int[av.geometry.max_width * av.geometry.max_height];
+      _maxVideoWidth = (int)av.geometry.max_width;
+      _maxVideoHeight = (int)av.geometry.max_height;
+      _videoBuffer = new int[_maxVideoWidth * _maxVideoHeight];
       _audioBuffer = new AudioBuffer();
       _audioBuffer.Data = new short[2];
       return true;
     }
-    
+
     #endregion
 
     #region Public Methods
+    bool firstRun = true;
     public void Run()
     {
+      if (firstRun)
+      {
+        if (_glContext != null)
+          _glContext.Init(_maxVideoWidth, _maxVideoHeight, _depthBuffer, _stencilBuffer, _bottomLeftOrigin);
+        if (retro_hw_context_reset_cb != null)
+          retro_hw_context_reset_cb();
+        firstRun = false;
+      }
       _retro.retro_run();
     }
     #endregion
 
     #region LibRetro Environment Delegates
-    unsafe bool retro_environment(LibRetro.RETRO_ENVIRONMENT cmd, IntPtr data)
+    unsafe bool retro_environment(LibRetroCore.RETRO_ENVIRONMENT cmd, IntPtr data)
     {
-      Log("Environment: {0}", cmd);
+      //Log("Environment: {0}", cmd);
       switch (cmd)
       {
-        case LibRetro.RETRO_ENVIRONMENT.SET_ROTATION:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_ROTATION:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.GET_OVERSCAN:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_OVERSCAN:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.GET_CAN_DUPE:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_CAN_DUPE:
           //gambatte requires this
           *(bool*)data.ToPointer() = true;
           return true;
-        case LibRetro.RETRO_ENVIRONMENT.SET_MESSAGE:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_MESSAGE:
           {
-            LibRetro.retro_message msg = new LibRetro.retro_message();
+            LibRetroCore.retro_message msg = new LibRetroCore.retro_message();
             Marshal.PtrToStructure(data, msg);
             if (!string.IsNullOrEmpty(msg.msg))
               Log("LibRetro Message: {0}", msg.msg);
             return true;
           }
-        case LibRetro.RETRO_ENVIRONMENT.SHUTDOWN:
+        case LibRetroCore.RETRO_ENVIRONMENT.SHUTDOWN:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.SET_PERFORMANCE_LEVEL:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_PERFORMANCE_LEVEL:
           Log("Core suggested SET_PERFORMANCE_LEVEL {0}", *(uint*)data.ToPointer());
           return true;
-        case LibRetro.RETRO_ENVIRONMENT.GET_SYSTEM_DIRECTORY:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_SYSTEM_DIRECTORY:
           //mednafen NGP neopop fails to launch with no system directory
           Directory.CreateDirectory(_systemDirectory); //just to be safe, it seems likely that cores will crash without a created system directory
           Log("returning system directory: " + _systemDirectory);
           *((IntPtr*)data.ToPointer()) = _systemDirectoryAtom;
           return true;
-        case LibRetro.RETRO_ENVIRONMENT.SET_PIXEL_FORMAT:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_PIXEL_FORMAT:
           {
-            LibRetro.RETRO_PIXEL_FORMAT fmt = 0;
+            LibRetroCore.RETRO_PIXEL_FORMAT fmt = 0;
             int[] tmp = new int[1];
             Marshal.Copy(data, tmp, 0, 1);
-            fmt = (LibRetro.RETRO_PIXEL_FORMAT)tmp[0];
+            fmt = (LibRetroCore.RETRO_PIXEL_FORMAT)tmp[0];
             switch (fmt)
             {
-              case LibRetro.RETRO_PIXEL_FORMAT.RGB565:
-              case LibRetro.RETRO_PIXEL_FORMAT.XRGB1555:
-              case LibRetro.RETRO_PIXEL_FORMAT.XRGB8888:
+              case LibRetroCore.RETRO_PIXEL_FORMAT.RGB565:
+              case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB1555:
+              case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB8888:
                 _pixelFormat = fmt;
                 Log("New pixel format set: {0}", _pixelFormat);
                 return true;
@@ -346,22 +414,30 @@ namespace SharpRetro.LibRetro
                 return false;
             }
           }
-        case LibRetro.RETRO_ENVIRONMENT.SET_INPUT_DESCRIPTORS:
-          return true;
-        case LibRetro.RETRO_ENVIRONMENT.SET_KEYBOARD_CALLBACK:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_INPUT_DESCRIPTORS:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.SET_DISK_CONTROL_INTERFACE:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_KEYBOARD_CALLBACK:
+          return false;
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_DISK_CONTROL_INTERFACE:
           return true;
-        case LibRetro.RETRO_ENVIRONMENT.SET_HW_RENDER:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_HW_RENDER:
           {
             //mupen64plus needs this, as well as 3dengine
-            LibRetro.retro_hw_render_callback* info = (LibRetro.retro_hw_render_callback*)data.ToPointer();
-            info->get_current_framebuffer = Marshal.GetFunctionPointerForDelegate(retro_hw_get_current_framebuffer_cb);
-            info->get_proc_address = Marshal.GetFunctionPointerForDelegate(retro_hw_get_proc_address_cb);
+            LibRetroCore.retro_hw_render_callback* info = (LibRetroCore.retro_hw_render_callback*)data.ToPointer();
             Log("SET_HW_RENDER: {0}, version={1}.{2}, dbg/cache={3}/{4}, depth/stencil = {5}/{6}{7}", info->context_type, info->version_minor, info->version_major, info->debug_context, info->cache_context, info->depth, info->stencil, info->bottom_left_origin ? " (bottomleft)" : "");
-            return true;
+            if (_glContext != null)
+            {
+              info->get_current_framebuffer = Marshal.GetFunctionPointerForDelegate(retro_hw_get_current_framebuffer_cb);
+              info->get_proc_address = Marshal.GetFunctionPointerForDelegate(retro_hw_get_proc_address_cb);
+              retro_hw_context_reset_cb = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_reset);
+              _depthBuffer = info->depth;
+              _stencilBuffer = info->stencil;
+              _bottomLeftOrigin = info->bottom_left_origin;
+              return true;
+            }
+            return false;
           }
-        case LibRetro.RETRO_ENVIRONMENT.GET_VARIABLE:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_VARIABLE:
           {
             void** variablesPtr = (void**)data.ToPointer();
             IntPtr pKey = new IntPtr(*variablesPtr++);
@@ -369,18 +445,13 @@ namespace SharpRetro.LibRetro
             Log("Requesting variable: {0}", key);
             //always return default
             //TODO: cache settings atoms
-            if (!_variables.ContainsKey(key))
+            VariableDescription variable;
+            if (!_variables.TryGet(key, out variable))
               return false;
-            //HACK: return pointer for desmume mouse, i want to implement that first
-            if (key == "desmume_pointer_type")
-            {
-              *variablesPtr = _unmanagedResources.StringToHGlobalAnsi("touch").ToPointer();
-              return true;
-            }
-            *variablesPtr = _unmanagedResources.StringToHGlobalAnsi(_variables[key].DefaultOption).ToPointer();
+            *variablesPtr = _unmanagedResources.StringToHGlobalAnsi(variable.DefaultOption).ToPointer();
             return true;
           }
-        case LibRetro.RETRO_ENVIRONMENT.SET_VARIABLES:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_VARIABLES:
           {
             void** variablesPtr = (void**)data.ToPointer();
             for (;;)
@@ -395,52 +466,47 @@ namespace SharpRetro.LibRetro
               var parts = value.Split(';');
               vd.Description = parts[0];
               vd.Options = parts[1].TrimStart(' ').Split('|');
-              _variables[vd.Name] = vd;
+              _variables.AddOrUpdate(vd);
               Log("set variable: Name: {0}, Description: {1}, Options: {2}", key, parts[0], parts[1].TrimStart(' '));
             }
           }
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.GET_VARIABLE_UPDATE:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_VARIABLE_UPDATE:
+          return _variables.Updated;
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_SUPPORT_NO_GAME:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.SET_SUPPORT_NO_GAME:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_LIBRETRO_PATH:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.GET_LIBRETRO_PATH:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_AUDIO_CALLBACK:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.SET_AUDIO_CALLBACK:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_FRAME_TIME_CALLBACK:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.SET_FRAME_TIME_CALLBACK:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_RUMBLE_INTERFACE:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.GET_RUMBLE_INTERFACE:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_INPUT_DEVICE_CAPABILITIES:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.GET_INPUT_DEVICE_CAPABILITIES:
-          return false;
-        case LibRetro.RETRO_ENVIRONMENT.GET_LOG_INTERFACE:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_LOG_INTERFACE:
           *(IntPtr*)data = Marshal.GetFunctionPointerForDelegate(retro_log_printf_cb);
           return true;
-        case LibRetro.RETRO_ENVIRONMENT.GET_PERF_INTERFACE:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_PERF_INTERFACE:
           //some builds of fmsx core crash without this set
           Marshal.StructureToPtr(retro_perf_callback, data, false);
           return true;
-        case LibRetro.RETRO_ENVIRONMENT.GET_LOCATION_INTERFACE:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_LOCATION_INTERFACE:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.GET_CORE_ASSETS_DIRECTORY:
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_CORE_ASSETS_DIRECTORY:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.GET_SAVE_DIRECTORY:
-          //supposedly optional like everything else here, but without it ?? crashes (please write which case)
-          //this will suffice for now. if we find evidence later it's needed we can stash a string with 
-          //unmanagedResources and CoreFileProvider
-          //mednafen NGP neopop, desmume, and others, request this, and falls back on the system directory if it isn't provided
-          //desmume crashes if the directory doesn't exist
+        case LibRetroCore.RETRO_ENVIRONMENT.GET_SAVE_DIRECTORY:
           Directory.CreateDirectory(_saveDirectory);
           Log("returning save directory: " + _saveDirectory);
           *((IntPtr*)data.ToPointer()) = _saveDirectoryAtom;
           return true;
-        case LibRetro.RETRO_ENVIRONMENT.SET_CONTROLLER_INFO:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_CONTROLLER_INFO:
           return true;
-        case LibRetro.RETRO_ENVIRONMENT.SET_MEMORY_MAPS:
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_MEMORY_MAPS:
           return false;
-        case LibRetro.RETRO_ENVIRONMENT.SET_GEOMETRY:
-          LibRetro.retro_game_geometry geometry = *((LibRetro.retro_game_geometry*)data.ToPointer());
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_GEOMETRY:
+          LibRetroCore.retro_game_geometry geometry = *((LibRetroCore.retro_game_geometry*)data.ToPointer());
           VideoInfo videoInfo = new VideoInfo()
           {
             BufferWidth = (int)geometry.base_width,
@@ -450,7 +516,7 @@ namespace SharpRetro.LibRetro
           _videoInfo = videoInfo;
           return true;
         default:
-          Log("Unknkown retro_environment command {0}", (int)cmd);
+          Log("Unknkown retro_environment command {0} - {1}", (int)cmd, cmd);
           return false;
       }
     }
@@ -470,6 +536,17 @@ namespace SharpRetro.LibRetro
       };
       _videoInfo = videoInfo;
 
+      //Frame buffer ready
+      if (data.ToInt32() == LibRetroCore.RETRO_HW_FRAME_BUFFER_VALID)
+      {
+        if (_glContext != null)
+        {
+          _glContext.FrameBufferReady((int)width, (int)height);
+          OnFrameBufferReady();
+        }
+        return;
+      }
+
       if (width * height > _videoBuffer.Length)
       {
         Log("Unexpected libretro video buffer overrun?");
@@ -477,23 +554,24 @@ namespace SharpRetro.LibRetro
       }
       fixed (int* dst = &_videoBuffer[0])
       {
-        if (_pixelFormat == LibRetro.RETRO_PIXEL_FORMAT.XRGB8888)
+        if (_pixelFormat == LibRetroCore.RETRO_PIXEL_FORMAT.XRGB8888)
           Blit888((int*)data, dst, (int)width, (int)height, (int)pitch / 4);
-        else if (_pixelFormat == LibRetro.RETRO_PIXEL_FORMAT.RGB565)
+        else if (_pixelFormat == LibRetroCore.RETRO_PIXEL_FORMAT.RGB565)
           Blit565((short*)data, dst, (int)width, (int)height, (int)pitch / 2);
         else
           Blit555((short*)data, dst, (int)width, (int)height, (int)pitch / 2);
       }
+      OnVideoReady();
     }
 
-    UIntPtr retro_hw_get_current_framebuffer()
+    uint retro_hw_get_current_framebuffer()
     {
-      return UIntPtr.Zero;
+      return _glContext != null ? _glContext.FrameBufferId : 0;
     }
 
-    IntPtr retro_hw_get_proc_address(string sym)
+    IntPtr retro_hw_get_proc_address(IntPtr sym)
     {
-      return IntPtr.Zero;
+      return _glContext != null ? _glContext.GetProcAddress(sym) : IntPtr.Zero;
     }
 
     void Blit555(short* src, int* dst, int width, int height, int pitch)
@@ -570,6 +648,7 @@ namespace SharpRetro.LibRetro
       _audioBuffer.Data[0] = left;
       _audioBuffer.Data[1] = right;
       _audioBuffer.Length = 2;
+      OnAudioReady();
     }
 
     uint retro_audio_sample_batch(IntPtr data, uint frames)
@@ -579,6 +658,7 @@ namespace SharpRetro.LibRetro
         _audioBuffer.Data = new short[samples];
       Marshal.Copy(data, _audioBuffer.Data, 0, samples);
       _audioBuffer.Length = samples;
+      OnAudioReady();
       return frames;
     }
     #endregion
@@ -596,39 +676,48 @@ namespace SharpRetro.LibRetro
     //id = button id (or key id)
     short retro_input_state(uint port, uint device, uint index, uint id)
     {
-      switch ((LibRetro.RETRO_DEVICE)device)
+      switch ((LibRetroCore.RETRO_DEVICE)device)
       {
-        case LibRetro.RETRO_DEVICE.POINTER:
+        case LibRetroCore.RETRO_DEVICE.POINTER:
           {
-            IRetroPointer pointer = Controller as IRetroPointer;
-            if (pointer != null)
+            if (_retroPointer != null)
             {
-              switch ((LibRetro.RETRO_DEVICE_ID_POINTER)id)
+              switch ((LibRetroCore.RETRO_DEVICE_ID_POINTER)id)
               {
-                case LibRetro.RETRO_DEVICE_ID_POINTER.X: return pointer.GetPointerX();
-                case LibRetro.RETRO_DEVICE_ID_POINTER.Y: return pointer.GetPointerY();
-                case LibRetro.RETRO_DEVICE_ID_POINTER.PRESSED: return (short)(pointer.IsPointerPressed() ? 1 : 0);
+                case LibRetroCore.RETRO_DEVICE_ID_POINTER.X: return _retroPointer.GetPointerX();
+                case LibRetroCore.RETRO_DEVICE_ID_POINTER.Y: return _retroPointer.GetPointerY();
+                case LibRetroCore.RETRO_DEVICE_ID_POINTER.PRESSED: return (short)(_retroPointer.IsPointerPressed() ? 1 : 0);
               }
             }
             return 0;
           }
 
-        case LibRetro.RETRO_DEVICE.KEYBOARD:
-          {            
-            LibRetro.RETRO_KEY key = (LibRetro.RETRO_KEY)id;
-            IRetroKeyboard keyboard = Controller as IRetroKeyboard;
-            return (short)(keyboard != null && keyboard.IsKeyPressed(key) ? 1 : 0);
+        case LibRetroCore.RETRO_DEVICE.KEYBOARD:
+          {
+            if (_retroKeyboard == null)
+              break;
+            LibRetroCore.RETRO_KEY key = (LibRetroCore.RETRO_KEY)id;
+            return (short)(_retroKeyboard.IsKeyPressed(key) ? 1 : 0);
           }
 
-        case LibRetro.RETRO_DEVICE.JOYPAD:
+        case LibRetroCore.RETRO_DEVICE.JOYPAD:
           {
-            LibRetro.RETRO_DEVICE_ID_JOYPAD button = (LibRetro.RETRO_DEVICE_ID_JOYPAD)id;
-            IRetroPad pad = Controller as IRetroPad;
-            return (short)(pad != null && pad.IsButtonPressed((int)port, button) ? 1 : 0);
+            if (_retroPad == null)
+              break;
+            LibRetroCore.RETRO_DEVICE_ID_JOYPAD button = (LibRetroCore.RETRO_DEVICE_ID_JOYPAD)id;
+            return (short)(_retroPad.IsButtonPressed(port, button) ? 1 : 0);
           }
-        default:
-          return 0;
+
+        case LibRetroCore.RETRO_DEVICE.ANALOG:
+          {
+            if (_retroAnalog == null)
+              break;
+            LibRetroCore.RETRO_DEVICE_INDEX_ANALOG analogIndex = (LibRetroCore.RETRO_DEVICE_INDEX_ANALOG)index;
+            LibRetroCore.RETRO_DEVICE_ID_ANALOG analogDirection = (LibRetroCore.RETRO_DEVICE_ID_ANALOG)id;
+            return _retroAnalog.GetAnalog(port, analogIndex, analogDirection);
+          }
       }
+      return 0;
     }
     #endregion
 
@@ -640,7 +729,7 @@ namespace SharpRetro.LibRetro
         logDlgt(string.Format(format, args));
     }
 
-    unsafe void retro_log_printf(LibRetro.RETRO_LOG_LEVEL level, string fmt, IntPtr a0, IntPtr a1, IntPtr a2, IntPtr a3, IntPtr a4, IntPtr a5, IntPtr a6, IntPtr a7, IntPtr a8, IntPtr a9, IntPtr a10, IntPtr a11, IntPtr a12, IntPtr a13, IntPtr a14, IntPtr a15)
+    unsafe void retro_log_printf(LibRetroCore.RETRO_LOG_LEVEL level, string fmt, IntPtr a0, IntPtr a1, IntPtr a2, IntPtr a3, IntPtr a4, IntPtr a5, IntPtr a6, IntPtr a7, IntPtr a8, IntPtr a9, IntPtr a10, IntPtr a11, IntPtr a12, IntPtr a13, IntPtr a14, IntPtr a15)
     {
       var logDlgt = LogDelegate;
       if (logDlgt == null)
@@ -649,7 +738,16 @@ namespace SharpRetro.LibRetro
       //I'm not sure this is a great idea. It would suck for silly logging to be unstable. But.. I dont think this is unstable. The sprintf might just print some garbledy stuff.
       var args = new IntPtr[] { a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15 };
       int idx = 0;
-      logDlgt(Sprintf.sprintf(fmt, () => args[idx++]));
+      string logStr;
+      try
+      {
+        logStr = Sprintf.sprintf(fmt, () => args[idx++]);
+      }
+      catch(Exception ex)
+      {
+        logStr = string.Format("Error in sprintf - {0}", ex);
+      }
+      logDlgt(logStr);
     }
     #endregion
 
@@ -660,6 +758,11 @@ namespace SharpRetro.LibRetro
       {
         _retro.Dispose();
         _retro = null;
+      }
+      if (_glContext != null)
+      {
+        _glContext.Dispose();
+        _glContext = null;
       }
       _unmanagedResources.Dispose();
     }
