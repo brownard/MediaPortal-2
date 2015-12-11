@@ -152,7 +152,7 @@ namespace Emulators.LibRetro
         dlgt();
     }
 
-    protected void RetroLogDlgt(string message)
+    protected void RetroLogDlgt(LibRetroCore.RETRO_LOG_LEVEL level, string message)
     {
       ServiceRegistration.Get<ILogger>().Info("LibRetro: {0}", message);
     }

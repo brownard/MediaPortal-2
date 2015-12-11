@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 namespace SharpRetro.LibRetro
 {
   #region Helper Classes
+  public delegate void LogDelegate(LibRetroCore.RETRO_LOG_LEVEL level, string message);
+
   public class VideoInfo
   {
     public float DAR { get; set; }
@@ -96,12 +98,16 @@ namespace SharpRetro.LibRetro
     protected LibRetroCore _retro;
     protected UnmanagedResourceHeap _unmanagedResources = new UnmanagedResourceHeap();
     protected LibRetroVariables _variables = new LibRetroVariables();
+    protected LogDelegate _logDelegate;
 
+    bool _firstRun = true;
     protected string _systemDirectory;
     protected IntPtr _systemDirectoryAtom;
     protected string _saveDirectory;
     protected IntPtr _saveDirectoryAtom;
 
+    protected bool _supportsNoGame;
+    protected IGLContext _glContext;
     protected int[] _videoBuffer;
     protected int _maxVideoWidth;
     protected int _maxVideoHeight;
@@ -116,8 +122,6 @@ namespace SharpRetro.LibRetro
     protected VideoInfo _videoInfo;
     protected TimingInfo _timingInfo;
     protected LibRetroCore.RETRO_PIXEL_FORMAT _pixelFormat = LibRetroCore.RETRO_PIXEL_FORMAT.XRGB1555;
-
-    protected IGLContext _glContext;
 
     protected IRetroController _retroController;
     protected IRetroPad _retroPad;
@@ -224,7 +228,11 @@ namespace SharpRetro.LibRetro
     #endregion
 
     #region Public Properties
-    public Action<string> LogDelegate { get; set; }
+    public LogDelegate LogDelegate
+    {
+      get { return _logDelegate; }
+      set { _logDelegate = value; }
+    }
 
     public IGLContext GLContext
     {
@@ -311,7 +319,7 @@ namespace SharpRetro.LibRetro
 
       if (!_retro.retro_load_game(ref gameInfo))
       {
-        Log("retro_load_game() failed");
+        Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "retro_load_game() failed");
         return false;
       }
 
@@ -347,16 +355,15 @@ namespace SharpRetro.LibRetro
     #endregion
 
     #region Public Methods
-    bool firstRun = true;
     public void Run()
     {
-      if (firstRun)
+      if (_firstRun)
       {
         if (_glContext != null)
           _glContext.Init(_maxVideoWidth, _maxVideoHeight, _depthBuffer, _stencilBuffer, _bottomLeftOrigin);
         if (retro_hw_context_reset_cb != null)
           retro_hw_context_reset_cb();
-        firstRun = false;
+        _firstRun = false;
       }
       _retro.retro_run();
     }
@@ -381,18 +388,18 @@ namespace SharpRetro.LibRetro
             LibRetroCore.retro_message msg = new LibRetroCore.retro_message();
             Marshal.PtrToStructure(data, msg);
             if (!string.IsNullOrEmpty(msg.msg))
-              Log("LibRetro Message: {0}", msg.msg);
+              Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "LibRetro Message: {0}", msg.msg);
             return true;
           }
         case LibRetroCore.RETRO_ENVIRONMENT.SHUTDOWN:
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_PERFORMANCE_LEVEL:
-          Log("Core suggested SET_PERFORMANCE_LEVEL {0}", *(uint*)data.ToPointer());
+          Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Core suggested SET_PERFORMANCE_LEVEL {0}", *(uint*)data.ToPointer());
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_SYSTEM_DIRECTORY:
           //mednafen NGP neopop fails to launch with no system directory
           Directory.CreateDirectory(_systemDirectory); //just to be safe, it seems likely that cores will crash without a created system directory
-          Log("returning system directory: " + _systemDirectory);
+          Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "returning system directory: " + _systemDirectory);
           *((IntPtr*)data.ToPointer()) = _systemDirectoryAtom;
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_PIXEL_FORMAT:
@@ -407,10 +414,10 @@ namespace SharpRetro.LibRetro
               case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB1555:
               case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB8888:
                 _pixelFormat = fmt;
-                Log("New pixel format set: {0}", _pixelFormat);
+                Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "New pixel format set: {0}", _pixelFormat);
                 return true;
               default:
-                Log("Unrecognized pixel format: {0}", (int)_pixelFormat);
+                Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Unrecognized pixel format: {0}", (int)_pixelFormat);
                 return false;
             }
           }
@@ -424,7 +431,7 @@ namespace SharpRetro.LibRetro
           {
             //mupen64plus needs this, as well as 3dengine
             LibRetroCore.retro_hw_render_callback* info = (LibRetroCore.retro_hw_render_callback*)data.ToPointer();
-            Log("SET_HW_RENDER: {0}, version={1}.{2}, dbg/cache={3}/{4}, depth/stencil = {5}/{6}{7}", info->context_type, info->version_minor, info->version_major, info->debug_context, info->cache_context, info->depth, info->stencil, info->bottom_left_origin ? " (bottomleft)" : "");
+            Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "SET_HW_RENDER: {0}, version={1}.{2}, dbg/cache={3}/{4}, depth/stencil = {5}/{6}{7}", info->context_type, info->version_minor, info->version_major, info->debug_context, info->cache_context, info->depth, info->stencil, info->bottom_left_origin ? " (bottomleft)" : "");
             if (_glContext != null)
             {
               info->get_current_framebuffer = Marshal.GetFunctionPointerForDelegate(retro_hw_get_current_framebuffer_cb);
@@ -442,7 +449,7 @@ namespace SharpRetro.LibRetro
             void** variablesPtr = (void**)data.ToPointer();
             IntPtr pKey = new IntPtr(*variablesPtr++);
             string key = Marshal.PtrToStringAnsi(pKey);
-            Log("Requesting variable: {0}", key);
+            Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Requesting variable: {0}", key);
             //always return default
             //TODO: cache settings atoms
             VariableDescription variable;
@@ -467,14 +474,15 @@ namespace SharpRetro.LibRetro
               vd.Description = parts[0];
               vd.Options = parts[1].TrimStart(' ').Split('|');
               _variables.AddOrUpdate(vd);
-              Log("set variable: Name: {0}, Description: {1}, Options: {2}", key, parts[0], parts[1].TrimStart(' '));
+              Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "set variable: Name: {0}, Description: {1}, Options: {2}", key, parts[0], parts[1].TrimStart(' '));
             }
           }
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_VARIABLE_UPDATE:
           return _variables.Updated;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_SUPPORT_NO_GAME:
-          return false;
+          _supportsNoGame = true;
+          return true;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_LIBRETRO_PATH:
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_AUDIO_CALLBACK:
@@ -498,7 +506,7 @@ namespace SharpRetro.LibRetro
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_SAVE_DIRECTORY:
           Directory.CreateDirectory(_saveDirectory);
-          Log("returning save directory: " + _saveDirectory);
+          Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "returning save directory: " + _saveDirectory);
           *((IntPtr*)data.ToPointer()) = _saveDirectoryAtom;
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_CONTROLLER_INFO:
@@ -516,7 +524,7 @@ namespace SharpRetro.LibRetro
           _videoInfo = videoInfo;
           return true;
         default:
-          Log("Unknkown retro_environment command {0} - {1}", (int)cmd, cmd);
+          Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "Unknkown retro_environment command {0} - {1}", (int)cmd, cmd);
           return false;
       }
     }
@@ -549,7 +557,7 @@ namespace SharpRetro.LibRetro
 
       if (width * height > _videoBuffer.Length)
       {
-        Log("Unexpected libretro video buffer overrun?");
+        Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "Unexpected libretro video buffer overrun?");
         return;
       }
       fixed (int* dst = &_videoBuffer[0])
@@ -722,17 +730,15 @@ namespace SharpRetro.LibRetro
     #endregion
 
     #region LibRetro Log Delegates
-    protected void Log(string format, params object[] args)
+    protected void Log(LibRetroCore.RETRO_LOG_LEVEL level, string format, params object[] args)
     {
-      var logDlgt = LogDelegate;
-      if (logDlgt != null)
-        logDlgt(string.Format(format, args));
+      if (_logDelegate != null)
+        _logDelegate(level, string.Format(format, args));
     }
 
     unsafe void retro_log_printf(LibRetroCore.RETRO_LOG_LEVEL level, string fmt, IntPtr a0, IntPtr a1, IntPtr a2, IntPtr a3, IntPtr a4, IntPtr a5, IntPtr a6, IntPtr a7, IntPtr a8, IntPtr a9, IntPtr a10, IntPtr a11, IntPtr a12, IntPtr a13, IntPtr a14, IntPtr a15)
     {
-      var logDlgt = LogDelegate;
-      if (logDlgt == null)
+      if (_logDelegate == null)
         return;
       //avert your eyes, these things were not meant to be seen in c#
       //I'm not sure this is a great idea. It would suck for silly logging to be unstable. But.. I dont think this is unstable. The sprintf might just print some garbledy stuff.
@@ -747,7 +753,7 @@ namespace SharpRetro.LibRetro
       {
         logStr = string.Format("Error in sprintf - {0}", ex);
       }
-      logDlgt(logStr);
+      _logDelegate(level, logStr);
     }
     #endregion
 
