@@ -88,6 +88,7 @@
     <Compile Include="Input\KeyboardHook.cs" />
     <Compile Include="LibRetro\Controllers\Keyboard.cs" />
     <Compile Include="LibRetro\Controllers\KeyboardController.cs" />
+    <Compile Include="LibRetro\LibRetroFrontend.cs" />
     <Compile Include="LibRetro\LibRetroMediaItem.cs" />
     <Compile Include="LibRetro\Renderers\GlContextProvider.cs" />
     <Compile Include="LibRetro\Renderers\OpenGLHelper.cs" />

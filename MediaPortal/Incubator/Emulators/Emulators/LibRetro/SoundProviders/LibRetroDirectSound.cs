@@ -1,4 +1,5 @@
 ﻿using MediaPortal.Common;
+using MediaPortal.Common.Logging;
 using MediaPortal.Common.Settings;
 using MediaPortal.UI.Players.Video.Settings;
 using SharpDX.DirectSound;
@@ -21,19 +22,14 @@ namespace Emulators.LibRetro.SoundProviders
     protected int _bufferBytes;
     protected int _nextWrite;
 
-    public LibRetroDirectSound(IntPtr windowHandler, int sampleRate)
-    {
-      _sampleRate = sampleRate;
-      Init(windowHandler);
-    }
-
     public int SampleRate
     {
       get { return _sampleRate; }
     }
 
-    protected bool Init(IntPtr windowHandler)
+    public bool Init(IntPtr windowHandler, int sampleRate)
     {
+      _sampleRate = sampleRate;
       try
       {
         InitializeDirectSound(windowHandler);
@@ -42,6 +38,7 @@ namespace Emulators.LibRetro.SoundProviders
       }
       catch (Exception ex)
       {
+        ServiceRegistration.Get<ILogger>().Warn("LibRetroDirectSound: Failed to initialise device", ex);
         return false;
       }
     }
@@ -109,9 +106,28 @@ namespace Emulators.LibRetro.SoundProviders
       }
       catch (Exception ex)
       {
+        ServiceRegistration.Get<ILogger>().Warn("LibRetroDirectSound: Failed to start playback", ex);
         return false;
       }
       return true;
+    }
+
+    public void Pause()
+    {
+      if (_secondaryBuffer != null)
+        _secondaryBuffer.Stop();
+    }
+
+    public void UnPause()
+    {
+      if (_secondaryBuffer != null)
+        _secondaryBuffer.Play(0, PlayFlags.Looping);
+    }
+
+    public void SetVolume(int volume)
+    {
+      if (_secondaryBuffer != null)
+        _secondaryBuffer.Volume = volume;
     }
 
     protected void Synchronize(int count)
