@@ -10,18 +10,16 @@ namespace Emulators.LibRetro
 {
   public class LibRetroMediaItem : MediaItem
   {
-    public LibRetroMediaItem(IDictionary<Guid, MediaItemAspect> aspects)
+    public LibRetroMediaItem(string libRetroPath, IDictionary<Guid, MediaItemAspect> aspects)
       : base(Guid.Empty, aspects)
     {
-      //Aspects[ProviderResourceAspect.ASPECT_ID].SetAttribute(ProviderResourceAspect.ATTR_SYSTEM_ID, ServiceRegistration.Get<ISystemResolver>().LocalSystemId);
+      LibRetroPath = libRetroPath;
       //otherwise MP2's player manager won't try and find a player 
       if (!Aspects.ContainsKey(VideoAspect.Metadata.AspectId))
         Aspects[VideoAspect.Metadata.AspectId] = new MediaItemAspect(VideoAspect.Metadata);
     }
 
-    public bool TryGetPlatform(out string platform)
-    {
-      return MediaItemAspect.TryGetAttribute(Aspects, Common.Games.GameAspect.ATTR_PLATFORM, out platform);
-    }
+    public string LibRetroPath { get; set; }
+    public string ExtractedPath { get; set; }
   }
 }

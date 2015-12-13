@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 using MediaPortal.UI.Presentation.Workflow;
 using MediaPortal.UI.Presentation.Screens;
 using MediaPortal.Common;
-using MediaPortal.Common.General;
-using Emulators.Common;
 using MediaPortal.Common.ResourceAccess;
 using MediaPortal.UiComponents.SkinBase.General;
 using Emulators.Common.Emulators;
@@ -79,7 +77,7 @@ namespace Emulators.Models
         return;
       EmulatorType emulatorType = (EmulatorType)selectedTypeItem.AdditionalProperties[KEY_EMULATOR_TYPE];
       _emulatorProxy = new EmulatorProxy(emulatorType);
-      if (emulatorType == EmulatorType.Emulator)
+      if (emulatorType == EmulatorType.Emulator || emulatorType == EmulatorType.LibRetro)
         NavigatePush(STATE_CHOOSE_PATH);
       else
         NavigatePush(STATE_EDIT_NAME);
@@ -88,7 +86,7 @@ namespace Emulators.Models
     protected void EditEmulatorConfiguration(ListItem item)
     {
       _emulatorProxy = new EmulatorProxy((EmulatorConfiguration)item.AdditionalProperties[KEY_CONFIGURATION]);
-      if (_emulatorProxy.EmulatorType == EmulatorType.Emulator)
+      if (_emulatorProxy.EmulatorType == EmulatorType.Emulator || _emulatorProxy.EmulatorType == EmulatorType.LibRetro)
         NavigatePush(STATE_CHOOSE_PATH);
       else
         NavigatePush(STATE_EDIT_NAME);
@@ -105,6 +103,7 @@ namespace Emulators.Models
       {
         configuration = new EmulatorConfiguration();
         configuration.IsNative = _emulatorProxy.EmulatorType == EmulatorType.Native;
+        configuration.IsLibRetro = _emulatorProxy.EmulatorType == EmulatorType.LibRetro;
         configuration.Id = Guid.NewGuid();
         configuration.LocalSystemId = ServiceRegistration.Get<ISystemResolver>().LocalSystemId;
       }
@@ -139,6 +138,9 @@ namespace Emulators.Models
       ListItem nativeItem = new ListItem(Consts.KEY_NAME, "[Emulators.Config.EmulatorType.Native]");
       nativeItem.AdditionalProperties[KEY_EMULATOR_TYPE] = EmulatorType.Native;
       _emulatorTypes.Add(nativeItem);
+      ListItem libRetroItem = new ListItem(Consts.KEY_NAME, "[Emulators.Config.EmulatorType.LibRetro]");
+      libRetroItem.AdditionalProperties[KEY_EMULATOR_TYPE] = EmulatorType.LibRetro;
+      _emulatorTypes.Add(libRetroItem);
       _emulatorTypes.FireChange();
     }
 

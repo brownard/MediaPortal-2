@@ -60,7 +60,7 @@
           <Button x:Name="FinishButton" Grid.Column="2" Style="{ThemeResource WizardButtonStyle}"
               Content="[System.Finish]" Command="{Command Source={StaticResource Model},Path=FinishEmulatorConfiguration}">
             <Button.IsVisible>
-              <Binding Path="EmulatorProxy.EmulatorType" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {EmulatorType}.{Native}"/>
+              <Binding Path="EmulatorProxy.EmulatorType" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} != {EmulatorType}.{Emulator}"/>
             </Button.IsVisible>
           </Button>
         </Grid>

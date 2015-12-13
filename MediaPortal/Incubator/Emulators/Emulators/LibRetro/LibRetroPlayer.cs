@@ -13,28 +13,11 @@ using MediaPortal.UI.SkinEngine;
 using MediaPortal.Common;
 using MediaPortal.Common.PathManager;
 using MediaPortal.Common.ResourceAccess;
-using MediaPortal.Common.MediaManagement;
 
 namespace Emulators.LibRetro
 {
-  public class LibRetroPlayer : ISharpDXVideoPlayer, IDisposable
+  public class LibRetroPlayer : ISharpDXVideoPlayer, IMediaPlaybackControl, IDisposable
   {
-    const string CORE_PATH = @"E:\Games\Cores\catsfc_libretro.dll";
-    const string GAME_PATH = @"E:\Games\SNES\Super Mario Kart (USA).sfc";
-
-    const string CORE_PATH_PSX = @"E:\Games\Cores\beetle_psx_libretro.dll";
-    const string GAME_PATH_PSX = @"E:\Games\PSX\Crash Team Racing [SCUS-94426].cue";
-
-    const string CORE_PATH_SEGA = @"E:\Games\Cores\genesis_plus_gx_libretro.dll";
-    const string GAME_PATH_SEGA = @"E:\Games\MegaDrive\Sonic the Hedgehog 2 (World).md";
-
-    const string CORE_PATH_N64 = @"E:\Games\Cores\mupen64plus_libretro_st.dll";
-    const string GAME_PATH_N64 = @"E:\Games\Banjo-Kazooie (E) (M3) [!].z64";
-    //const string GAME_PATH_N64 = @"E:\Games\Cores\Mario Kart 64 (E) (V1.0) [!].z64";
-
-    const string CORE_PATH_3D = @"C:\Users\Brownard\Downloads\RetroArch\3dengine_libretro_d.dll";
-    const string GAME_PATH_3D = @"E:\Games\Cores\box.obj";
-
     #region Protected Members
     protected const string AUDIO_STREAM_NAME = "Audio1";
     protected static string[] DEFAULT_AUDIO_STREAM_NAMES = new[] { AUDIO_STREAM_NAME };
@@ -65,17 +48,20 @@ namespace Emulators.LibRetro
       get { return _state; }
     }
 
-    public void Play(MediaItem mediaItem)
+    public void Play(LibRetroMediaItem mediaItem)
     {
       if (_retro != null)
         return;
 
-      //if (!mediaItem.GetResourceLocator().TryCreateLocalFsAccessor(out _accessor))
-      //  return;
-
-      string corePath = CORE_PATH_N64;
-      string gamePath = GAME_PATH_N64;
-      _retro = new LibRetroFrontend(corePath, gamePath, SAVE_DIRECTORY);
+      string gamePath;
+      if (!string.IsNullOrEmpty(mediaItem.ExtractedPath))
+        gamePath = mediaItem.ExtractedPath;
+      else if (mediaItem.GetResourceLocator().TryCreateLocalFsAccessor(out _accessor))
+        gamePath = _accessor.LocalFileSystemPath;
+      else
+        return;
+      
+      _retro = new LibRetroFrontend(mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY);
       if (_retro.Init())
       {
         _retro.Run();
@@ -86,6 +72,72 @@ namespace Emulators.LibRetro
     public void Stop()
     {
       Dispose();
+      _state = PlayerState.Stopped;
+    }
+    #endregion
+
+    #region IMediaPlaybackControl
+    public bool SetPlaybackRate(double value)
+    {
+      return false;
+    }
+
+    public void Pause()
+    {
+      if (_retro != null)
+        _retro.Pause();
+    }
+
+    public void Resume()
+    {
+      if (_retro != null)
+        _retro.Unpause();
+    }
+
+    public void Restart()
+    {
+
+    }
+
+    public TimeSpan CurrentTime
+    {
+      get { return TimeSpan.Zero; }
+      set { }
+    }
+
+    public TimeSpan Duration
+    {
+      get { return TimeSpan.Zero; }
+    }
+
+    public double PlaybackRate
+    {
+      get { return 1; }
+    }
+
+    public bool IsPlayingAtNormalRate
+    {
+      get { return true; }
+    }
+
+    public bool IsSeeking
+    {
+      get { return false; }
+    }
+
+    public bool IsPaused
+    {
+      get { return _retro != null ? _retro.Paused : false; }
+    }
+
+    public bool CanSeekForwards
+    {
+      get { return false; }
+    }
+
+    public bool CanSeekBackwards
+    {
+      get { return false; }
     }
     #endregion
 

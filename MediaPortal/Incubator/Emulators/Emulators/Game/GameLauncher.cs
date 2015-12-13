@@ -70,9 +70,6 @@ namespace Emulators.Game
 
     public bool LaunchGame(MediaItem mediaItem)
     {
-      LibRetroMediaItem libRetroItem = new LibRetroMediaItem(mediaItem.Aspects);
-      PlayItemsModel.CheckQueryPlayAction(libRetroItem);
-      return true;
       _mediaItem = mediaItem;
       EmulatorConfiguration configuration;
       if (!TryGetConfiguration(mediaItem, out configuration))
@@ -96,7 +93,7 @@ namespace Emulators.Game
           LaunchGoodmergeGame(_resourceAccessor, goodmergeItems, selectedItem, configuration);
           return true;
         }
-        return LaunchGame(_resourceAccessor.LocalFileSystemPath, configuration);
+        return LaunchGame(_resourceAccessor.LocalFileSystemPath, configuration, false);
       }
     }    
 
@@ -113,7 +110,7 @@ namespace Emulators.Game
         if (e.Success)
         {
           UpdateMediaItem(_mediaItem, GoodMergeAspect.ATTR_LAST_PLAYED_ITEM, e.ExtractedItem);
-          LaunchGame(e.ExtractedPath, configuration);
+          LaunchGame(e.ExtractedPath, configuration, true);
         }
         else
         {
@@ -122,8 +119,11 @@ namespace Emulators.Game
       }
     }
 
-    protected bool LaunchGame(string path, EmulatorConfiguration configuration)
-    {      
+    protected bool LaunchGame(string path, EmulatorConfiguration configuration, bool isExtractedPath)
+    {
+      if (configuration.IsLibRetro)
+        return LaunchLibRetroGame(path, configuration, isExtractedPath);
+
       _emulatorProcess = new EmulatorProcess(path, configuration, _mappedKey);
       _emulatorProcess.Exited += ProcessExited;
       bool result = TryStartProcess();
@@ -137,6 +137,17 @@ namespace Emulators.Game
         ShowErrorDialog("[Emulators.LaunchError.Label]");
       }
       return result;
+    }
+
+    protected bool LaunchLibRetroGame(string path, EmulatorConfiguration configuration, bool isExtractedPath)
+    {
+      LibRetroMediaItem mediaItem = new LibRetroMediaItem(configuration.Path, _mediaItem.Aspects);
+      if (isExtractedPath)
+        mediaItem.ExtractedPath = path;
+      else
+        Cleanup();
+      PlayItemsModel.CheckQueryPlayAction(mediaItem);
+      return true;
     }
 
     protected bool TryGetConfiguration(MediaItem mediaItem, out EmulatorConfiguration configuration)

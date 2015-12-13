@@ -18,7 +18,8 @@ namespace Emulators.Models
   public enum EmulatorType
   {
     Emulator,
-    Native
+    Native,
+    LibRetro
   }
 
   public class EmulatorProxy
@@ -173,6 +174,8 @@ namespace Emulators.Models
         return;
       if (EmulatorType == EmulatorType.Native)
         SetDefaultNativeSettings();
+      else if (EmulatorType == EmulatorType.LibRetro)
+        SetLibRetroSettings();
       else if (!string.IsNullOrEmpty(PathBrowser.ChoosenResourcePathDisplayName))
         SetDefaultEmulatorSettings();
     }
@@ -243,7 +246,12 @@ namespace Emulators.Models
     {
       if (_configuration == null)
         return;
-      EmulatorType = _configuration.IsNative ? EmulatorType.Native : EmulatorType.Emulator;
+      if (_configuration.IsNative)
+        EmulatorType = EmulatorType.Native;
+      else if (_configuration.IsLibRetro)
+        EmulatorType = EmulatorType.LibRetro;
+      else
+        EmulatorType = EmulatorType.Emulator;
       Name = _configuration.Name;
       if (!string.IsNullOrEmpty(_configuration.Path))
         PathBrowser.ChoosenResourcePath = LocalFsResourceProviderBase.ToResourcePath(_configuration.Path);
@@ -292,6 +300,16 @@ namespace Emulators.Models
       FileExtensions = new HashSet<string>(defaultConfiguration.FileExtensions);
       SelectedGameCategories = new List<string>(defaultConfiguration.Platforms);
       UpdateIsGameCategoriesSelected();
+    }
+
+    protected void SetLibRetroSettings()
+    {
+      LibRetroProxy libRetro = new LibRetroProxy(LocalFsResourceProviderBase.ToDosPath(PathBrowser.ChoosenResourcePath));
+      if (libRetro.Init())
+      {
+        Name = libRetro.Name;
+        FileExtensions = new HashSet<string>(libRetro.Extensions);
+      }
     }
     
     protected void UpdateIsEmulatorNameValid()

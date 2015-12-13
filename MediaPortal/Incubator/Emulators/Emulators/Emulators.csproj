@@ -113,6 +113,7 @@
     <Compile Include="Models\EmulatorConfigurationModel.cs" />
     <Compile Include="Models\EmulatorProxy.cs" />
     <Compile Include="Models\GoodMergeSelectModel.cs" />
+    <Compile Include="Models\LibRetroProxy.cs" />
     <Compile Include="Models\Navigation\GameFilterItem.cs" />
     <Compile Include="Models\Navigation\GameItem.cs" />
     <Compile Include="Models\PathBrowser.cs" />

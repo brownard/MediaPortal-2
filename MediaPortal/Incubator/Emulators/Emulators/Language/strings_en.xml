@@ -40,6 +40,7 @@
   <string name="Emulators.Config.ChooseEmulatorType.Label">Choose the type of emulator you want to create. Choose Native for PC Games.</string>
   <string name="Emulators.Config.EmulatorType.Emulator">Emulator</string>
   <string name="Emulators.Config.EmulatorType.Native">Native</string>
+  <string name="Emulators.Config.EmulatorType.LibRetro">LibRetro</string>
 
   <string name="Emulators.Config.ChooseEmulatorPath.Title">Choose path</string>
   <string name="Emulators.Config.ChooseEmulatorPath.Label">Choose the path to the emulator</string>

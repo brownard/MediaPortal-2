@@ -29,6 +29,7 @@ namespace Emulators.Common.Emulators
     public string Arguments { get; set; }
     public bool UseQuotes { get; set; }
     public bool IsNative { get; set; }
+    public bool IsLibRetro { get; set; }
     public bool ExitsOnEscapeKey { get; set; }
   }
 }

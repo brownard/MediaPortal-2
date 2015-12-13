@@ -17,7 +17,7 @@ namespace Emulators.LibRetro
       if (retroItem == null)
         return null;
       var player = new LibRetroPlayer();
-      player.Play(mediaItem);
+      player.Play(retroItem);
       return player;
     }
   }
