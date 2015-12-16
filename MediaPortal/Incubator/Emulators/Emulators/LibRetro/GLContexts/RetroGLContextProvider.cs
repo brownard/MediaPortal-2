@@ -3,7 +3,7 @@ using MediaPortal.Common.Logging;
 using SharpGL;
 using SharpGL.RenderContextProviders;
 using SharpGL.Version;
-using SharpRetro.OpenGL;
+using SharpRetro.RetroGL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +11,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Emulators.LibRetro.Renderers
+namespace Emulators.LibRetro.GLContexts
 {
-  public class GlContextProvider : FBORenderContextProvider, IGLContext
+  public class RetroGLContextProvider : FBORenderContextProvider, IRetroGLContext
   {
     [DllImport("opengl32", EntryPoint = "wglGetProcAddress", ExactSpelling = true)]
     private static extern IntPtr wglGetProcAddress(IntPtr function_name);

@@ -1,5 +1,5 @@
 ﻿using SharpRetro.Controller;
-using SharpRetro.OpenGL;
+using SharpRetro.RetroGL;
 using SharpRetro.Utils;
 using System;
 using System.Collections.Generic;
@@ -105,7 +105,7 @@ namespace SharpRetro.LibRetro
     protected string _saveDirectory;
 
     protected bool _supportsNoGame;
-    protected IGLContext _glContext;
+    protected IRetroGLContext _glContext;
     protected int[] _videoBuffer;
     protected int _maxVideoWidth;
     protected int _maxVideoHeight;
@@ -226,7 +226,7 @@ namespace SharpRetro.LibRetro
       set { _logDelegate = value; }
     }
 
-    public IGLContext GLContext
+    public IRetroGLContext GLContext
     {
       get { return _glContext; }
       set { _glContext = value; }

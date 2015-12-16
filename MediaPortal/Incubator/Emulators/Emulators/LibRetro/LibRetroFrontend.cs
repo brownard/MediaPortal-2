@@ -1,5 +1,5 @@
 ﻿using Emulators.LibRetro.Controllers;
-using Emulators.LibRetro.Renderers;
+using Emulators.LibRetro.GLContexts;
 using Emulators.LibRetro.SoundProviders;
 using Emulators.LibRetro.VideoProviders;
 using MediaPortal.Common;
@@ -92,7 +92,7 @@ namespace Emulators.LibRetro
         SaveDirectory = _saveDirectory,
         LogDelegate = RetroLogDlgt,
         Controller = new XInputController(false),
-        GLContext = new GlContextProvider()
+        GLContext = new RetroGLContextProvider()
       };
       _retroEmulator.VideoReady += OnVideoReady;
       _retroEmulator.FrameBufferReady += OnFrameBufferReady;

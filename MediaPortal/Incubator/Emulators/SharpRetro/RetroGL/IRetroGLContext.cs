@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharpRetro.OpenGL
+namespace SharpRetro.RetroGL
 {
-  public interface IGLContext : IDisposable
+  public interface IRetroGLContext : IDisposable
   {
     bool IsInit { get; }
     bool NeedsReset { get; set; }
