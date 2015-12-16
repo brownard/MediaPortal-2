@@ -383,6 +383,21 @@ namespace SharpRetro.LibRetro
       if (ptr != IntPtr.Zero)
         Marshal.Copy(saveBuffer, 0, ptr, Math.Min(saveBuffer.Length, (int)size));
     }
+
+    public byte[] Serialize()
+    {
+      uint size = _retro.retro_serialize_size();
+      byte[] buffer = new byte[size];
+      fixed(byte* p = &buffer[0])
+        _retro.retro_serialize((IntPtr)p, size);
+      return buffer;
+    }
+
+    public void Unserialize(byte[] buffer)
+    {
+      fixed (byte* p = &buffer[0])
+        _retro.retro_unserialize((IntPtr)p, (uint)buffer.Length);
+    }
     #endregion
 
     #region LibRetro Environment Delegates
