@@ -102,9 +102,7 @@ namespace SharpRetro.LibRetro
 
     bool _firstRun = true;
     protected string _systemDirectory;
-    protected IntPtr _systemDirectoryAtom;
     protected string _saveDirectory;
-    protected IntPtr _saveDirectoryAtom;
 
     protected bool _supportsNoGame;
     protected IGLContext _glContext;
@@ -176,10 +174,8 @@ namespace SharpRetro.LibRetro
 
         if (string.IsNullOrEmpty(_systemDirectory))
           _systemDirectory = Path.GetDirectoryName(_corePath);
-        _systemDirectoryAtom = _unmanagedResources.StringToHGlobalAnsi(_systemDirectory);
         if (string.IsNullOrEmpty(_saveDirectory))
           _saveDirectory = Path.GetDirectoryName(_corePath);
-        _saveDirectoryAtom = _unmanagedResources.StringToHGlobalAnsi(_saveDirectory);
         _retro.retro_set_environment(retro_environment_cb);
 
         _retro.retro_set_video_refresh(retro_video_refresh_cb);
@@ -264,6 +260,11 @@ namespace SharpRetro.LibRetro
     public SystemInfo SystemInfo
     {
       get { return _systemInfo; }
+    }
+
+    public LibRetroVariables Variables
+    {
+      get { return _variables; }
     }
 
     public VideoInfo VideoInfo
@@ -407,7 +408,7 @@ namespace SharpRetro.LibRetro
           //mednafen NGP neopop fails to launch with no system directory
           Directory.CreateDirectory(_systemDirectory); //just to be safe, it seems likely that cores will crash without a created system directory
           Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "returning system directory: " + _systemDirectory);
-          *((IntPtr*)data.ToPointer()) = _systemDirectoryAtom;
+          *((IntPtr*)data.ToPointer()) = _unmanagedResources.StringToHGlobalAnsiCached(_systemDirectory);
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_PIXEL_FORMAT:
           LibRetroCore.RETRO_PIXEL_FORMAT fmt = 0;
@@ -453,12 +454,10 @@ namespace SharpRetro.LibRetro
             IntPtr pKey = new IntPtr(*variablesPtr++);
             string key = Marshal.PtrToStringAnsi(pKey);
             Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Requesting variable: {0}", key);
-            //always return default
-            //TODO: cache settings atoms
             VariableDescription variable;
             if (!_variables.TryGet(key, out variable))
               return false;
-            *variablesPtr = _unmanagedResources.StringToHGlobalAnsi(variable.DefaultOption).ToPointer();
+            *variablesPtr = _unmanagedResources.StringToHGlobalAnsiCached(variable.SelectedOption).ToPointer();
             return true;
           }
         case LibRetroCore.RETRO_ENVIRONMENT.SET_VARIABLES:
@@ -477,7 +476,7 @@ namespace SharpRetro.LibRetro
               vd.Description = parts[0];
               vd.Options = parts[1].TrimStart(' ').Split('|');
               _variables.AddOrUpdate(vd);
-              Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "set variable: Name: {0}, Description: {1}, Options: {2}", key, parts[0], parts[1].TrimStart(' '));
+              Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Set variable: Name: {0}, Description: {1}, Options: {2}", key, parts[0], parts[1].TrimStart(' '));
             }
             return false;
           }
@@ -510,7 +509,7 @@ namespace SharpRetro.LibRetro
         case LibRetroCore.RETRO_ENVIRONMENT.GET_SAVE_DIRECTORY:
           Directory.CreateDirectory(_saveDirectory);
           Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "returning save directory: " + _saveDirectory);
-          *((IntPtr*)data.ToPointer()) = _saveDirectoryAtom;
+          *((IntPtr*)data.ToPointer()) = _unmanagedResources.StringToHGlobalAnsiCached(_saveDirectory);
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_CONTROLLER_INFO:
           return true;
@@ -560,7 +559,7 @@ namespace SharpRetro.LibRetro
 
       if (width * height > _videoBuffer.Length)
       {
-        Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "Unexpected libretro video buffer overrun?");
+        Log(LibRetroCore.RETRO_LOG_LEVEL.ERROR, "Unexpected libretro video buffer overrun?");
         return;
       }
       fixed (int* dst = &_videoBuffer[0])

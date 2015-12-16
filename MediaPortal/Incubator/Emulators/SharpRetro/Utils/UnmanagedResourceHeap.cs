@@ -5,21 +5,33 @@ using System.Runtime.InteropServices;
 namespace SharpRetro.Utils
 {
 	public class UnmanagedResourceHeap : IDisposable
-	{
-		public IntPtr StringToHGlobalAnsi(string str)
+  {
+    protected List<IntPtr> hGlobals = new List<IntPtr>();
+    protected Dictionary<string, IntPtr> cache = new Dictionary<string, IntPtr>();
+
+    public IntPtr StringToHGlobalAnsi(string str)
 		{
-			var ret = Marshal.StringToHGlobalAnsi(str);
-			HGlobals.Add(ret);
-			return ret;
+      IntPtr ptr = Marshal.StringToHGlobalAnsi(str);
+			hGlobals.Add(ptr);
+			return ptr;
 		}
 
-		public List<IntPtr> HGlobals = new List<IntPtr>();
+    public IntPtr StringToHGlobalAnsiCached(string str)
+    {
+      IntPtr ptr;
+      if (cache.TryGetValue(str, out ptr))
+        return ptr;
+      ptr = StringToHGlobalAnsi(str);
+      cache[str] = ptr;
+      return ptr;
+    }
 
-		public void Dispose()
+    public void Dispose()
 		{
-			foreach (var h in HGlobals)
+			foreach (var h in hGlobals)
 				Marshal.FreeHGlobal(h);
-			HGlobals.Clear();
+			hGlobals.Clear();
+      cache.Clear();
 		}
 	}
 }

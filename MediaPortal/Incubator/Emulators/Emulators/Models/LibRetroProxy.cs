@@ -15,6 +15,7 @@ namespace Emulators.Models
     protected LibRetroEmulator _retro;
     protected string _name;
     protected List<string> _extensions;
+    protected List<VariableDescription> _options;
 
     public LibRetroProxy(string corePath)
     {
@@ -31,6 +32,11 @@ namespace Emulators.Models
       get { return _extensions; }
     }
 
+    public List<VariableDescription> Options
+    {
+      get { return _options; }
+    }
+
     public bool Init()
     {
       _retro = new LibRetroEmulator(_corePath);
@@ -38,14 +44,17 @@ namespace Emulators.Models
       {
         _retro.Init();
         InitializeProperties();
-        _retro.Dispose();
         return true;
       }
       catch (Exception ex)
       {
         ServiceRegistration.Get<ILogger>().Error("LibRetroProxy: Exception initialising LibRetro core '{0}'", ex, _corePath);
       }
-      _retro = null;
+      finally
+      {
+        _retro.Dispose();
+        _retro = null;
+      }
       return false;
     }
 
@@ -56,6 +65,7 @@ namespace Emulators.Models
       SystemInfo coreInfo = _retro.SystemInfo;
       _name = coreInfo.LibraryName;
       _extensions = coreInfo.ValidExtensions.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries).Select(s => "." + s.ToLowerInvariant()).ToList();
+      _options = _retro.Variables.GetAllVariables();
     }
   }
 }

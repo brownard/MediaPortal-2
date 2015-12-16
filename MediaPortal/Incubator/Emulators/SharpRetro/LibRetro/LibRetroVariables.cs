@@ -17,6 +17,11 @@ namespace SharpRetro.LibRetro
       get { return _updated; }
     }
 
+    public List<VariableDescription> GetAllVariables()
+    {
+      return _variables.Values.ToList();
+    }
+
     public bool Contains(string variableName)
     {
       return _variables.ContainsKey(variableName);
@@ -24,7 +29,20 @@ namespace SharpRetro.LibRetro
 
     public void AddOrUpdate(VariableDescription variable)
     {
+      VariableDescription vd;
+      if (_variables.TryGetValue(variable.Name, out vd))
+        variable.SelectedOption = vd.SelectedOption;
       _variables[variable.Name] = variable;
+      _updated = true;
+    }
+
+    public void AddOrUpdate(string variableName, string selectedOption)
+    {
+      VariableDescription vd;
+      if (_variables.TryGetValue(variableName, out vd))
+        vd.SelectedOption = selectedOption;
+      else
+        _variables[variableName] = new VariableDescription() { Name = variableName, SelectedOption = selectedOption };
       _updated = true;
     }
 
@@ -37,10 +55,22 @@ namespace SharpRetro.LibRetro
 
   public class VariableDescription
   {
+    protected string _selectedOption;
+
     public string Name { get; set; }
     public string Description { get; set; }
     public string[] Options { get; set; }
-    public string DefaultOption { get { return Options[0]; } }
+
+    public string DefaultOption
+    {
+      get { return Options != null && Options.Length > 0 ? Options[0] : ""; }
+    }
+
+    public string SelectedOption
+    {
+      get { return string.IsNullOrEmpty(_selectedOption) ? DefaultOption : _selectedOption; }
+      set { _selectedOption = value; }
+    }
 
     public override string ToString()
     {
