@@ -643,7 +643,7 @@ namespace SharpRetro.LibRetro
 			if (!ConnectAllEntryPoints())
 			{
 				dll.Dispose();
-				throw new Exception("ConnectAllEntryPoints() failed.  The console may contain more details.");
+				throw new Exception("Unable to load LibRetro core. ConnectAllEntryPoints() failed.");
 			}
 		}
 
