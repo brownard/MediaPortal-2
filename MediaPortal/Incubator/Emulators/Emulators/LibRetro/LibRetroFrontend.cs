@@ -75,6 +75,13 @@ namespace Emulators.LibRetro
           return _textureProvider != null ? _textureProvider.Texture : null;
       }
     }
+
+    public bool SyncToAudio
+    {
+      get { return _syncToAudio; }
+      set { _syncToAudio = value; }
+    }
+
     #endregion
 
     #region Public Methods
@@ -132,7 +139,7 @@ namespace Emulators.LibRetro
 
     public void SetVolume(int volume)
     {
-      lock(_syncObj)
+      lock (_syncObj)
         if (_soundOutput != null)
           _soundOutput.SetVolume(volume);
     }
@@ -172,11 +179,12 @@ namespace Emulators.LibRetro
       long timestamp = Stopwatch.GetTimestamp();
       while (_doRender)
       {
+        lock (_syncObj)
+          if (_pauseWaitHandle.IsSet && (_syncToAudio || NeedsRender(ref timestamp)))
+            _retroEmulator.Run();
+        RenderFrame();
         if (!_pauseWaitHandle.IsSet)
           _pauseWaitHandle.Wait();
-        if (_syncToAudio || NeedsRender(ref timestamp))
-          _retroEmulator.Run();
-        RenderFrame();
       }
       SaveState();
       _retroEmulator.Dispose();
@@ -195,21 +203,22 @@ namespace Emulators.LibRetro
 
     protected void OnPausedChanged()
     {
-      if (_isPaused)
+      lock (_syncObj)
       {
-        lock (_syncObj)
+        if (_isPaused)
+        {
           if (_soundOutput != null)
             _soundOutput.Pause();
-        if (_pauseWaitHandle != null)
-          _pauseWaitHandle.Reset();
-      }
-      else
-      {
-        lock (_syncObj)
-           if (_soundOutput != null)
+          if (_pauseWaitHandle != null)
+            _pauseWaitHandle.Reset();
+        }
+        else
+        {
+          if (_soundOutput != null)
             _soundOutput.UnPause();
-        if (_pauseWaitHandle != null)
-          _pauseWaitHandle.Set();
+          if (_pauseWaitHandle != null)
+            _pauseWaitHandle.Set();
+        }
       }
     }
 
@@ -222,23 +231,20 @@ namespace Emulators.LibRetro
 
     protected void OnVideoReady(object sender, EventArgs e)
     {
-      lock (_syncObj)
-        if (_initialised)
-          _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.VideoBuffer, _retroEmulator.VideoInfo.BufferWidth, _retroEmulator.VideoInfo.BufferHeight);
+      if (_initialised)
+        _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.VideoBuffer, _retroEmulator.VideoInfo.BufferWidth, _retroEmulator.VideoInfo.BufferHeight);
     }
 
     protected void OnFrameBufferReady(object sender, EventArgs e)
     {
-      lock (_syncObj)
-          if (_initialised)
-          _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.GLContext.Pixels, _retroEmulator.VideoInfo.BufferWidth, _retroEmulator.VideoInfo.BufferHeight, _retroEmulator.GLContext.BottomLeftOrigin);
+      if (_initialised)
+        _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.GLContext.Pixels, _retroEmulator.VideoInfo.BufferWidth, _retroEmulator.VideoInfo.BufferHeight, _retroEmulator.GLContext.BottomLeftOrigin);
     }
 
     protected void OnAudioReady(object sender, EventArgs e)
     {
-      lock (_syncObj)
-        if (_soundOutput != null)
-          _soundOutput.WriteSamples(_retroEmulator.AudioBuffer.Data, _retroEmulator.AudioBuffer.Length, _syncToAudio);
+      if (_soundOutput != null)
+        _soundOutput.WriteSamples(_retroEmulator.AudioBuffer.Data, _retroEmulator.AudioBuffer.Length, _syncToAudio);
     }
 
     protected void RetroLogDlgt(LibRetroCore.RETRO_LOG_LEVEL level, string message)
