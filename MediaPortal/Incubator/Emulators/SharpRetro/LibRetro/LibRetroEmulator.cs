@@ -354,6 +354,12 @@ namespace SharpRetro.LibRetro
           retro_hw_context_reset_cb();
         _firstRun = false;
       }
+      else if (_glContext != null && _glContext.NeedsReset)
+      {
+        if (retro_hw_context_reset_cb != null)
+          retro_hw_context_reset_cb();
+        _glContext.NeedsReset = false;
+      }
       _retro.retro_run();
     }
 

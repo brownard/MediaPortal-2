@@ -92,7 +92,7 @@ namespace Emulators.LibRetro
         SaveDirectory = _saveDirectory,
         LogDelegate = RetroLogDlgt,
         Controller = new XInputController(false),
-        GLContext = new OpenGLHelper()
+        GLContext = new GlContextProvider()
       };
       _retroEmulator.VideoReady += OnVideoReady;
       _retroEmulator.FrameBufferReady += OnFrameBufferReady;
