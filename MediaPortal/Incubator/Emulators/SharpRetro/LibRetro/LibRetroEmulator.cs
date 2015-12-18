@@ -162,7 +162,6 @@ namespace SharpRetro.LibRetro
       {
         LibRetroCore.retro_system_info system_info = new LibRetroCore.retro_system_info();
         _retro.retro_get_system_info(ref system_info);
-
         _systemInfo = new SystemInfo()
         {
           LibraryName = Marshal.PtrToStringAnsi(system_info.library_name),
@@ -171,18 +170,17 @@ namespace SharpRetro.LibRetro
           NeedsFullPath = system_info.need_fullpath,
           BlockExtract = system_info.block_extract
         };
-
         if (string.IsNullOrEmpty(_systemDirectory))
           _systemDirectory = Path.GetDirectoryName(_corePath);
         if (string.IsNullOrEmpty(_saveDirectory))
           _saveDirectory = Path.GetDirectoryName(_corePath);
         _retro.retro_set_environment(retro_environment_cb);
-
         _retro.retro_set_video_refresh(retro_video_refresh_cb);
         _retro.retro_set_audio_sample(retro_audio_sample_cb);
         _retro.retro_set_audio_sample_batch(retro_audio_sample_batch_cb);
         _retro.retro_set_input_poll(retro_input_poll_cb);
         _retro.retro_set_input_state(retro_input_state_cb);
+        _retro.retro_init();
       }
       catch
       {
@@ -288,7 +286,7 @@ namespace SharpRetro.LibRetro
     }
     #endregion
 
-    #region Load
+    #region Public Methods
     public bool LoadGame(string path, byte[] data)
     {
       LibRetroCore.retro_game_info gameInfo = new LibRetroCore.retro_game_info();
@@ -305,45 +303,6 @@ namespace SharpRetro.LibRetro
       }
     }
 
-    protected bool Load(LibRetroCore.retro_game_info gameInfo)
-    {
-      _retro.retro_set_environment(retro_environment_cb);
-      _retro.retro_init();
-
-      if (!_retro.retro_load_game(ref gameInfo))
-      {
-        Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "retro_load_game() failed");
-        return false;
-      }
-
-      LibRetroCore.retro_system_av_info av = new LibRetroCore.retro_system_av_info();
-      _retro.retro_get_system_av_info(ref av);
-
-      _videoInfo = new VideoInfo()
-      {
-        BufferWidth = (int)av.geometry.base_width,
-        BufferHeight = (int)av.geometry.base_height,
-        DAR = av.geometry.aspect_ratio,
-      };
-      _timingInfo = new TimingInfo()
-      {
-        FPS = av.timing.fps,
-        SampleRate = av.timing.sample_rate,
-        VSyncNum = (int)(10000000 * av.timing.fps),
-        VSyncDen = 10000000
-      };
-
-      _maxVideoWidth = (int)av.geometry.max_width;
-      _maxVideoHeight = (int)av.geometry.max_height;
-      _videoBuffer = new int[_maxVideoWidth * _maxVideoHeight];
-      _audioBuffer = new AudioBuffer();
-      _audioBuffer.Data = new short[2];
-      return true;
-    }
-
-    #endregion
-
-    #region Public Methods
     public void Run()
     {
       if (_firstRun)
@@ -397,6 +356,39 @@ namespace SharpRetro.LibRetro
     {
       fixed (byte* p = &buffer[0])
         _retro.retro_unserialize((IntPtr)p, (uint)buffer.Length);
+    }
+    #endregion
+
+    #region Protected Methods
+    protected bool Load(LibRetroCore.retro_game_info gameInfo)
+    {
+      if (!_retro.retro_load_game(ref gameInfo))
+      {
+        Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "retro_load_game() failed");
+        return false;
+      }
+
+      LibRetroCore.retro_system_av_info av = new LibRetroCore.retro_system_av_info();
+      _retro.retro_get_system_av_info(ref av);
+      _maxVideoWidth = (int)av.geometry.max_width;
+      _maxVideoHeight = (int)av.geometry.max_height;
+      _videoBuffer = new int[_maxVideoWidth * _maxVideoHeight];
+      _audioBuffer = new AudioBuffer();
+      _audioBuffer.Data = new short[2];
+      _videoInfo = new VideoInfo()
+      {
+        BufferWidth = (int)av.geometry.base_width,
+        BufferHeight = (int)av.geometry.base_height,
+        DAR = av.geometry.aspect_ratio,
+      };
+      _timingInfo = new TimingInfo()
+      {
+        FPS = av.timing.fps,
+        SampleRate = av.timing.sample_rate,
+        VSyncNum = (int)(10000000 * av.timing.fps),
+        VSyncDen = 10000000
+      };
+      return true;
     }
     #endregion
 
@@ -571,10 +563,7 @@ namespace SharpRetro.LibRetro
       if (data.ToInt32() == LibRetroCore.RETRO_HW_FRAME_BUFFER_VALID)
       {
         if (_glContext != null)
-        {
-          _glContext.FrameBufferReady((int)width, (int)height);
           OnFrameBufferReady();
-        }
         return;
       }
 
