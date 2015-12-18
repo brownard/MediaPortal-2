@@ -27,8 +27,42 @@ namespace Emulators.LibRetro.Controllers
     Right
   }
 
+  /// <summary>
+  /// Helper class to cache the connected state of controllers.
+  /// Polling the connected state of disconnected controllers causes high CPU load if done repeatedly.
+  /// This class only updates the connected state every cacheTimeoutMs milliseconds
+  /// </summary>
+  class ControllerCache
+  {
+    protected Controller _controller;
+    protected bool _isConnected;
+    protected DateTime _lastCheck = DateTime.MinValue;
+
+    public ControllerCache(Controller controller)
+    {
+      _controller = controller;
+    }
+
+    public Controller Controller { get { return _controller; } }
+
+    public bool GetState(int cacheTimeoutMs, out State state)
+    {
+      DateTime now = DateTime.Now;
+      if (!_isConnected && (now - _lastCheck).TotalMilliseconds < cacheTimeoutMs)
+      {
+        state = new State();
+        return false;
+      }
+      _lastCheck = now;
+      _isConnected = _controller.GetState(out state);
+      return _isConnected;
+    }
+  }
+
   class XInputController : IRetroPad, IRetroAnalog
   {
+    const int CONTROLLER_CONNECTED_TIMEOUT = 2000;
+    protected ControllerCache[] _controllers;
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, GamepadButtonFlags> _buttonBindings;
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, AxisDirection> _axisBindings;
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, Trigger> _triggerBindings;
@@ -36,6 +70,11 @@ namespace Emulators.LibRetro.Controllers
 
     public XInputController(bool bindAnalogToDPad)
     {
+      _controllers = new ControllerCache[4];
+      _controllers[0] = new ControllerCache(new Controller(UserIndex.One));
+      _controllers[1] = new ControllerCache(new Controller(UserIndex.Two));
+      _controllers[2] = new ControllerCache(new Controller(UserIndex.Three));
+      _controllers[3] = new ControllerCache(new Controller(UserIndex.Four));
       _bindAnalogToDPad = bindAnalogToDPad;
       InitDefaultMapping();
     }
@@ -74,10 +113,12 @@ namespace Emulators.LibRetro.Controllers
 
     public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)
     {
-      var controller = GetController(port);
-      if (!controller.IsConnected)
+      if (port > 3)
         return false;
-      Gamepad gamepad = controller.GetState().Gamepad;
+      State state;
+      if (!_controllers[port].GetState(CONTROLLER_CONNECTED_TIMEOUT, out state))
+        return false;
+      Gamepad gamepad = state.Gamepad;
 
       GamepadButtonFlags buttonFlag;
       if (_buttonBindings.TryGetValue(button, out buttonFlag)
@@ -99,10 +140,12 @@ namespace Emulators.LibRetro.Controllers
 
     public short GetAnalog(uint port, LibRetroCore.RETRO_DEVICE_INDEX_ANALOG index, LibRetroCore.RETRO_DEVICE_ID_ANALOG direction)
     {
-      var controller = GetController(port);
-      if (!controller.IsConnected)
+      if (port > 3)
         return 0;
-      Gamepad gamepad = controller.GetState().Gamepad;
+      State state;
+      if (!_controllers[port].GetState(CONTROLLER_CONNECTED_TIMEOUT, out state))
+        return 0;
+      Gamepad gamepad = state.Gamepad;
       //LibRetro specifies that positive Y values are down, so we need to invert the Y values reported by XInput
       if (index == LibRetroCore.RETRO_DEVICE_INDEX_ANALOG.LEFT)
         return direction == LibRetroCore.RETRO_DEVICE_ID_ANALOG.X ? gamepad.LeftThumbX : (short)(-gamepad.LeftThumbY - 1);
