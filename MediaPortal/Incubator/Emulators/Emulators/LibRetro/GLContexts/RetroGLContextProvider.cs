@@ -67,11 +67,6 @@ namespace Emulators.LibRetro.GLContexts
       return ptr;
     }
 
-    public void FrameBufferReady(int width, int height)
-    {
-      _pixels = GetPixels(width, height);
-    }
-
     public byte[] GetPixels(int width, int height)
     {
       if (deviceContextHandle != IntPtr.Zero)

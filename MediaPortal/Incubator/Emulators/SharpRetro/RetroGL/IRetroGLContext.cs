@@ -12,9 +12,8 @@ namespace SharpRetro.RetroGL
     bool NeedsReset { get; set; }
     uint FrameBufferId { get; }
     bool BottomLeftOrigin { get; }
-    byte[] Pixels { get; }
     void Init(int maxWidth, int maxHeight, bool depth, bool stencil, bool bottomLeftOrigin);
-    void FrameBufferReady(int width, int height);
+    byte[] GetPixels(int width, int height);
     IntPtr GetProcAddress(IntPtr sym);
   }
 }

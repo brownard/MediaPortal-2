@@ -238,7 +238,11 @@ namespace Emulators.LibRetro
     protected void OnFrameBufferReady(object sender, EventArgs e)
     {
       if (_initialised)
-        _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.GLContext.Pixels, _retroEmulator.VideoInfo.BufferWidth, _retroEmulator.VideoInfo.BufferHeight, _retroEmulator.GLContext.BottomLeftOrigin);
+      {
+        int width = _retroEmulator.VideoInfo.BufferWidth;
+        int height = _retroEmulator.VideoInfo.BufferHeight;
+        _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.GLContext.GetPixels(width, height), width, height, _retroEmulator.GLContext.BottomLeftOrigin);
+      }
     }
 
     protected void OnAudioReady(object sender, EventArgs e)
