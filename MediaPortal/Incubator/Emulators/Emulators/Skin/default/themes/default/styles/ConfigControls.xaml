@@ -71,12 +71,6 @@
       <Label x:Name="EmulatorPath" Grid.Column="1" Content="{Binding [Path]}" FontSize="{ThemeResource SmallFontSize}"
           HorizontalAlignment="Left" VerticalAlignment="Center"
           Color="{ThemeResource HintTextColor}"/>
-      <!-- Additionally available properties to show here:
-      <Label x:Name="ShareProvider" Grid.Column="2" Content="{Binding AdditionalProperties[ResourceProviderMetadata].Name}"
-          Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}"/>
-      <Label x:Name="Categories" Grid.Column="3" Content="{Binding [Categories]}"
-          Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}"/>
--->
     </Grid>
   </DataTemplate>
 
@@ -136,6 +130,55 @@
     <Setter Property="ItemTemplate" Value="{ThemeResource EmulatorItemDataTemplate}"/>
     <Setter Property="DataStringProvider" Value="{ThemeResource EmulatorItemDataStringProvider}"/>
     <Setter Property="ItemContainerStyle" Value="{ThemeResource MultiMarkableEmulatorContainerStyle}"/>
+  </Style>
+
+  <!-- Data template for a simple libretro option entry in the options list -->
+  <DataTemplate x:Key="LibRetroOptionItemDataTemplate" DataType="{x:Type collections:ListItem}">
+    <Grid x:Name="ItemControl">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="100"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Label x:Name="OptionName" Grid.Column="0" Content="{Binding [Name]}" FontSize="{ThemeResource SmallFontSize}"
+          HorizontalAlignment="Left" VerticalAlignment="Center"
+          Color="{ThemeResource TextColor}"/>
+      <Label x:Name="OptionValue" Grid.Column="2" Content="{Binding [OptionValue]}" FontSize="{ThemeResource SmallFontSize}"
+          HorizontalAlignment="Right" VerticalAlignment="Center"
+          Color="{ThemeResource HintTextColor}"/>
+    </Grid>
+  </DataTemplate>
+
+  <!-- ListView style to be used for the LibRetro options list -->
+  <Style x:Key="LibRetroOptionsListViewStyle" BasedOn="{ThemeResource ContentsMenuListViewStyle}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ListView}">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <ScrollViewer CanContentScroll="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                IsVisible="{Binding RelativeSource={RelativeSource TemplatedParent},Path=!IsEmpty}"
+                Background="{ThemeResource ItemsControlShadowBackgroundColor}">
+              <ItemsPresenter VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+            </ScrollViewer>
+            <Label Content="[Emulators.Config.NoSettingsInThisView]" IsVisible="{Binding RelativeSource={RelativeSource TemplatedParent},Path=IsEmpty}"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Color="{ThemeResource HintTextColor}" FontSize="{ThemeResource SmallFontSize}"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="ItemTemplate" Value="{ThemeResource LibRetroOptionItemDataTemplate}"/>
+    <Setter Property="DataStringProvider" Value="{ThemeResource EmulatorItemDataStringProvider}"/>
+    <Setter Property="ItemContainerStyle" Value="{ThemeResource SelectableEmulatorContainerStyle}"/>
   </Style>
 
 </ResourceDictionary>

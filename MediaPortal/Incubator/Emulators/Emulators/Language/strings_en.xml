@@ -69,6 +69,11 @@
   <string name="Emulators.Config.SelectWildcard.Game">Game path</string>
   <string name="Emulators.Config.SelectWildcard.GameNoExt">Game filename without extension</string>
   <string name="Emulators.Config.SelectWildcard.GameDir">Game directory</string>
+  
+  <string name="Emulators.Config.LibRetroSettings.Title">LibRetro settings</string>
+  <string name="Emulators.Config.LibRetroSettings.Label">Edit the settings to use for this LibRetro core</string>
+  <string name="Emulators.Config.NoSettingsInThisView">No settings in this view</string>
+  <string name="Emulators.Config.LibRetroSelectOption.Header">Select option</string>
 
   <string name="Emulators.SelectGoodmerge.Header">Choose GoodMerge file</string>
   <string name="Emulators.ExtractGoodmerge.Header">Extracting GoodMerge file</string>

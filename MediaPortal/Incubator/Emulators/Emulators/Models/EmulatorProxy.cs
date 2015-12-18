@@ -40,6 +40,7 @@ namespace Emulators.Models
     protected PathBrowser _pathBrowser;
     protected PathBrowserCloseWatcher _pathBrowserCloseWatcher;
     protected EmulatorConfiguration _configuration;
+    protected LibRetroProxy _libRetroProxy;
     #endregion
 
     #region Constructor
@@ -165,6 +166,11 @@ namespace Emulators.Models
     {
       get { return _pathBrowser; }
     }
+
+    public LibRetroProxy LibRetroProxy
+    {
+      get { return _libRetroProxy; }
+    }
     #endregion
 
     #region Public Methods
@@ -239,6 +245,15 @@ namespace Emulators.Models
       _pathBrowserCloseWatcher = new PathBrowserCloseWatcher(this, dialogHandle, chosenPath => WorkingDirectory = LocalFsResourceProviderBase.ToDosPath(chosenPath), null);
     }
 
+    public void UpdateLibRetroSettings()
+    {
+      if (_libRetroProxy == null)
+      {
+        _libRetroProxy = new LibRetroProxy(LocalFsResourceProviderBase.ToDosPath(PathBrowser.ChoosenResourcePath));
+        _libRetroProxy.Init();
+      }
+    }
+
     #endregion
 
     #region Protected Methods
@@ -304,11 +319,11 @@ namespace Emulators.Models
 
     protected void SetLibRetroSettings()
     {
-      LibRetroProxy libRetro = new LibRetroProxy(LocalFsResourceProviderBase.ToDosPath(PathBrowser.ChoosenResourcePath));
-      if (libRetro.Init())
+      _libRetroProxy = new LibRetroProxy(LocalFsResourceProviderBase.ToDosPath(PathBrowser.ChoosenResourcePath));
+      if (_libRetroProxy.Init())
       {
-        Name = libRetro.Name;
-        FileExtensions = new HashSet<string>(libRetro.Extensions);
+        Name = _libRetroProxy.Name;
+        FileExtensions = new HashSet<string>(_libRetroProxy.Extensions);
       }
     }
     

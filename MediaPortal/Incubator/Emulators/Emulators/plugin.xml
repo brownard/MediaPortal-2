@@ -131,6 +131,13 @@
         MainScreen="emulator_config_arguments"
         WorkflowModel="6C96C335-7A79-45DA-90B7-541B3C7235EF"/>    <!-- Emulator config model -->
 
+    <!-- Edit emulator arguments -->
+    <WorkflowState Id="97E490B5-DF74-4894-9704-81B214C47EF8"
+        Name="EditLibRetroOptions"
+        DisplayLabel="[Emulators.Config.LibRetroSettings.Title]"
+        MainScreen="emulator_config_libretro_options"
+        WorkflowModel="6C96C335-7A79-45DA-90B7-541B3C7235EF"/>    <!-- Emulator config model -->
+
     <!-- Dialog States -->
 
     <!-- Clear GoodMerge cache dialog -->

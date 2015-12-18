@@ -34,6 +34,7 @@ namespace Emulators.Models
     public static readonly Guid STATE_CHOOSE_CATEGORIES = new Guid("E30DCBAE-BB1D-4701-84B0-FA3624481648");
     public static readonly Guid STATE_EDIT_EXTENSIONS = new Guid("3017CAD9-3EFD-48F4-BC8D-06295389D21D");
     public static readonly Guid STATE_EDIT_ARGUMENTS = new Guid("B2D4E8EC-0AE3-4C77-9E45-5EDC71EF4032");
+    public static readonly Guid STATE_LIBRETRO_OPTIONS = new Guid("97E490B5-DF74-4894-9704-81B214C47EF8");
     public static readonly Guid STATE_REMOVE_EMULATOR = new Guid("A07A0648-878E-4762-9540-3939E308DD94");
 
     protected EmulatorProxy _emulatorProxy;
@@ -217,6 +218,10 @@ namespace Emulators.Models
       else if (stateId == STATE_EDIT_EXTENSIONS)
       {
         _emulatorProxy.UpdateFileExtensionItems();
+      }
+      else if (stateId == STATE_LIBRETRO_OPTIONS)
+      {
+        _emulatorProxy.UpdateLibRetroSettings();
       }
       else if (stateId == STATE_REMOVE_EMULATOR)
       {
