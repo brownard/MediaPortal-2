@@ -11,33 +11,33 @@ namespace Emulators.LibRetro.VideoProviders
   public class LibRetroTextureWrapper : ITextureProvider
   {
     protected Texture[] _textures = new Texture[2];
-    protected int _currentTexture;
+    protected int _currentTextureIndex;
 
     public Texture Texture
     {
-      get { return _textures[_currentTexture]; }
+      get { return _textures[_currentTextureIndex]; }
     }
 
     public void UpdateTexture(Device device, int[] pixels, int width, int height)
     {
-      _currentTexture = (_currentTexture + 1) % _textures.Length;
+      _currentTextureIndex = (_currentTextureIndex + 1) % _textures.Length;
       Texture texture = new Texture(device, width, height, 1, Usage.Dynamic, Format.X8R8G8B8, Pool.Default);
       DataStream dataStream;
       texture.LockRectangle(0, LockFlags.None, out dataStream);
       using (dataStream)
         dataStream.WriteRange(pixels, 0, width * height);
       texture.UnlockRectangle(0);
-      Texture oldTexture = _textures[_currentTexture];
+      Texture oldTexture = _textures[_currentTextureIndex];
       if (oldTexture != null)
         oldTexture.Dispose();
-      _textures[_currentTexture] = texture;
+      _textures[_currentTextureIndex] = texture;
     }
 
     public void UpdateTexture(Device device, byte[] pixels, int width, int height, bool bottomLeftOrigin)
     {
       if (pixels == null)
         return;
-      _currentTexture = (_currentTexture + 1) % _textures.Length;
+      _currentTextureIndex = (_currentTextureIndex + 1) % _textures.Length;
       Texture texture = new Texture(device, width, height, 1, Usage.Dynamic, Format.X8R8G8B8, Pool.Default);
       DataStream dataStream;
       texture.LockRectangle(0, LockFlags.None, out dataStream);
@@ -49,10 +49,10 @@ namespace Emulators.LibRetro.VideoProviders
           dataStream.WriteRange(pixels, 0, width * height * 4);
       }
       texture.UnlockRectangle(0);
-      Texture oldTexture = _textures[_currentTexture];
+      Texture oldTexture = _textures[_currentTextureIndex];
       if (oldTexture != null)
         oldTexture.Dispose();
-      _textures[_currentTexture] = texture;
+      _textures[_currentTextureIndex] = texture;
     }
 
     protected void FlipVertically(byte[] pixels, int width, int height, DataStream dataStream)
