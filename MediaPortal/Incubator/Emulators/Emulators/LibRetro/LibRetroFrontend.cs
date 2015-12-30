@@ -29,8 +29,11 @@ namespace Emulators.LibRetro
     #endregion
 
     #region Protected Members
-    protected readonly object _syncObj = new object();
+    protected const int AUTO_SAVE_INTERVAL = 10 * 1000;
+    protected readonly object _surfaceLock = new object();
+    protected readonly object _audioLock = new object();
     protected LibRetroEmulator _retroEmulator;
+    protected LibRetroSaveStateHandler _saveHandler;
     protected string _corePath;
     protected string _gamePath;
     protected string _saveDirectory;
@@ -41,9 +44,11 @@ namespace Emulators.LibRetro
     protected double _vsync;
     protected bool _initialised;
     protected bool _syncToAudio = true;
+    protected bool _autoSave = true;
     protected RenderDlgt _renderDlgt;
     protected bool _isPaused;
     protected ManualResetEventSlim _pauseWaitHandle;
+    protected ManualResetEventSlim _isPausedHandle;
     #endregion
 
     #region Ctor
@@ -53,13 +58,14 @@ namespace Emulators.LibRetro
       _gamePath = gamePath;
       _saveDirectory = saveDirectory;
       _pauseWaitHandle = new ManualResetEventSlim(true);
+      _isPausedHandle = new ManualResetEventSlim(false);
     }
     #endregion
 
     #region Public Properties
-    public object SyncObj
+    public object SurfaceLock
     {
-      get { return _syncObj; }
+      get { return _surfaceLock; }
     }
 
     public bool Paused
@@ -71,7 +77,7 @@ namespace Emulators.LibRetro
     {
       get
       {
-        lock (_syncObj)
+        lock (_surfaceLock)
           return _textureProvider != null ? _textureProvider.Texture : null;
       }
     }
@@ -94,6 +100,7 @@ namespace Emulators.LibRetro
         Controller = new XInputController(false),
         GLContext = new RetroGLContextProvider()
       };
+      //_retroEmulator.Variables.AddOrUpdate("mupen64-gfxplugin", "rice");
       _retroEmulator.VideoReady += OnVideoReady;
       _retroEmulator.FrameBufferReady += OnFrameBufferReady;
       _retroEmulator.AudioReady += OnAudioReady;
@@ -108,7 +115,8 @@ namespace Emulators.LibRetro
         _soundOutput.Dispose();
         _soundOutput = null;
       }
-      LoadState();
+      _saveHandler = new LibRetroSaveStateHandler(_retroEmulator, _gamePath, _saveDirectory, AUTO_SAVE_INTERVAL);
+      _saveHandler.LoadSaveRam();
       _initialised = true;
       return true;
     }
@@ -139,7 +147,7 @@ namespace Emulators.LibRetro
 
     public void SetVolume(int volume)
     {
-      lock (_syncObj)
+      lock (_audioLock)
         if (_soundOutput != null)
           _soundOutput.SetVolume(volume);
     }
@@ -152,13 +160,13 @@ namespace Emulators.LibRetro
 
     public void ReallocGUIResources()
     {
-      lock (_syncObj)
+      lock (_surfaceLock)
         _initialised = true;
     }
 
     public void ReleaseGUIResources()
     {
-      lock (_syncObj)
+      lock (_surfaceLock)
       {
         _initialised = false;
         if (_textureProvider != null)
@@ -179,14 +187,19 @@ namespace Emulators.LibRetro
       long timestamp = Stopwatch.GetTimestamp();
       while (_doRender)
       {
-        lock (_syncObj)
-          if (_pauseWaitHandle.IsSet && (_syncToAudio || NeedsRender(ref timestamp)))
-            _retroEmulator.Run();
+        if (_syncToAudio || NeedsRender(ref timestamp))
+          _retroEmulator.Run();
         RenderFrame();
+        if (_autoSave)
+          _saveHandler.AutoSave();
         if (!_pauseWaitHandle.IsSet)
+        {
+          _isPausedHandle.Set();
           _pauseWaitHandle.Wait();
+          _isPausedHandle.Reset();
+        }
       }
-      SaveState();
+      _saveHandler.SaveSaveRam();
       _retroEmulator.Dispose();
       _retroEmulator = null;
     }
@@ -203,22 +216,21 @@ namespace Emulators.LibRetro
 
     protected void OnPausedChanged()
     {
-      lock (_syncObj)
+      if (_isPaused)
       {
-        if (_isPaused)
-        {
-          if (_soundOutput != null)
-            _soundOutput.Pause();
-          if (_pauseWaitHandle != null)
-            _pauseWaitHandle.Reset();
-        }
-        else
-        {
-          if (_soundOutput != null)
-            _soundOutput.UnPause();
-          if (_pauseWaitHandle != null)
-            _pauseWaitHandle.Set();
-        }
+        if (_pauseWaitHandle != null)
+          _pauseWaitHandle.Reset();
+        _isPausedHandle.Wait();
+        if (_soundOutput != null)
+          _soundOutput.Pause();
+      }
+      else
+      {
+        _isPausedHandle.Wait();
+        if (_soundOutput != null)
+          _soundOutput.UnPause();
+        if (_pauseWaitHandle != null)
+          _pauseWaitHandle.Set();
       }
     }
 
@@ -231,24 +243,27 @@ namespace Emulators.LibRetro
 
     protected void OnVideoReady(object sender, EventArgs e)
     {
-      if (_initialised)
-        _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.VideoBuffer, _retroEmulator.VideoInfo.BufferWidth, _retroEmulator.VideoInfo.BufferHeight);
+      lock (_surfaceLock)
+        if (_initialised)
+          _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.VideoBuffer, _retroEmulator.VideoInfo.BufferWidth, _retroEmulator.VideoInfo.BufferHeight);
     }
 
     protected void OnFrameBufferReady(object sender, EventArgs e)
     {
-      if (_initialised)
-      {
-        int width = _retroEmulator.VideoInfo.BufferWidth;
-        int height = _retroEmulator.VideoInfo.BufferHeight;
-        _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.GLContext.GetPixels(width, height), width, height, _retroEmulator.GLContext.BottomLeftOrigin);
-      }
+      lock (_surfaceLock)
+        if (_initialised)
+        {
+          int width = _retroEmulator.VideoInfo.BufferWidth;
+          int height = _retroEmulator.VideoInfo.BufferHeight;
+          _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.GLContext.Pixels, width, height, _retroEmulator.GLContext.BottomLeftOrigin);
+        }
     }
 
     protected void OnAudioReady(object sender, EventArgs e)
     {
-      if (_soundOutput != null)
-        _soundOutput.WriteSamples(_retroEmulator.AudioBuffer.Data, _retroEmulator.AudioBuffer.Length, _syncToAudio);
+      lock (_audioLock)
+        if (_soundOutput != null)
+          _soundOutput.WriteSamples(_retroEmulator.AudioBuffer.Data, _retroEmulator.AudioBuffer.Length, _syncToAudio);
     }
 
     protected void RetroLogDlgt(LibRetroCore.RETRO_LOG_LEVEL level, string message)
@@ -273,62 +288,6 @@ namespace Emulators.LibRetro
           break;
       }
     }
-
-    protected void LoadState()
-    {
-      string saveFile = GetSaveFile();
-      byte[] saveState;
-      if (TryReadFromFile(GetSaveFile(), out saveState))
-        _retroEmulator.LoadState(LibRetroCore.RETRO_MEMORY.SAVE_RAM, saveState);
-    }
-
-    protected void SaveState()
-    {
-      byte[] saveState = _retroEmulator.SaveState(LibRetroCore.RETRO_MEMORY.SAVE_RAM);
-      if (saveState == null)
-        return;
-      TryWriteToFile(GetSaveFile(), saveState);
-    }
-
-    protected bool TryReadFromFile(string path, out byte[] fileBytes)
-    {
-      try
-      {
-        if (File.Exists(path))
-        {
-          fileBytes = File.ReadAllBytes(path);
-          return true;
-        }
-      }
-      catch (Exception ex)
-      {
-        Logger.Error("LibRetroFrontend: Error reading from path '{0}':", ex, path);
-      }
-      fileBytes = null;
-      return false;
-    }
-
-    protected bool TryWriteToFile(string path, byte[] fileBytes)
-    {
-      try
-      {
-        DirectoryInfo directory = new DirectoryInfo(Path.GetDirectoryName(path));
-        if (!directory.Exists)
-          directory.Create();
-        File.WriteAllBytes(path, fileBytes);
-        return true;
-      }
-      catch (Exception ex)
-      {
-        Logger.Error("LibRetroFrontend: Error writing to path '{0}':", ex, path);
-      }
-      return false;
-    }
-
-    protected string GetSaveFile()
-    {
-      return Path.Combine(_saveDirectory, Path.GetFileNameWithoutExtension(_gamePath) + ".srm");
-    }
     #endregion
 
     #region IDisposable
@@ -346,6 +305,11 @@ namespace Emulators.LibRetro
       {
         _pauseWaitHandle.Dispose();
         _pauseWaitHandle = null;
+      }
+      if (_isPausedHandle != null)
+      {
+        _isPausedHandle.Dispose();
+        _isPausedHandle = null;
       }
       if (_textureProvider != null)
       {

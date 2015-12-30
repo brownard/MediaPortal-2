@@ -469,7 +469,11 @@ namespace SharpRetro.LibRetro
             Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Requesting variable: {0}", key);
             VariableDescription variable;
             if (!_variables.TryGet(key, out variable))
+            {
+              Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "Variable {0}: not found", key);
               return false;
+            }
+            Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Variable {0}: {1}", key, variable.SelectedOption);
             *variablesPtr = _unmanagedResources.StringToHGlobalAnsiCached(variable.SelectedOption).ToPointer();
             return true;
           }
@@ -563,7 +567,10 @@ namespace SharpRetro.LibRetro
       if (data.ToInt32() == LibRetroCore.RETRO_HW_FRAME_BUFFER_VALID)
       {
         if (_glContext != null)
+        {
+          _glContext.OnFrameBufferReady((int)width, (int)height);
           OnFrameBufferReady();
+        }
         return;
       }
 

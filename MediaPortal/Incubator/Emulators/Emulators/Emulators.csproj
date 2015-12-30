@@ -92,6 +92,7 @@
     <Compile Include="LibRetro\LibRetroFrontend.cs" />
     <Compile Include="LibRetro\LibRetroMediaItem.cs" />
     <Compile Include="LibRetro\GLContexts\RetroGLContextProvider.cs" />
+    <Compile Include="LibRetro\LibRetroSaveStateHandler.cs" />
     <Compile Include="LibRetro\SoundProviders\ISoundOutput.cs" />
     <Compile Include="LibRetro\SoundProviders\LibRetroDirectSound.cs" />
     <Compile Include="LibRetro\LibRetroPlayer.cs" />

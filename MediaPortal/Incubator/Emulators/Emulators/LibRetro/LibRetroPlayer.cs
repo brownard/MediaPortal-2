@@ -171,7 +171,7 @@ namespace Emulators.LibRetro
 
     public object SurfaceLock
     {
-      get { return _retro != null ? _retro.SyncObj : _syncObj; }
+      get { return _retro != null ? _retro.SurfaceLock : _syncObj; }
     }
 
     public Texture Texture
