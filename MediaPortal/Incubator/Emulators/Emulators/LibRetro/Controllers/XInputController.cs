@@ -183,29 +183,5 @@ namespace Emulators.LibRetro.Controllers
       }
       return false;
     }
-
-    protected Controller GetController(uint port)
-    {
-      UserIndex index;
-      switch (port)
-      {
-        case 0:
-          index = UserIndex.One;
-          break;
-        case 1:
-          index = UserIndex.Two;
-          break;
-        case 2:
-          index = UserIndex.Three;
-          break;
-        case 4:
-          index = UserIndex.Four;
-          break;
-        default:
-          index = UserIndex.One;
-          break;
-      }
-      return new Controller(index);
-    }
   }
 }
