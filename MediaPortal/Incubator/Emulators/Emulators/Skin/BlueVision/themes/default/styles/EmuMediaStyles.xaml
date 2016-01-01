@@ -142,7 +142,7 @@
       </Grid.RowDefinitions>
 
       <!-- SHADOW -->
-      <Control Height="{Binding ElementName=PosterGrid,Path=ActualHeight}" Style="{ThemeResource Shadow_3_18}" />
+      <Control Height="{Binding ElementName=PosterGrid,Path=ActualHeight}" Style="{ThemeResource Shadow_3_20}" />
       <!-- SHADOW -->
 
       <Grid Name="PosterGrid" HorizontalAlignment="Center" VerticalAlignment="Center">
