@@ -100,7 +100,6 @@ namespace Emulators.LibRetro
         Controller = new XInputController(false),
         GLContext = new RetroGLContextProvider()
       };
-      //_retroEmulator.Variables.AddOrUpdate("mupen64-gfxplugin", "rice");
       _retroEmulator.VideoReady += OnVideoReady;
       _retroEmulator.FrameBufferReady += OnFrameBufferReady;
       _retroEmulator.AudioReady += OnAudioReady;
