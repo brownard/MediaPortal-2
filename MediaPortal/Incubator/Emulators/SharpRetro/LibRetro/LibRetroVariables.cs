@@ -69,7 +69,11 @@ namespace SharpRetro.LibRetro
     public string SelectedOption
     {
       get { return string.IsNullOrEmpty(_selectedOption) ? DefaultOption : _selectedOption; }
-      set { _selectedOption = value; }
+      set
+      {
+        if (Options != null && Options.Contains(value))
+          _selectedOption = value;
+      }
     }
 
     public override string ToString()

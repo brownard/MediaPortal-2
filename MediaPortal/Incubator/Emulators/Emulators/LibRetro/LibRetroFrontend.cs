@@ -4,6 +4,7 @@ using Emulators.LibRetro.SoundProviders;
 using Emulators.LibRetro.VideoProviders;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
+using MediaPortal.Common.Settings;
 using MediaPortal.UI.SkinEngine.Players;
 using MediaPortal.UI.SkinEngine.SkinManagement;
 using SharpDX.Direct3D9;
@@ -100,6 +101,7 @@ namespace Emulators.LibRetro
         Controller = new XInputController(false),
         GLContext = new RetroGLContextProvider()
       };
+      SetCoreVariables();
       _retroEmulator.VideoReady += OnVideoReady;
       _retroEmulator.FrameBufferReady += OnFrameBufferReady;
       _retroEmulator.AudioReady += OnAudioReady;
@@ -181,6 +183,16 @@ namespace Emulators.LibRetro
     #endregion
 
     #region Protected Methods
+    protected void SetCoreVariables()
+    {
+      var sm = ServiceRegistration.Get<ISettingsManager>();
+      CoreSetting coreSetting;
+      if (!sm.Load<LibRetroCoreSettings>().TryGetCoreSetting(_corePath, out coreSetting) || coreSetting.Variables == null)
+        return;
+      foreach (VariableDescription variable in coreSetting.Variables)
+        _retroEmulator.Variables.AddOrUpdate(variable);
+    }
+
     protected void DoRender()
     {
       long timestamp = Stopwatch.GetTimestamp();

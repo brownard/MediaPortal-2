@@ -181,7 +181,7 @@ namespace Emulators.Models
       if (EmulatorType == EmulatorType.Native)
         SetDefaultNativeSettings();
       else if (EmulatorType == EmulatorType.LibRetro)
-        SetLibRetroSettings();
+        SetDefaultLibRetroSettings();
       else if (!string.IsNullOrEmpty(PathBrowser.ChoosenResourcePathDisplayName))
         SetDefaultEmulatorSettings();
     }
@@ -317,7 +317,7 @@ namespace Emulators.Models
       UpdateIsGameCategoriesSelected();
     }
 
-    protected void SetLibRetroSettings()
+    protected void SetDefaultLibRetroSettings()
     {
       _libRetroProxy = new LibRetroProxy(LocalFsResourceProviderBase.ToDosPath(PathBrowser.ChoosenResourcePath));
       if (_libRetroProxy.Init())

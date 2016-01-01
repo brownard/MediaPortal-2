@@ -1,7 +1,9 @@
-﻿using MediaPortal.Common;
+﻿using Emulators.LibRetro;
+using MediaPortal.Common;
 using MediaPortal.Common.Commands;
 using MediaPortal.Common.General;
 using MediaPortal.Common.Logging;
+using MediaPortal.Common.Settings;
 using MediaPortal.UI.Presentation.DataObjects;
 using MediaPortal.UI.Presentation.Screens;
 using MediaPortal.UiComponents.Media.General;
@@ -117,7 +119,22 @@ namespace Emulators.Models
       _name = coreInfo.LibraryName;
       _extensions = coreInfo.ValidExtensions.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries).Select(s => "." + s.ToLowerInvariant()).ToList();
       _variables = _retro.Variables.GetAllVariables();
+      UpdateVariablesFromSettings();
       CreateVariableItems();
+    }
+
+    protected void UpdateVariablesFromSettings()
+    {
+      var sm = ServiceRegistration.Get<ISettingsManager>();
+      CoreSetting coreSetting;
+      if (!sm.Load<LibRetroCoreSettings>().TryGetCoreSetting(_corePath, out coreSetting) || coreSetting.Variables == null)
+        return;
+      foreach (VariableDescription variable in coreSetting.Variables)
+      {
+        VariableDescription coreVariable = _variables.FirstOrDefault(v => v.Name == variable.Name);
+        if (coreVariable != null)
+          coreVariable.SelectedOption = variable.SelectedOption;
+      }
     }
 
     protected void CreateVariableItems()

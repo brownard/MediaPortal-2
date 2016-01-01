@@ -15,6 +15,9 @@ using MediaPortal.Common.ResourceAccess;
 using MediaPortal.UiComponents.SkinBase.General;
 using Emulators.Common.Emulators;
 using MediaPortal.Common.SystemResolver;
+using SharpRetro.LibRetro;
+using MediaPortal.Common.Settings;
+using Emulators.LibRetro;
 
 namespace Emulators.Models
 {
@@ -120,6 +123,8 @@ namespace Emulators.Models
       foreach (string category in _emulatorProxy.SelectedGameCategories)
         configuration.Platforms.Add(category);
       ServiceRegistration.Get<IEmulatorManager>().AddOrUpdate(configuration);
+      if (configuration.IsLibRetro && _emulatorProxy.LibRetroProxy != null)
+        UpdateLibRetroCoreSetting(configuration.Path, _emulatorProxy.LibRetroProxy.Variables);
       UpdateConfigurations();
       NavigateBackToOverview();
     }
@@ -234,6 +239,14 @@ namespace Emulators.Models
       _emulatorProxy = null;
       IWorkflowManager workflowManager = ServiceRegistration.Get<IWorkflowManager>();
       workflowManager.NavigatePopToState(STATE_OVERVIEW, false);
+    }
+
+    protected void UpdateLibRetroCoreSetting(string corePath, List<VariableDescription> variables)
+    {
+      var sm = ServiceRegistration.Get<ISettingsManager>();
+      var coreSettings = sm.Load<LibRetroCoreSettings>();
+      coreSettings.AddOrUpdateCoreSetting(corePath, variables);
+      sm.Save(coreSettings);
     }
   }
 }
