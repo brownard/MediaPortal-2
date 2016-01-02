@@ -1,7 +1,6 @@
 ﻿using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using SharpGL;
-using SharpGL.RenderContextProviders;
 using SharpGL.Version;
 using SharpRetro.RetroGL;
 using System;
@@ -22,6 +21,8 @@ namespace Emulators.LibRetro.GLContexts
     protected bool _isInit;
     protected bool _needsReset;
     protected bool _bottomLeftOrigin;
+    protected int _maxWidth;
+    protected int _maxHeight;
 
     public bool IsInit
     {
@@ -57,6 +58,9 @@ namespace Emulators.LibRetro.GLContexts
       _isInit = true;
       _needsReset = true;
       _bottomLeftOrigin = bottomLeftOrigin;
+      _maxWidth = maxWidth;
+      _maxHeight = maxHeight;
+      _pixels = new byte[maxWidth * maxHeight * 4];
     }
 
     public IntPtr GetProcAddress(IntPtr sym)
@@ -69,25 +73,21 @@ namespace Emulators.LibRetro.GLContexts
 
     public void OnFrameBufferReady(int width, int height)
     {
-      _pixels = GetPixels(width, height);
+      UpdatePixels(width, height);
     }
 
-    protected byte[] GetPixels(int width, int height)
+    protected void UpdatePixels(int width, int height)
     {
       if (deviceContextHandle != IntPtr.Zero)
       {
         //  Set the read buffer.
         gl.ReadBuffer(OpenGL.GL_COLOR_ATTACHMENT0_EXT);
-        byte[] pixels = new byte[width * height * 4];
-        gl.ReadPixels(0, 0, width, height, OpenGL.GL_BGRA, OpenGL.GL_UNSIGNED_BYTE, pixels);
-        return pixels;
+        gl.ReadPixels(0, 0, width, height, OpenGL.GL_BGRA, OpenGL.GL_UNSIGNED_BYTE, _pixels);
       }
-      return null;
     }
 
     public void Dispose()
     {
-      MakeCurrent();
       Destroy();
     }
   }
