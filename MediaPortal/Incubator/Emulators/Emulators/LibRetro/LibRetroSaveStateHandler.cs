@@ -54,8 +54,14 @@ namespace Emulators.LibRetro
         return;
       _lastSaveTime = now;
       byte[] saveRam = _retroEmulator.SaveState(LibRetroCore.RETRO_MEMORY.SAVE_RAM);
-      if (ShouldSave(_lastSaveRam, saveRam) && TryWriteToFile(GetSaveFile(SAVE_RAM_EXTENSION), saveRam))
+      if (!ShouldSave(_lastSaveRam, saveRam))
+        return;
+      string savePath = GetSaveFile(SAVE_RAM_EXTENSION);
+      if (TryWriteToFile(savePath, saveRam))
+      {
+        ServiceRegistration.Get<ILogger>().Debug("LibRetroSaveStateHandler: Auto saved to '{0}'", GetSaveFile(SAVE_RAM_EXTENSION));
         _lastSaveRam = saveRam;
+      }
     }
 
     protected bool TryReadFromFile(string path, out byte[] fileBytes)
@@ -70,7 +76,7 @@ namespace Emulators.LibRetro
       }
       catch (Exception ex)
       {
-        ServiceRegistration.Get<ILogger>().Error("LibRetroFrontend: Error reading from path '{0}':", ex, path);
+        ServiceRegistration.Get<ILogger>().Error("LibRetroSaveStateHandler: Error reading from path '{0}':", ex, path);
       }
       fileBytes = null;
       return false;
@@ -88,7 +94,7 @@ namespace Emulators.LibRetro
       }
       catch (Exception ex)
       {
-        ServiceRegistration.Get<ILogger>().Error("LibRetroFrontend: Error writing to path '{0}':", ex, path);
+        ServiceRegistration.Get<ILogger>().Error("LibRetroSaveStateHandler: Error writing to path '{0}':", ex, path);
       }
       return false;
     }
