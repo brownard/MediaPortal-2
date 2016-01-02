@@ -91,6 +91,7 @@ namespace SharpRetro.LibRetro
     LibRetroCore.retro_hw_get_current_framebuffer_t retro_hw_get_current_framebuffer_cb;
     LibRetroCore.retro_hw_get_proc_address_t retro_hw_get_proc_address_cb;
     LibRetroCore.retro_hw_context_reset_t retro_hw_context_reset_cb;
+    LibRetroCore.retro_hw_context_reset_t retro_hw_context_destroy_cb;
     #endregion
 
     #region Protected Members
@@ -347,7 +348,7 @@ namespace SharpRetro.LibRetro
     {
       uint size = _retro.retro_serialize_size();
       byte[] buffer = new byte[size];
-      fixed(byte* p = &buffer[0])
+      fixed (byte* p = &buffer[0])
         _retro.retro_serialize((IntPtr)p, size);
       return buffer;
     }
@@ -455,6 +456,8 @@ namespace SharpRetro.LibRetro
             info->get_current_framebuffer = Marshal.GetFunctionPointerForDelegate(retro_hw_get_current_framebuffer_cb);
             info->get_proc_address = Marshal.GetFunctionPointerForDelegate(retro_hw_get_proc_address_cb);
             retro_hw_context_reset_cb = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_reset);
+            if (info->context_destroy != IntPtr.Zero)
+              retro_hw_context_destroy_cb = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_destroy);
             _depthBuffer = info->depth;
             _stencilBuffer = info->stencil;
             _bottomLeftOrigin = info->bottom_left_origin;
@@ -767,6 +770,9 @@ namespace SharpRetro.LibRetro
     {
       if (_retro != null)
       {
+        //Mupen64 crashes if deinit is called when run hasn't been called
+        if (!_firstRun)
+          _retro.retro_deinit();
         _retro.Dispose();
         _retro = null;
       }
