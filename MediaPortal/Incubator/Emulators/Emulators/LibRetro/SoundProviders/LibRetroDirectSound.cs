@@ -21,6 +21,7 @@ namespace Emulators.LibRetro.SoundProviders
     protected int _sampleRate;
     protected int _bufferBytes;
     protected int _nextWrite;
+    protected double _samplesPerMs;
 
     public int SampleRate
     {
@@ -65,6 +66,7 @@ namespace Emulators.LibRetro.SoundProviders
       // Create a temporary sound buffer with the specific buffer settings.
       _secondaryBuffer = new SecondarySoundBuffer(_directSound, buffer);
       _bufferBytes = _secondaryBuffer.Capabilities.BufferBytes;
+      _samplesPerMs = format.AverageBytesPerSecond / (sizeof(short) * 1000d);
     }
 
     public int GetPlayedSize()
@@ -136,8 +138,8 @@ namespace Emulators.LibRetro.SoundProviders
       //ServiceRegistration.Get<MediaPortal.Common.Logging.ILogger>().Info("************Audio count {0} samplesneeded {1} total size {2}", count, samplesNeeded, _bufferBytes);
       while (samplesNeeded < count)
       {
-        double sleepTime = (count - samplesNeeded) / (_sampleRate / 1000d);
-        Thread.Sleep((int)(sleepTime / 4));
+        int sleepTime = (int)((count - samplesNeeded) / _samplesPerMs);
+        Thread.Sleep(Math.Max(sleepTime / 2, 1));
         samplesNeeded = GetSamplesNeeded();
       }
     }
