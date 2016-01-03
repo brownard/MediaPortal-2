@@ -88,6 +88,11 @@
     <Compile Include="Input\KeyboardHook.cs" />
     <Compile Include="LibRetro\Controllers\Keyboard.cs" />
     <Compile Include="LibRetro\Controllers\KeyboardController.cs" />
+    <Compile Include="LibRetro\Controllers\Mapping\DeviceInput.cs" />
+    <Compile Include="LibRetro\Controllers\Mapping\IDeviceMapping.cs" />
+    <Compile Include="LibRetro\Controllers\Mapping\RetroPadMapping.cs" />
+    <Compile Include="LibRetro\Controllers\XInput\XInputControllerCache.cs" />
+    <Compile Include="LibRetro\Controllers\XInput\XInputMapper.cs" />
     <Compile Include="LibRetro\GLContexts\FBORenderContextProvider.cs" />
     <Compile Include="LibRetro\LibRetroCoreSettings.cs" />
     <Compile Include="LibRetro\LibRetroFrontend.cs" />
@@ -100,7 +105,7 @@
     <Compile Include="LibRetro\LibRetroPlayerBuilder.cs" />
     <Compile Include="LibRetro\VideoProviders\ITextureProvider.cs" />
     <Compile Include="LibRetro\VideoProviders\LibRetroTextureWrapper.cs" />
-    <Compile Include="LibRetro\Controllers\XInputController.cs" />
+    <Compile Include="LibRetro\Controllers\XInput\XInputController.cs" />
     <Compile Include="MediaCategoryHelper.cs" />
     <Compile Include="MediaExtensions\GameAspectWrapper.cs" />
     <Compile Include="MediaExtensions\GameFilterByDeveloperScreenData.cs" />
@@ -339,6 +344,7 @@
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(TargetPath)" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\Emulators\" /Y /E /I

@@ -1,4 +1,6 @@
 ﻿using Emulators.LibRetro.Controllers;
+using Emulators.LibRetro.Controllers.Mapping;
+using Emulators.LibRetro.Controllers.XInput;
 using Emulators.LibRetro.GLContexts;
 using Emulators.LibRetro.SoundProviders;
 using Emulators.LibRetro.VideoProviders;
@@ -98,7 +100,7 @@ namespace Emulators.LibRetro
       {
         SaveDirectory = _saveDirectory,
         LogDelegate = RetroLogDlgt,
-        Controller = new XInputController(false),
+        Controller = new XInputController(XInputMapper.GetDefaultMapping(false)),
         GLContext = new RetroGLContextProvider()
       };
       SetCoreVariables();
