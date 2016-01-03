@@ -384,8 +384,8 @@ namespace SharpRetro.Utils
 					else if (shortLongIndicator == 'l')
 					{
 						//zero 08-nov-2015 - something like this for longs, but i dont think this is a long
-						//o = n.ToInt32() + (((long)(fetcher().ToInt32()) << 32));
-						throw new InvalidOperationException("horn-rimmed astatine embryology");
+						o = n.ToInt32() + (((long)(fetcher().ToInt32()) << 32));
+						//throw new InvalidOperationException("horn-rimmed astatine embryology");
 					}
 					else o = n.ToInt32();
 				}
