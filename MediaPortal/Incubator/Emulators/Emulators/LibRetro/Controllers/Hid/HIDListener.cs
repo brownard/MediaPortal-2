@@ -13,7 +13,7 @@ using System.Windows.Forms;
 
 namespace Emulators.LibRetro.Controllers.Hid
 {
-  class HidStateEventArgs : EventArgs
+  public class HidStateEventArgs : EventArgs
   {
     public HidStateEventArgs(HidState state)
     {
@@ -22,7 +22,7 @@ namespace Emulators.LibRetro.Controllers.Hid
     public HidState State { get; private set; }
   }
 
-  class HidListener : IDisposable
+  public class HidListener : IDisposable
   {
     #region Logger
     static ILogger Logger

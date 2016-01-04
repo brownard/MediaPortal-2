@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Emulators.LibRetro.Controllers.Hid
 {
-  class HidState
+  public class HidState
   {
     public HidState(string name, string friendlyName, HashSet<ushort> buttons, Dictionary<ushort, HidAxisState> axisStates, SharpLib.Hid.DirectionPadState directionPadState)
     {
@@ -23,7 +23,7 @@ namespace Emulators.LibRetro.Controllers.Hid
     public SharpLib.Hid.DirectionPadState DirectionPadState { get; private set; }
   }
 
-  class HidAxisState
+  public class HidAxisState
   {
     public HidAxisState(string name, ushort id, uint value, ushort bitSize)
     {

@@ -22,13 +22,11 @@ namespace Emulators.LibRetro.Controllers.Hid
     public bool PositiveValues { get; set; }
   }
 
-  class HidGameControl : IRetroPad, IRetroAnalog
+  class HidGameControl : IRetroPad, IRetroAnalog, IHidDevice
   {
     public const int AXIS_DEADZONE = 8192;
-
-    protected HidListener _hidListener;
+    
     protected HidState _currentState;
-
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, ushort> _buttonToButtonMappings;
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, HidAxis> _analogToButtonMappings;
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DirectionPadState> _directionPadToButtonMappings;
@@ -36,10 +34,8 @@ namespace Emulators.LibRetro.Controllers.Hid
     protected Dictionary<RetroAnalogDevice, ushort> _buttonToAnalogMappings;
     protected Dictionary<RetroAnalogDevice, DirectionPadState> _directionPadToAnalogMappings;
 
-    public HidGameControl(HidListener hidListener, RetroPadMapping mapping)
+    public HidGameControl(RetroPadMapping mapping)
     {
-      _hidListener = hidListener;
-      _hidListener.StateChanged += HidListener_StateChanged;
       InitializeMappings(mapping);
     }
 
@@ -93,9 +89,9 @@ namespace Emulators.LibRetro.Controllers.Hid
       }
     }
 
-    protected void HidListener_StateChanged(object sender, HidStateEventArgs e)
+    public void UpdateState(HidState state)
     {
-      _currentState = e.State;
+      _currentState = state;
     }
 
     public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)

@@ -1,6 +1,5 @@
 ﻿using Emulators.LibRetro.Controllers;
 using Emulators.LibRetro.Controllers.Hid;
-using Emulators.LibRetro.Controllers.Mapping;
 using Emulators.LibRetro.Controllers.XInput;
 using Emulators.LibRetro.GLContexts;
 using Emulators.LibRetro.SoundProviders;
@@ -53,7 +52,7 @@ namespace Emulators.LibRetro
     protected bool _isPaused;
     protected ManualResetEventSlim _pauseWaitHandle;
     protected ManualResetEventSlim _isPausedHandle;
-    HidListener _hidListener;
+    protected ControllerWrapper _controllerWrapper;
     #endregion
 
     #region Ctor
@@ -98,13 +97,15 @@ namespace Emulators.LibRetro
     #region Public Methods
     public bool Init()
     {
-      _hidListener = new HidListener();
-      _hidListener.Register(SkinContext.Form.Handle);
+      _controllerWrapper = new ControllerWrapper();
+      _controllerWrapper.AddController(new XInputController(XInputMapper.GetDefaultMapping(false)), 0);
+      //_controllerWrapper.AddController(new HidGameControl(XBox360HidMapping.DEFAULT_MAPPING), 0);
+
       _retroEmulator = new LibRetroEmulator(_corePath)
       {
         SaveDirectory = _saveDirectory,
         LogDelegate = RetroLogDlgt,
-        Controller = new HidGameControl(_hidListener, XBox360HidMapping.DEFAULT_MAPPING), //new XInputController(XInputMapper.GetDefaultMapping(false)),
+        Controller = _controllerWrapper,
         GLContext = new RetroGLContextProvider()
       };
       SetCoreVariables();
@@ -130,6 +131,7 @@ namespace Emulators.LibRetro
 
     public void Run()
     {
+      _controllerWrapper.Start();
       _soundOutput.Play();
       _doRender = true;
       _renderThread = new Thread(DoRender);
@@ -318,10 +320,10 @@ namespace Emulators.LibRetro
         _renderThread.Join();
         _renderThread = null;
       }
-      if (_hidListener != null)
+      if (_controllerWrapper != null)
       {
-        _hidListener.Dispose();
-        _hidListener = null;
+        _controllerWrapper.Dispose();
+        _controllerWrapper = null;
       }
       if (_pauseWaitHandle != null)
       {

@@ -94,11 +94,13 @@
     <Compile Include="GoodMerge\GoodMergeExtractor.cs" />
     <Compile Include="Input\InputHandler.cs" />
     <Compile Include="Input\KeyboardHook.cs" />
+    <Compile Include="LibRetro\Controllers\ControllerWrapper.cs" />
     <Compile Include="LibRetro\Controllers\Hid\HidMapper.cs" />
     <Compile Include="LibRetro\Controllers\Hid\HidState.cs" />
     <Compile Include="LibRetro\Controllers\Hid\HidGameControl.cs" />
     <Compile Include="LibRetro\Controllers\Hid\HidListener.cs" />
     <Compile Include="LibRetro\Controllers\Hid\HidUtils.cs" />
+    <Compile Include="LibRetro\Controllers\Hid\IHidDevice.cs" />
     <Compile Include="LibRetro\Controllers\Hid\XBox360HidMapping.cs" />
     <Compile Include="LibRetro\Controllers\Keyboard\Keyboard.cs" />
     <Compile Include="LibRetro\Controllers\Keyboard\KeyboardController.cs" />
