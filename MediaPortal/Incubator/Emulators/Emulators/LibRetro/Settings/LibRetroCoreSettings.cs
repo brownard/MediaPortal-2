@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Emulators.LibRetro
+namespace Emulators.LibRetro.Settings
 {
   public class LibRetroCoreSettings
   {

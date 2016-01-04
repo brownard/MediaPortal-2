@@ -73,7 +73,7 @@ namespace Emulators.LibRetro.Controllers.XInput
     #region DefaultMapping
     public static RetroPadMapping GetDefaultMapping(bool mapAnalogToDPad)
     {
-      RetroPadMapping mapping = new RetroPadMapping();
+      RetroPadMapping mapping = new RetroPadMapping() { DeviceName = DEVICE_NAME };
       mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.LEFT, DPAD_LEFT);
       mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.RIGHT, DPAD_RIGHT);
       mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.UP, DPAD_UP);
@@ -121,22 +121,21 @@ namespace Emulators.LibRetro.Controllers.XInput
       public XInputAxis Axis { get; set; }
     }
 
+    const string DEVICE_NAME = "XInput Gamepad";
     const int CONTROLLER_CONNECTED_TIMEOUT = 1000;
     protected Dictionary<GamepadButtonFlags, DeviceInput> _buttonInputs;
     protected List<AxisDeviceInput> _axisInputs;
-    protected string _deviceName;
     protected XInputControllerCache _controller;
 
     public XInputMapper(Controller controller)
     {
       _controller = new XInputControllerCache(controller);
-      _deviceName = "XInput Device " + controller.UserIndex;
       InitializeInputs();
     }
 
     public string DeviceName
     {
-      get { return _deviceName; }
+      get { return DEVICE_NAME; }
     }
 
     public DeviceInput GetPressedInput()

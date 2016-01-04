@@ -18,6 +18,7 @@ using MediaPortal.Common.SystemResolver;
 using SharpRetro.LibRetro;
 using MediaPortal.Common.Settings;
 using Emulators.LibRetro;
+using Emulators.LibRetro.Settings;
 
 namespace Emulators.Models
 {

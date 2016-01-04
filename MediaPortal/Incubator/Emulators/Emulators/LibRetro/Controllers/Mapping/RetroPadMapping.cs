@@ -1,13 +1,15 @@
-﻿using SharpRetro.LibRetro;
+﻿using Emulators.Settings;
+using SharpRetro.LibRetro;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace Emulators.LibRetro.Controllers.Mapping
 {
-  enum RetroAnalogDevice
+  public enum RetroAnalogDevice
   {
     LeftThumbLeft,
     LeftThumbRight,
@@ -19,7 +21,7 @@ namespace Emulators.LibRetro.Controllers.Mapping
     RightThumbDown,
   }
 
-  class RetroPadMapping
+  public class RetroPadMapping
   {
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput> _buttonMappings;
     protected Dictionary<RetroAnalogDevice, DeviceInput> _analogMappings;
@@ -29,12 +31,16 @@ namespace Emulators.LibRetro.Controllers.Mapping
       _buttonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput>();
       _analogMappings = new Dictionary<RetroAnalogDevice, DeviceInput>();
     }
+    
+    public string DeviceName { get; set; }
 
+    [XmlIgnore]
     public Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput> ButtonMappings
     {
       get { return _buttonMappings; }
     }
 
+    [XmlIgnore]
     public Dictionary<RetroAnalogDevice, DeviceInput> AnalogMappings
     {
       get { return _analogMappings; }
@@ -81,5 +87,44 @@ namespace Emulators.LibRetro.Controllers.Mapping
         }
       }
     }
+
+    /// <summary>
+    /// Used for serialization
+    /// </summary>
+    public SerializeableKeyValue<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput>[] ButtonMappingsSerializable
+    {
+      get
+      {
+        var list = new List<SerializeableKeyValue<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput>>();
+        foreach (var kvp in _buttonMappings)
+          list.Add(new SerializeableKeyValue<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput>(kvp.Key, kvp.Value));
+        return list.ToArray();
+      }
+      set
+      {
+        foreach (var item in value)
+          _buttonMappings[item.Key] = item.Value;
+      }
+    }
+
+    /// <summary>
+    /// Used for serialization
+    /// </summary>
+    public SerializeableKeyValue<RetroAnalogDevice, DeviceInput>[] AnalogMappingsSerializable
+    {
+      get
+      {
+        var list = new List<SerializeableKeyValue<RetroAnalogDevice, DeviceInput>>();
+        foreach (var kvp in _analogMappings)
+          list.Add(new SerializeableKeyValue<RetroAnalogDevice, DeviceInput>(kvp.Key, kvp.Value));
+        return list.ToArray();
+      }
+      set
+      {
+        foreach (var item in value)
+          _analogMappings[item.Key] = item.Value;
+      }
+    }
+
   }
 }

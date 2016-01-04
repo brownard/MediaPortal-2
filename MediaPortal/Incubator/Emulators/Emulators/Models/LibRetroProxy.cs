@@ -1,4 +1,5 @@
 ﻿using Emulators.LibRetro;
+using Emulators.LibRetro.Settings;
 using MediaPortal.Common;
 using MediaPortal.Common.Commands;
 using MediaPortal.Common.General;

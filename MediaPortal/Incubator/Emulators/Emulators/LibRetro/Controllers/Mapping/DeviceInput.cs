@@ -6,45 +6,27 @@ using System.Threading.Tasks;
 
 namespace Emulators.LibRetro.Controllers.Mapping
 {
-  enum InputType
+  public enum InputType
   {
     Axis,
     Button
   }
 
-  class DeviceInput
+  public class DeviceInput
   {
-    protected string _label;
-    protected string _id;
-    protected InputType _inputType;
-    protected bool _positiveValues;
+    public DeviceInput() { }
 
     public DeviceInput(string label, string id, InputType inputType, bool positiveValues = true)
     {
-      _label = label;
-      _id = id;
-      _inputType = inputType;
-      _positiveValues = positiveValues;
+      Label = label;
+      Id = id;
+      InputType = inputType;
+      PositiveValues = positiveValues;
     }
 
-    public string Label
-    {
-      get { return _label; }
-    }
-
-    public string Id
-    {
-      get { return _id; }
-    }
-
-    public InputType InputType
-    {
-      get { return _inputType; }
-    }
-
-    public bool PositiveValues
-    {
-      get { return _positiveValues; }
-    }
+    public string Label { get; set; }
+    public string Id { get; set; }
+    public InputType InputType { get; set; }
+    public bool PositiveValues { get; set; }
   }
 }

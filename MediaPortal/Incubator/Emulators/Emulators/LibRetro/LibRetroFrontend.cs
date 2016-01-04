@@ -2,6 +2,7 @@
 using Emulators.LibRetro.Controllers.Hid;
 using Emulators.LibRetro.Controllers.XInput;
 using Emulators.LibRetro.GLContexts;
+using Emulators.LibRetro.Settings;
 using Emulators.LibRetro.SoundProviders;
 using Emulators.LibRetro.VideoProviders;
 using MediaPortal.Common;
