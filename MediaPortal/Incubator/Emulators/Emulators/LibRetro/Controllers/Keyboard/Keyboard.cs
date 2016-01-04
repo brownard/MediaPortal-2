@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Emulators.LibRetro.Controllers
+namespace Emulators.LibRetro.Controllers.Keyboard
 {
   public static class Keyboard
   {

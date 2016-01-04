@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using SharpRetro.LibRetro;
 using LibRetro = SharpRetro.LibRetro.LibRetroCore;
 
-namespace Emulators.LibRetro.Controllers
+namespace Emulators.LibRetro.Controllers.Keyboard
 {
   class KeyboardController : IRetroPad
   {
@@ -34,7 +34,7 @@ namespace Emulators.LibRetro.Controllers
       _bindings[LibRetroCore.RETRO_DEVICE_ID_JOYPAD.R] = Keys.E;
     }
 
-    public bool IsButtonPressed(uint port, SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)
+    public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)
     {
       Keys key;
       return port == _port && _bindings.TryGetValue(button, out key) && Keyboard.IsKeyDown(key);
