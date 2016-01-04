@@ -1,8 +1,4 @@
-﻿using Emulators.Common;
-using Emulators.Emulator;
-using Emulators.Game;
-using Emulators.MediaExtensions;
-using MediaPortal.Common;
+﻿using Emulators.MediaExtensions;
 using MediaPortal.Common.PluginManager;
 using System;
 using System.Collections.Generic;
