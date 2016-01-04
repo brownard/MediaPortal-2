@@ -11,33 +11,33 @@ namespace Emulators.LibRetro.Controllers.XInput
   class XInputMapper : IInputDeviceMapper
   {
     #region Available Inputs
-    static readonly DeviceInput DPAD_LEFT = new DeviceInput("D-Pad Left", GamepadButtonFlags.DPadLeft.ToString(), InputType.Digital);
-    static readonly DeviceInput DPAD_RIGHT = new DeviceInput("D-Pad Right", GamepadButtonFlags.DPadRight.ToString(), InputType.Digital);
-    static readonly DeviceInput DPAD_UP = new DeviceInput("D-Pad Up", GamepadButtonFlags.DPadUp.ToString(), InputType.Digital);
-    static readonly DeviceInput DPAD_DOWN = new DeviceInput("D-Pad Down", GamepadButtonFlags.DPadDown.ToString(), InputType.Digital);
-    static readonly DeviceInput BACK = new DeviceInput("Back", GamepadButtonFlags.Back.ToString(), InputType.Digital);
-    static readonly DeviceInput START = new DeviceInput("Start", GamepadButtonFlags.Start.ToString(), InputType.Digital);
-    static readonly DeviceInput A = new DeviceInput("A", GamepadButtonFlags.A.ToString(), InputType.Digital);
-    static readonly DeviceInput B = new DeviceInput("B", GamepadButtonFlags.B.ToString(), InputType.Digital);
-    static readonly DeviceInput X = new DeviceInput("X", GamepadButtonFlags.X.ToString(), InputType.Digital);
-    static readonly DeviceInput Y = new DeviceInput("Y", GamepadButtonFlags.Y.ToString(), InputType.Digital);
-    static readonly DeviceInput LEFT_SHOULDER = new DeviceInput("Left Shoulder", GamepadButtonFlags.LeftShoulder.ToString(), InputType.Digital);
-    static readonly DeviceInput RIGHT_SHOULDER = new DeviceInput("Right Shoulder", GamepadButtonFlags.RightShoulder.ToString(), InputType.Digital);
-    static readonly DeviceInput LEFT_THUMB = new DeviceInput("Left Thumb", GamepadButtonFlags.LeftThumb.ToString(), InputType.Digital);
-    static readonly DeviceInput RIGHT_THUMB = new DeviceInput("Right Thumb", GamepadButtonFlags.RightThumb.ToString(), InputType.Digital);
+    static readonly DeviceInput DPAD_LEFT = new DeviceInput("D-Pad Left", GamepadButtonFlags.DPadLeft.ToString(), InputType.Button);
+    static readonly DeviceInput DPAD_RIGHT = new DeviceInput("D-Pad Right", GamepadButtonFlags.DPadRight.ToString(), InputType.Button);
+    static readonly DeviceInput DPAD_UP = new DeviceInput("D-Pad Up", GamepadButtonFlags.DPadUp.ToString(), InputType.Button);
+    static readonly DeviceInput DPAD_DOWN = new DeviceInput("D-Pad Down", GamepadButtonFlags.DPadDown.ToString(), InputType.Button);
+    static readonly DeviceInput BACK = new DeviceInput("Back", GamepadButtonFlags.Back.ToString(), InputType.Button);
+    static readonly DeviceInput START = new DeviceInput("Start", GamepadButtonFlags.Start.ToString(), InputType.Button);
+    static readonly DeviceInput A = new DeviceInput("A", GamepadButtonFlags.A.ToString(), InputType.Button);
+    static readonly DeviceInput B = new DeviceInput("B", GamepadButtonFlags.B.ToString(), InputType.Button);
+    static readonly DeviceInput X = new DeviceInput("X", GamepadButtonFlags.X.ToString(), InputType.Button);
+    static readonly DeviceInput Y = new DeviceInput("Y", GamepadButtonFlags.Y.ToString(), InputType.Button);
+    static readonly DeviceInput LEFT_SHOULDER = new DeviceInput("Left Shoulder", GamepadButtonFlags.LeftShoulder.ToString(), InputType.Button);
+    static readonly DeviceInput RIGHT_SHOULDER = new DeviceInput("Right Shoulder", GamepadButtonFlags.RightShoulder.ToString(), InputType.Button);
+    static readonly DeviceInput LEFT_THUMB = new DeviceInput("Left Thumb", GamepadButtonFlags.LeftThumb.ToString(), InputType.Button);
+    static readonly DeviceInput RIGHT_THUMB = new DeviceInput("Right Thumb", GamepadButtonFlags.RightThumb.ToString(), InputType.Button);
 
-    static readonly DeviceInput LEFT_THUMB_LEFT = new DeviceInput("Left Thumb X-", XInputAnalogInput.LeftThumbLeft.ToString(), InputType.Analog);
-    static readonly DeviceInput LEFT_THUMB_RIGHT = new DeviceInput("Left Thumb X+", XInputAnalogInput.LeftThumbRight.ToString(), InputType.Analog);
-    static readonly DeviceInput LEFT_THUMB_UP = new DeviceInput("Left Thumb Y+", XInputAnalogInput.LeftThumbUp.ToString(), InputType.Analog);
-    static readonly DeviceInput LEFT_THUMB_DOWN = new DeviceInput("Left Thumb Y-", XInputAnalogInput.LeftThumbDown.ToString(), InputType.Analog);
-    static readonly DeviceInput RIGHT_THUMB_LEFT = new DeviceInput("Right Thumb X-", XInputAnalogInput.RightThumbLeft.ToString(), InputType.Analog);
-    static readonly DeviceInput RIGHT_THUMB_RIGHT = new DeviceInput("Right Thumb X+", XInputAnalogInput.RightThumbRight.ToString(), InputType.Analog);
-    static readonly DeviceInput RIGHT_THUMB_UP = new DeviceInput("Right Thumb Y+", XInputAnalogInput.RightThumbUp.ToString(), InputType.Analog);
-    static readonly DeviceInput RIGHT_THUMB_DOWN = new DeviceInput("Right Thumb Y-", XInputAnalogInput.RightThumbDown.ToString(), InputType.Analog);
-    static readonly DeviceInput LEFT_TRIGGER = new DeviceInput("Left Trigger", XInputAnalogInput.LeftTrigger.ToString(), InputType.Analog);
-    static readonly DeviceInput RIGHT_TRIGGER = new DeviceInput("Right Trigger", XInputAnalogInput.RightTrigger.ToString(), InputType.Analog);
+    static readonly DeviceInput LEFT_THUMB_LEFT = new DeviceInput("Left Thumb X-", XInputAxisType.LeftThumbX.ToString(), InputType.Axis, false);
+    static readonly DeviceInput LEFT_THUMB_RIGHT = new DeviceInput("Left Thumb X+", XInputAxisType.LeftThumbX.ToString(), InputType.Axis, true);
+    static readonly DeviceInput LEFT_THUMB_UP = new DeviceInput("Left Thumb Y+", XInputAxisType.LeftThumbY.ToString(), InputType.Axis, true);
+    static readonly DeviceInput LEFT_THUMB_DOWN = new DeviceInput("Left Thumb Y-", XInputAxisType.LeftThumbY.ToString(), InputType.Axis, false);
+    static readonly DeviceInput RIGHT_THUMB_LEFT = new DeviceInput("Right Thumb X-", XInputAxisType.RightThumbX.ToString(), InputType.Axis, false);
+    static readonly DeviceInput RIGHT_THUMB_RIGHT = new DeviceInput("Right Thumb X+", XInputAxisType.RightThumbX.ToString(), InputType.Axis, true);
+    static readonly DeviceInput RIGHT_THUMB_UP = new DeviceInput("Right Thumb Y+", XInputAxisType.RightThumbY.ToString(), InputType.Axis, true);
+    static readonly DeviceInput RIGHT_THUMB_DOWN = new DeviceInput("Right Thumb Y-", XInputAxisType.RightThumbY.ToString(), InputType.Axis, false);
+    static readonly DeviceInput LEFT_TRIGGER = new DeviceInput("Left Trigger", XInputAxisType.LeftTrigger.ToString(), InputType.Axis, true);
+    static readonly DeviceInput RIGHT_TRIGGER = new DeviceInput("Right Trigger", XInputAxisType.RightTrigger.ToString(), InputType.Axis, true);
 
-    protected static readonly DeviceInput[] AVAILABLE_INPUTS =
+    protected static readonly DeviceInput[] AVAILABLE_BUTTONS =
     {
       DPAD_LEFT,
       DPAD_RIGHT,
@@ -52,7 +52,11 @@ namespace Emulators.LibRetro.Controllers.XInput
       LEFT_SHOULDER,
       RIGHT_SHOULDER,
       LEFT_THUMB,
-      RIGHT_THUMB,
+      RIGHT_THUMB
+    };
+
+    protected static readonly DeviceInput[] AVAILABLE_AXIS =
+    {
       LEFT_THUMB_LEFT,
       LEFT_THUMB_RIGHT,
       LEFT_THUMB_UP,
@@ -111,8 +115,15 @@ namespace Emulators.LibRetro.Controllers.XInput
     }
     #endregion
 
+    protected class AxisDeviceInput
+    {
+      public DeviceInput DeviceInput { get; set; }
+      public XInputAxis Axis { get; set; }
+    }
+
     const int CONTROLLER_CONNECTED_TIMEOUT = 1000;
-    protected Dictionary<string, DeviceInput> _inputs;
+    protected Dictionary<GamepadButtonFlags, DeviceInput> _buttonInputs;
+    protected List<AxisDeviceInput> _axisInputs;
     protected string _deviceName;
     protected XInputControllerCache _controller;
 
@@ -120,6 +131,7 @@ namespace Emulators.LibRetro.Controllers.XInput
     {
       _controller = new XInputControllerCache(controller);
       _deviceName = "XInput Device " + controller.UserIndex;
+      InitializeInputs();
     }
 
     public string DeviceName
@@ -135,21 +147,37 @@ namespace Emulators.LibRetro.Controllers.XInput
       Gamepad gamepad = state.Gamepad;
 
       DeviceInput pressedInput;
-      if (_inputs.TryGetValue(gamepad.Buttons.ToString(), out pressedInput))
+      if (_buttonInputs.TryGetValue(gamepad.Buttons, out pressedInput))
         return pressedInput;
 
-      foreach (XInputAnalogInput analog in Enum.GetValues(typeof(XInputAnalogInput)))
-        if (_inputs.TryGetValue(analog.ToString(), out pressedInput) && XInputController.IsAnalogPressed(analog, gamepad))
-          return pressedInput;
+      foreach (AxisDeviceInput axisInput in _axisInputs)
+        if (XInputController.IsAxisPressed(axisInput.Axis, gamepad))
+          return axisInput.DeviceInput;
 
       return null;
     }
 
     protected void InitializeInputs()
     {
-      _inputs = new Dictionary<string, DeviceInput>();
-      foreach (DeviceInput input in AVAILABLE_INPUTS)
-        _inputs.Add(input.Id, input);
+      _buttonInputs = new Dictionary<GamepadButtonFlags, DeviceInput>();
+      foreach (DeviceInput input in AVAILABLE_BUTTONS)
+      {
+        GamepadButtonFlags buttonFlag;
+        if (Enum.TryParse(input.Id, out buttonFlag))
+          _buttonInputs.Add(buttonFlag, input);
+      }
+
+      _axisInputs = new List<AxisDeviceInput>();
+      foreach (DeviceInput input in AVAILABLE_AXIS)
+      {
+        XInputAxisType axisType;
+        if (Enum.TryParse(input.Id, out axisType))
+          _axisInputs.Add(new AxisDeviceInput()
+          {
+            DeviceInput = input,
+            Axis = new XInputAxis(axisType, input.PositiveValues)
+          });
+      }
     }
   }
 }

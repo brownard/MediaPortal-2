@@ -10,18 +10,26 @@ using Emulators.LibRetro.Controllers.Mapping;
 
 namespace Emulators.LibRetro.Controllers.XInput
 {
-  enum XInputAnalogInput
+  enum XInputAxisType
   {
-    LeftThumbLeft,
-    LeftThumbRight,
-    LeftThumbUp,
-    LeftThumbDown,
-    RightThumbLeft,
-    RightThumbRight,
-    RightThumbUp,
-    RightThumbDown,
+    LeftThumbX,
+    LeftThumbY,
+    RightThumbX,
+    RightThumbY,
     LeftTrigger,
     RightTrigger
+  }
+
+  class XInputAxis
+  {
+    public XInputAxis(XInputAxisType axisType, bool positiveValues)
+    {
+      AxisType = axisType;
+      PositiveValues = positiveValues;
+    }
+
+    public XInputAxisType AxisType { get; set; }
+    public bool PositiveValues { get; set; }
   }
 
   class XInputController : IRetroPad, IRetroAnalog
@@ -30,8 +38,8 @@ namespace Emulators.LibRetro.Controllers.XInput
     const int CONTROLLER_CONNECTED_TIMEOUT = 2000;
     protected XInputControllerCache[] _controllers;
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, GamepadButtonFlags> _buttonToButtonMappings;
-    protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, XInputAnalogInput> _analogToButtonMappings;
-    protected Dictionary<RetroAnalogDevice, XInputAnalogInput> _analogToAnalogMappings;
+    protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, XInputAxis> _analogToButtonMappings;
+    protected Dictionary<RetroAnalogDevice, XInputAxis> _analogToAnalogMappings;
     protected Dictionary<RetroAnalogDevice, GamepadButtonFlags> _buttonToAnalogMappings;
 
     public XInputController(RetroPadMapping mapping)
@@ -52,41 +60,41 @@ namespace Emulators.LibRetro.Controllers.XInput
     protected void InitMapping(RetroPadMapping mapping)
     {
       _buttonToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, GamepadButtonFlags>();
-      _analogToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, XInputAnalogInput>();
-      _analogToAnalogMappings = new Dictionary<RetroAnalogDevice, XInputAnalogInput>();
+      _analogToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, XInputAxis>();
+      _analogToAnalogMappings = new Dictionary<RetroAnalogDevice, XInputAxis>();
       _buttonToAnalogMappings = new Dictionary<RetroAnalogDevice, GamepadButtonFlags>();
 
       foreach (var kvp in mapping.ButtonMappings)
       {
         DeviceInput deviceInput = kvp.Value;
-        if (deviceInput.InputType == InputType.Digital)
+        if (deviceInput.InputType == InputType.Button)
         {
           GamepadButtonFlags button;
           if (Enum.TryParse(deviceInput.Id, out button))
             _buttonToButtonMappings[kvp.Key] = button;
         }
-        else if (deviceInput.InputType == InputType.Analog)
+        else if (deviceInput.InputType == InputType.Axis)
         {
-          XInputAnalogInput analogInput;
+          XInputAxisType analogInput;
           if (Enum.TryParse(deviceInput.Id, out analogInput))
-            _analogToButtonMappings[kvp.Key] = analogInput;
+            _analogToButtonMappings[kvp.Key] = new XInputAxis(analogInput, deviceInput.PositiveValues);
         }
       }
 
       foreach (var kvp in mapping.AnalogMappings)
       {
         DeviceInput deviceInput = kvp.Value;
-        if (deviceInput.InputType == InputType.Digital)
+        if (deviceInput.InputType == InputType.Button)
         {
           GamepadButtonFlags button;
           if (Enum.TryParse(deviceInput.Id, out button))
             _buttonToAnalogMappings[kvp.Key] = button;
         }
-        else if (deviceInput.InputType == InputType.Analog)
+        else if (deviceInput.InputType == InputType.Axis)
         {
-          XInputAnalogInput analogInput;
+          XInputAxisType analogInput;
           if (Enum.TryParse(deviceInput.Id, out analogInput))
-            _analogToAnalogMappings[kvp.Key] = analogInput;
+            _analogToAnalogMappings[kvp.Key] = new XInputAxis(analogInput, deviceInput.PositiveValues);
         }
       }
     }
@@ -100,8 +108,8 @@ namespace Emulators.LibRetro.Controllers.XInput
       GamepadButtonFlags buttonFlag;
       if (_buttonToButtonMappings.TryGetValue(button, out buttonFlag) && IsButtonPressed(buttonFlag, gamepad))
         return true;
-      XInputAnalogInput analogInput;
-      if (_analogToButtonMappings.TryGetValue(button, out analogInput) && IsAnalogPressed(analogInput, gamepad))
+      XInputAxis axis;
+      if (_analogToButtonMappings.TryGetValue(button, out axis) && IsAxisPressed(axis, gamepad))
         return true;
       return false;
     }
@@ -118,15 +126,15 @@ namespace Emulators.LibRetro.Controllers.XInput
       short positivePosition = 0;
       short negativePosition = 0;
 
-      XInputAnalogInput analog;
+      XInputAxis axis;
       GamepadButtonFlags buttonFlag;
-      if (_analogToAnalogMappings.TryGetValue(positive, out analog))
-        positivePosition = GetAnalogPosition(analog, gamepad, true);
+      if (_analogToAnalogMappings.TryGetValue(positive, out axis))
+        positivePosition = GetAxisPositionMapped(axis, gamepad, true);
       else if (_buttonToAnalogMappings.TryGetValue(positive, out buttonFlag) && IsButtonPressed(buttonFlag, gamepad))
         positivePosition = short.MaxValue;
 
-      if (_analogToAnalogMappings.TryGetValue(negative, out analog))
-        negativePosition = GetAnalogPosition(analog, gamepad, false);
+      if (_analogToAnalogMappings.TryGetValue(negative, out axis))
+        negativePosition = GetAxisPositionMapped(axis, gamepad, false);
       else if (_buttonToAnalogMappings.TryGetValue(negative, out buttonFlag) && IsButtonPressed(buttonFlag, gamepad))
         negativePosition = short.MinValue;
 
@@ -154,101 +162,72 @@ namespace Emulators.LibRetro.Controllers.XInput
       return (gamepad.Buttons & buttonFlag) == buttonFlag;
     }
 
-    public static bool IsAnalogPressed(XInputAnalogInput analogInput, Gamepad gamepad)
+    public static bool IsAxisPressed(XInputAxis axis, Gamepad gamepad)
     {
-      switch (analogInput)
+      short axisValue = 0;
+      short deadZone = 0;
+      switch (axis.AxisType)
       {
-        case XInputAnalogInput.LeftThumbLeft:
-          return gamepad.LeftThumbX < -Gamepad.LeftThumbDeadZone;
-        case XInputAnalogInput.LeftThumbRight:
-          return gamepad.LeftThumbX > Gamepad.LeftThumbDeadZone;
-        case XInputAnalogInput.LeftThumbUp:
-          return gamepad.LeftThumbY > Gamepad.LeftThumbDeadZone;
-        case XInputAnalogInput.LeftThumbDown:
-          return gamepad.LeftThumbY < -Gamepad.LeftThumbDeadZone;
-        case XInputAnalogInput.RightThumbLeft:
-          return gamepad.RightThumbX < -Gamepad.RightThumbDeadZone;
-        case XInputAnalogInput.RightThumbRight:
-          return gamepad.RightThumbX > Gamepad.RightThumbDeadZone;
-        case XInputAnalogInput.RightThumbUp:
-          return gamepad.RightThumbY > Gamepad.RightThumbDeadZone;
-        case XInputAnalogInput.RightThumbDown:
-          return gamepad.RightThumbY < -Gamepad.RightThumbDeadZone;
-        case XInputAnalogInput.LeftTrigger:
-          return gamepad.LeftTrigger > Gamepad.TriggerThreshold;
-        case XInputAnalogInput.RightTrigger:
-          return gamepad.RightTrigger > Gamepad.TriggerThreshold;
+        case XInputAxisType.LeftThumbX:
+          axisValue = gamepad.LeftThumbX;
+          deadZone = Gamepad.LeftThumbDeadZone;
+          break;
+        case XInputAxisType.LeftThumbY:
+          axisValue = gamepad.LeftThumbY;
+          deadZone = Gamepad.LeftThumbDeadZone;
+          break;
+        case XInputAxisType.RightThumbX:
+          axisValue = gamepad.RightThumbX;
+          deadZone = Gamepad.RightThumbDeadZone;
+          break;
+        case XInputAxisType.RightThumbY:
+          axisValue = gamepad.RightThumbY;
+          deadZone = Gamepad.RightThumbDeadZone;
+          break;
+        case XInputAxisType.LeftTrigger:
+          axisValue = gamepad.LeftTrigger;
+          deadZone = Gamepad.TriggerThreshold;
+          break;
+        case XInputAxisType.RightTrigger:
+          axisValue = gamepad.RightTrigger;
+          deadZone = Gamepad.TriggerThreshold;
+          break;
       }
-      return false;
+
+      if (axis.PositiveValues)
+        return axisValue > deadZone;
+      else
+        return axisValue < -deadZone;
     }
 
-    public static short GetAnalogPosition(XInputAnalogInput analogInput, Gamepad gamepad, bool isPositiveDirection)
+    public static short GetAxisPosition(XInputAxisType axisType, Gamepad gamepad)
     {
-      short position = 0;
-      bool shouldInvert = false;
-      switch (analogInput)
+      switch (axisType)
       {
-        case XInputAnalogInput.LeftThumbLeft:
-          position = gamepad.LeftThumbX;
-          if (position >= 0)
-            return 0;
-          shouldInvert = isPositiveDirection;
-          break;
-        case XInputAnalogInput.LeftThumbRight:
-          position = gamepad.LeftThumbX;
-          if (position <= 0)
-            return 0;
-          shouldInvert = !isPositiveDirection;
-          break;
-        case XInputAnalogInput.LeftThumbUp:
-          position = gamepad.LeftThumbY;
-          if (position <= 0)
-            return 0;
-          shouldInvert = !isPositiveDirection;
-          break;
-        case XInputAnalogInput.LeftThumbDown:
-          position = gamepad.LeftThumbY;
-          if (position >= 0)
-            return 0;
-          shouldInvert = isPositiveDirection;
-          break;
-        case XInputAnalogInput.RightThumbLeft:
-          position = gamepad.RightThumbX;
-          if (position >= 0)
-            return 0;
-          shouldInvert = isPositiveDirection;
-          break;
-        case XInputAnalogInput.RightThumbRight:
-          position = gamepad.RightThumbX;
-          if (position <= 0)
-            return 0;
-          shouldInvert = !isPositiveDirection;
-          break;
-        case XInputAnalogInput.RightThumbUp:
-          position = gamepad.RightThumbY;
-          if (position <= 0)
-            return 0;
-          shouldInvert = !isPositiveDirection;
-          break;
-        case XInputAnalogInput.RightThumbDown:
-          position = gamepad.RightThumbY;
-          if (position >= 0)
-            return 0;
-          shouldInvert = isPositiveDirection;
-          break;
-        case XInputAnalogInput.LeftTrigger:
-          position = ScaleByteToShort(gamepad.LeftTrigger);
-          if (position == 0)
-            return 0;
-          shouldInvert = !isPositiveDirection;
-          break;
-        case XInputAnalogInput.RightTrigger:
-          position = ScaleByteToShort(gamepad.RightTrigger);
-          if (position == 0)
-            return 0;
-          shouldInvert = !isPositiveDirection;
-          break;
+        case XInputAxisType.LeftThumbX:
+          return gamepad.LeftThumbX;
+        case XInputAxisType.LeftThumbY:
+          return gamepad.LeftThumbY;
+        case XInputAxisType.RightThumbX:
+          return gamepad.RightThumbX;
+        case XInputAxisType.RightThumbY:
+          return gamepad.RightThumbY;
+        case XInputAxisType.LeftTrigger:
+          return ScaleByteToShort(gamepad.LeftTrigger);
+        case XInputAxisType.RightTrigger:
+          return ScaleByteToShort(gamepad.RightTrigger);
+        default:
+          return 0;
       }
+    }
+
+    public static short GetAxisPositionMapped(XInputAxis axis, Gamepad gamepad, bool isMappedToPositive)
+    {
+      short position = GetAxisPosition(axis.AxisType, gamepad);
+      if (position == 0 || (axis.PositiveValues && position <= 0) || (!axis.PositiveValues && position >= 0))
+        return 0;
+
+      bool shouldInvert = (axis.PositiveValues && !isMappedToPositive) || (!axis.PositiveValues && isMappedToPositive);
       if (shouldInvert)
         position = (short)(-position - 1);
       return position;
