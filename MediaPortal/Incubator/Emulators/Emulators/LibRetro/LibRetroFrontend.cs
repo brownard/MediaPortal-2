@@ -1,4 +1,5 @@
 ﻿using Emulators.LibRetro.Controllers;
+using Emulators.LibRetro.Controllers.Hid;
 using Emulators.LibRetro.Controllers.Mapping;
 using Emulators.LibRetro.Controllers.XInput;
 using Emulators.LibRetro.GLContexts;
@@ -52,6 +53,7 @@ namespace Emulators.LibRetro
     protected bool _isPaused;
     protected ManualResetEventSlim _pauseWaitHandle;
     protected ManualResetEventSlim _isPausedHandle;
+    HidListener _hidListener;
     #endregion
 
     #region Ctor
@@ -96,11 +98,13 @@ namespace Emulators.LibRetro
     #region Public Methods
     public bool Init()
     {
+      _hidListener = new HidListener();
+      _hidListener.Register(SkinContext.Form.Handle);
       _retroEmulator = new LibRetroEmulator(_corePath)
       {
         SaveDirectory = _saveDirectory,
         LogDelegate = RetroLogDlgt,
-        Controller = new XInputController(XInputMapper.GetDefaultMapping(false)),
+        Controller = new HidGameControl(_hidListener, XBox360HidMapping.DEFAULT_MAPPING), //new XInputController(XInputMapper.GetDefaultMapping(false)),
         GLContext = new RetroGLContextProvider()
       };
       SetCoreVariables();
@@ -313,6 +317,11 @@ namespace Emulators.LibRetro
       {
         _renderThread.Join();
         _renderThread = null;
+      }
+      if (_hidListener != null)
+      {
+        _hidListener.Dispose();
+        _hidListener = null;
       }
       if (_pauseWaitHandle != null)
       {

@@ -106,11 +106,11 @@ namespace Emulators.LibRetro.Controllers.XInput
         return false;
 
       GamepadButtonFlags buttonFlag;
-      if (_buttonToButtonMappings.TryGetValue(button, out buttonFlag) && IsButtonPressed(buttonFlag, gamepad))
-        return true;
+      if (_buttonToButtonMappings.TryGetValue(button, out buttonFlag))
+        return IsButtonPressed(buttonFlag, gamepad);
       XInputAxis axis;
-      if (_analogToButtonMappings.TryGetValue(button, out axis) && IsAxisPressed(axis, gamepad))
-        return true;
+      if (_analogToButtonMappings.TryGetValue(button, out axis))
+        return IsAxisPressed(axis, gamepad);
       return false;
     }
 
@@ -194,10 +194,7 @@ namespace Emulators.LibRetro.Controllers.XInput
           break;
       }
 
-      if (axis.PositiveValues)
-        return axisValue > deadZone;
-      else
-        return axisValue < -deadZone;
+      return axis.PositiveValues ? axisValue > deadZone : axisValue < -deadZone;
     }
 
     public static short GetAxisPosition(XInputAxisType axisType, Gamepad gamepad)
@@ -213,9 +210,9 @@ namespace Emulators.LibRetro.Controllers.XInput
         case XInputAxisType.RightThumbY:
           return gamepad.RightThumbY;
         case XInputAxisType.LeftTrigger:
-          return ScaleByteToShort(gamepad.LeftTrigger);
+          return NumericUtils.ScaleByteToShort(gamepad.LeftTrigger);
         case XInputAxisType.RightTrigger:
-          return ScaleByteToShort(gamepad.RightTrigger);
+          return NumericUtils.ScaleByteToShort(gamepad.RightTrigger);
         default:
           return 0;
       }
@@ -231,13 +228,6 @@ namespace Emulators.LibRetro.Controllers.XInput
       if (shouldInvert)
         position = (short)(-position - 1);
       return position;
-    }
-
-    static short ScaleByteToShort(byte b)
-    {
-      if (b == 0)
-        return 0;
-      return (short)(((b << 8) | b) >> 1);
     }
   }
 }

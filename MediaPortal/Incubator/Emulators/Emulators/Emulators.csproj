@@ -59,6 +59,14 @@
       <HintPath>..\..\..\Packages\SharpGL.2.4.0.0\lib\net40\SharpGL.SceneGraph.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="SharpLibHid, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <HintPath>..\..\..\Packages\SharpLibHid.1.3.0\lib\net20\SharpLibHid.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SharpLibWin32, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <HintPath>..\..\..\Packages\SharpLibWin32.0.0.7\lib\net20\SharpLibWin32.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -86,11 +94,18 @@
     <Compile Include="GoodMerge\GoodMergeExtractor.cs" />
     <Compile Include="Input\InputHandler.cs" />
     <Compile Include="Input\KeyboardHook.cs" />
+    <Compile Include="LibRetro\Controllers\Hid\HidMapper.cs" />
+    <Compile Include="LibRetro\Controllers\Hid\HidState.cs" />
+    <Compile Include="LibRetro\Controllers\Hid\HidGameControl.cs" />
+    <Compile Include="LibRetro\Controllers\Hid\HidListener.cs" />
+    <Compile Include="LibRetro\Controllers\Hid\HidUtils.cs" />
+    <Compile Include="LibRetro\Controllers\Hid\XBox360HidMapping.cs" />
     <Compile Include="LibRetro\Controllers\Keyboard.cs" />
     <Compile Include="LibRetro\Controllers\KeyboardController.cs" />
     <Compile Include="LibRetro\Controllers\Mapping\DeviceInput.cs" />
     <Compile Include="LibRetro\Controllers\Mapping\IDeviceMapping.cs" />
     <Compile Include="LibRetro\Controllers\Mapping\RetroPadMapping.cs" />
+    <Compile Include="LibRetro\Controllers\NumericUtils.cs" />
     <Compile Include="LibRetro\Controllers\XInput\XInputControllerCache.cs" />
     <Compile Include="LibRetro\Controllers\XInput\XInputMapper.cs" />
     <Compile Include="LibRetro\GLContexts\FBORenderContextProvider.cs" />
