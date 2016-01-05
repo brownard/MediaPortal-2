@@ -32,28 +32,38 @@ namespace Emulators.LibRetro
     }
     #endregion
 
-    #region Protected Members
+    #region Consts
     protected const int AUTO_SAVE_INTERVAL = 10 * 1000;
+    #endregion
+
+    #region Protected Members
     protected readonly object _surfaceLock = new object();
     protected readonly object _audioLock = new object();
+    protected ManualResetEventSlim _pauseWaitHandle;
+
     protected LibRetroEmulator _retroEmulator;
     protected LibRetroSaveStateHandler _saveHandler;
+    protected ITextureProvider _textureProvider;
+    protected ISoundOutput _soundOutput;
+    protected ControllerWrapper _controllerWrapper;
+
+    protected Thread _renderThread;
+    protected volatile bool _doRender;
+    protected RenderDlgt _renderDlgt;
+
+    protected bool _libretroInitialized;
+    protected bool _guiInitialized;
+    protected bool _isPaused;
+
+    protected double _secondsPerFrame;
+    protected long _lastRenderTimestamp;
+
     protected string _corePath;
     protected string _gamePath;
     protected string _saveDirectory;
-    protected ITextureProvider _textureProvider;
-    protected ISoundOutput _soundOutput;
-    protected Thread _renderThread;
-    protected volatile bool _doRender;
-    protected double _vsync;
-    protected bool _initialised;
-    protected bool _syncToAudio = true;
-    protected bool _autoSave = true;
-    protected RenderDlgt _renderDlgt;
-    protected bool _isPaused;
-    protected ManualResetEventSlim _pauseWaitHandle;
-    protected ManualResetEventSlim _isPausedHandle;
-    protected ControllerWrapper _controllerWrapper;
+
+    protected bool _syncToAudio;
+    protected bool _autoSave;
     #endregion
 
     #region Ctor
@@ -63,7 +73,9 @@ namespace Emulators.LibRetro
       _gamePath = gamePath;
       _saveDirectory = saveDirectory;
       _pauseWaitHandle = new ManualResetEventSlim(true);
-      _isPausedHandle = new ManualResetEventSlim(false);
+      _syncToAudio = true;
+      _autoSave = true;
+      _guiInitialized = true;
     }
     #endregion
 
@@ -98,40 +110,18 @@ namespace Emulators.LibRetro
     #region Public Methods
     public bool Init()
     {
-      _controllerWrapper = new ControllerWrapper();
-      _controllerWrapper.AddController(new XInputController(XInputMapper.GetDefaultMapping(false)), 0);
-      //_controllerWrapper.AddController(new HidGameControl(XBox360HidMapping.DEFAULT_MAPPING), 0);
-
-      _retroEmulator = new LibRetroEmulator(_corePath)
-      {
-        SaveDirectory = _saveDirectory,
-        LogDelegate = RetroLogDlgt,
-        Controller = _controllerWrapper,
-        GLContext = new RetroGLContextProvider()
-      };
-      SetCoreVariables();
-      _retroEmulator.VideoReady += OnVideoReady;
-      _retroEmulator.FrameBufferReady += OnFrameBufferReady;
-      _retroEmulator.AudioReady += OnAudioReady;
-      _retroEmulator.Init();
-      if (!_retroEmulator.LoadGame(_gamePath, _retroEmulator.SystemInfo.NeedsFullPath ? null : File.ReadAllBytes(_gamePath)))
+      InitializeLibRetro();
+      if (!LoadGame())
         return false;
-      _vsync = 1 / _retroEmulator.TimingInfo.VSyncRate;
-      _textureProvider = new LibRetroTextureWrapper();
-      _soundOutput = new LibRetroDirectSound();
-      if (!_soundOutput.Init(SkinContext.Form.Handle, (int)_retroEmulator.TimingInfo.SampleRate))
-      {
-        _soundOutput.Dispose();
-        _soundOutput = null;
-      }
-      _saveHandler = new LibRetroSaveStateHandler(_retroEmulator, _gamePath, _saveDirectory, AUTO_SAVE_INTERVAL);
-      _saveHandler.LoadSaveRam();
-      _initialised = true;
+      InitializeOutputs();      
+      _libretroInitialized = true;
       return true;
     }
 
     public void Run()
     {
+      if (!_libretroInitialized)
+        return;
       _controllerWrapper.Start();
       _soundOutput.Play();
       _doRender = true;
@@ -171,14 +161,14 @@ namespace Emulators.LibRetro
     public void ReallocGUIResources()
     {
       lock (_surfaceLock)
-        _initialised = true;
+        _guiInitialized = true;
     }
 
     public void ReleaseGUIResources()
     {
       lock (_surfaceLock)
       {
-        _initialised = false;
+        _guiInitialized = false;
         if (_textureProvider != null)
           _textureProvider.Release();
       }
@@ -192,6 +182,42 @@ namespace Emulators.LibRetro
     #endregion
 
     #region Protected Methods
+    protected void InitializeLibRetro()
+    {
+      _controllerWrapper = new ControllerWrapper();
+      _controllerWrapper.AddController(new XInputController(XInputMapper.GetDefaultMapping(false)), 0);
+      //_controllerWrapper.AddController(new HidGameControl(XBox360HidMapping.DEFAULT_MAPPING), 0);
+
+      _retroEmulator = new LibRetroEmulator(_corePath)
+      {
+        SaveDirectory = _saveDirectory,
+        LogDelegate = RetroLogDlgt,
+        Controller = _controllerWrapper,
+        GLContext = new RetroGLContextProvider()
+      };
+
+      SetCoreVariables();
+      _retroEmulator.VideoReady += OnVideoReady;
+      _retroEmulator.FrameBufferReady += OnFrameBufferReady;
+      _retroEmulator.AudioReady += OnAudioReady;
+      _retroEmulator.Init();
+    }
+
+    protected void InitializeOutputs()
+    {
+      _secondsPerFrame = 1 / _retroEmulator.TimingInfo.VSyncRate;
+      _textureProvider = new LibRetroTextureWrapper();
+      _soundOutput = new LibRetroDirectSound();
+      if (!_soundOutput.Init(SkinContext.Form.Handle, (int)_retroEmulator.TimingInfo.SampleRate))
+      {
+        _soundOutput.Dispose();
+        _soundOutput = null;
+        _syncToAudio = false;
+      }
+      _saveHandler = new LibRetroSaveStateHandler(_retroEmulator, _gamePath, _saveDirectory, AUTO_SAVE_INTERVAL);
+      _saveHandler.LoadSaveRam();
+    }
+
     protected void SetCoreVariables()
     {
       var sm = ServiceRegistration.Get<ISettingsManager>();
@@ -202,56 +228,87 @@ namespace Emulators.LibRetro
         _retroEmulator.Variables.AddOrUpdate(variable);
     }
 
+    protected bool LoadGame()
+    {
+      byte[] gameData = _retroEmulator.SystemInfo.NeedsFullPath ? null : File.ReadAllBytes(_gamePath);
+      return _retroEmulator.LoadGame(_gamePath, gameData);
+    }
+
     protected void DoRender()
     {
-      long timestamp = Stopwatch.GetTimestamp();
       while (_doRender)
       {
-        if (_syncToAudio || NeedsRender(ref timestamp))
-          _retroEmulator.Run();
+        RunEmulator();
         RenderFrame();
+        CheckPauseState();
+      }
+      OnRenderThreadFinished();
+    }
+
+    protected void RunEmulator()
+    {
+      if (_syncToAudio || NeedsRender())
+      {
+        _retroEmulator.Run();
         if (_autoSave)
           _saveHandler.AutoSave();
-        if (!_pauseWaitHandle.IsSet)
-        {
-          _isPausedHandle.Set();
-          _pauseWaitHandle.Wait();
-          _isPausedHandle.Reset();
-        }
       }
+    }
+
+    protected bool NeedsRender()
+    {
+      long currentTimestamp = Stopwatch.GetTimestamp();
+      double secondsPassed = (double)(currentTimestamp - _lastRenderTimestamp) / Stopwatch.Frequency;
+      if (secondsPassed < _secondsPerFrame)
+        return false;
+      _lastRenderTimestamp = currentTimestamp;
+      return true;
+    }
+
+    protected void CheckPauseState()
+    {
+      if (!_pauseWaitHandle.IsSet)
+      {
+        OnRenderThreadPaused();
+        _pauseWaitHandle.Wait();
+        OnRenderThreadUnPaused();
+      }
+    }
+
+    protected void OnRenderThreadPaused()
+    {
+      lock (_audioLock)
+      {
+        if (_soundOutput != null)
+          _soundOutput.Pause();
+      }
+    }
+
+    protected void OnRenderThreadUnPaused()
+    {
+      lock (_audioLock)
+      {
+        if (_soundOutput != null)
+          _soundOutput.UnPause();
+      }
+    }
+
+    protected void OnRenderThreadFinished()
+    {
       _saveHandler.SaveSaveRam();
       _retroEmulator.Dispose();
       _retroEmulator = null;
     }
 
-    protected bool NeedsRender(ref long lastTimestamp)
-    {
-      long currentTimestamp = Stopwatch.GetTimestamp();
-      double deltaMs = (double)(currentTimestamp - lastTimestamp) / Stopwatch.Frequency;
-      if (deltaMs < _vsync)
-        return false;
-      lastTimestamp = currentTimestamp;
-      return true;
-    }
-
     protected void OnPausedChanged()
     {
+      if (_pauseWaitHandle == null)
+        return;
+
       if (_isPaused)
-      {
-        if (_pauseWaitHandle != null)
-          _pauseWaitHandle.Reset();
-        _isPausedHandle.Wait();
-        if (_soundOutput != null)
-          _soundOutput.Pause();
-      }
+        _pauseWaitHandle.Reset();
       else
-      {
-        _isPausedHandle.Wait();
-        if (_soundOutput != null)
-          _soundOutput.UnPause();
-        if (_pauseWaitHandle != null)
-          _pauseWaitHandle.Set();
-      }
+        _pauseWaitHandle.Set();
     }
 
     protected void RenderFrame()
@@ -264,26 +321,32 @@ namespace Emulators.LibRetro
     protected void OnVideoReady(object sender, EventArgs e)
     {
       lock (_surfaceLock)
-        if (_initialised)
+      {
+        if (_guiInitialized)
           _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.VideoBuffer, _retroEmulator.VideoInfo.BufferWidth, _retroEmulator.VideoInfo.BufferHeight);
+      }
     }
 
     protected void OnFrameBufferReady(object sender, EventArgs e)
     {
       lock (_surfaceLock)
-        if (_initialised)
+      {
+        if (_guiInitialized)
         {
           int width = _retroEmulator.VideoInfo.BufferWidth;
           int height = _retroEmulator.VideoInfo.BufferHeight;
           _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.GLContext.Pixels, width, height, _retroEmulator.GLContext.BottomLeftOrigin);
         }
+      }
     }
 
     protected void OnAudioReady(object sender, EventArgs e)
     {
       lock (_audioLock)
+      {
         if (_soundOutput != null)
           _soundOutput.WriteSamples(_retroEmulator.AudioBuffer.Data, _retroEmulator.AudioBuffer.Length, _syncToAudio);
+      }
     }
 
     protected void RetroLogDlgt(LibRetroCore.RETRO_LOG_LEVEL level, string message)
@@ -316,6 +379,7 @@ namespace Emulators.LibRetro
       _doRender = false;
       if (_pauseWaitHandle != null && !_pauseWaitHandle.IsSet)
         _pauseWaitHandle.Set();
+
       if (_renderThread != null)
       {
         _renderThread.Join();
@@ -330,11 +394,6 @@ namespace Emulators.LibRetro
       {
         _pauseWaitHandle.Dispose();
         _pauseWaitHandle = null;
-      }
-      if (_isPausedHandle != null)
-      {
-        _isPausedHandle.Dispose();
-        _isPausedHandle = null;
       }
       if (_textureProvider != null)
       {
