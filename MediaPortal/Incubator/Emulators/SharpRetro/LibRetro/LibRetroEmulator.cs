@@ -304,6 +304,11 @@ namespace SharpRetro.LibRetro
       }
     }
 
+    public void UnloadGame()
+    {
+      _retro.retro_unload_game();
+    }
+
     public void Run()
     {
       if (_firstRun)

@@ -296,6 +296,7 @@ namespace Emulators.LibRetro
     protected void OnRenderThreadFinished()
     {
       _saveHandler.SaveSaveRam();
+      _retroEmulator.UnloadGame();
       _retroEmulator.Dispose();
       _retroEmulator = null;
     }
