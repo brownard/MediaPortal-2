@@ -1,6 +1,7 @@
 ﻿using SharpRetro.Controller;
 using SharpRetro.RetroGL;
 using SharpRetro.Utils;
+using SharpRetro.Video;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,71 +12,7 @@ using System.Threading.Tasks;
 
 namespace SharpRetro.LibRetro
 {
-  #region Helper Classes
   public delegate void LogDelegate(LibRetroCore.RETRO_LOG_LEVEL level, string message);
-
-  public class VideoInfo
-  {
-    public float DAR { get; set; }
-    public int BufferWidth { get; set; }
-    public int BufferHeight { get; set; }
-
-    public int VirtualWidth
-    {
-      get
-      {
-        if (DAR <= 0)
-          return BufferWidth;
-        else if (DAR > 1.0f)
-          return (int)(BufferHeight * DAR);
-        else
-          return BufferWidth;
-      }
-    }
-
-    public int VirtualHeight
-    {
-      get
-      {
-        if (DAR <= 0)
-          return BufferHeight;
-        if (DAR < 1.0f)
-          return (int)(BufferWidth / DAR);
-        else
-          return BufferHeight;
-      }
-    }
-  }
-
-  public class TimingInfo
-  {
-    public int VSyncNum { get; set; }
-    public int VSyncDen { get; set; }
-    public double FPS { get; set; }
-    public double SampleRate { get; set; }
-
-    public double VSyncRate
-    {
-      get { return VSyncNum / (double)VSyncDen; }
-    }
-  }
-
-  public class SystemInfo
-  {
-    public string LibraryName { get; set; }
-    public string LibraryVersion { get; set; }
-    public string ValidExtensions { get; set; }
-    public bool NeedsFullPath { get; set; }
-    public bool BlockExtract { get; set; }
-  }
-
-  public class AudioBuffer
-  {
-    public short[] Data { get; set; }
-    public int Length { get; set; }
-  }
-
-  #endregion
 
   public unsafe class LibRetroEmulator : IDisposable
   {
@@ -101,9 +38,11 @@ namespace SharpRetro.LibRetro
     protected LibRetroVariables _variables = new LibRetroVariables();
     protected LogDelegate _logDelegate;
 
-    bool _firstRun = true;
+    protected bool _firstRun = true;
     protected string _systemDirectory;
     protected string _saveDirectory;
+    protected bool _canDupe = true;
+    protected uint _performanceLevel;
 
     protected bool _supportsNoGame;
     protected IRetroGLContext _glContext;
@@ -409,102 +348,33 @@ namespace SharpRetro.LibRetro
         case LibRetroCore.RETRO_ENVIRONMENT.GET_OVERSCAN:
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_CAN_DUPE:
-          //gambatte requires this
-          *(bool*)data.ToPointer() = true;
+          *(bool*)data.ToPointer() = _canDupe;
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_MESSAGE:
-          LibRetroCore.retro_message msg = new LibRetroCore.retro_message();
-          Marshal.PtrToStructure(data, msg);
-          if (!string.IsNullOrEmpty(msg.msg))
-            Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "LibRetro Message: {0}", msg.msg);
-          return true;
+          return SetMessage(data);
         case LibRetroCore.RETRO_ENVIRONMENT.SHUTDOWN:
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_PERFORMANCE_LEVEL:
-          Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Core suggested SET_PERFORMANCE_LEVEL {0}", *(uint*)data.ToPointer());
+          _performanceLevel = *(uint*)data.ToPointer();
+          Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Core suggested SET_PERFORMANCE_LEVEL {0}", _performanceLevel);
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_SYSTEM_DIRECTORY:
-          //mednafen NGP neopop fails to launch with no system directory
-          Directory.CreateDirectory(_systemDirectory); //just to be safe, it seems likely that cores will crash without a created system directory
           Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "returning system directory: " + _systemDirectory);
-          *((IntPtr*)data.ToPointer()) = _unmanagedResources.StringToHGlobalAnsiCached(_systemDirectory);
-          return true;
+          return GetAndCreateDirectory(data, _systemDirectory);
         case LibRetroCore.RETRO_ENVIRONMENT.SET_PIXEL_FORMAT:
-          LibRetroCore.RETRO_PIXEL_FORMAT fmt = 0;
-          int[] tmp = new int[1];
-          Marshal.Copy(data, tmp, 0, 1);
-          fmt = (LibRetroCore.RETRO_PIXEL_FORMAT)tmp[0];
-          switch (fmt)
-          {
-            case LibRetroCore.RETRO_PIXEL_FORMAT.RGB565:
-            case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB1555:
-            case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB8888:
-              _pixelFormat = fmt;
-              Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "New pixel format set: {0}", _pixelFormat);
-              return true;
-            default:
-              Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Unrecognized pixel format: {0}", (int)_pixelFormat);
-              return false;
-          }
+          return SetPixelFormat(data);
         case LibRetroCore.RETRO_ENVIRONMENT.SET_INPUT_DESCRIPTORS:
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_KEYBOARD_CALLBACK:
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_DISK_CONTROL_INTERFACE:
-          return true;
-        case LibRetroCore.RETRO_ENVIRONMENT.SET_HW_RENDER:
-          //mupen64plus needs this, as well as 3dengine
-          LibRetroCore.retro_hw_render_callback* info = (LibRetroCore.retro_hw_render_callback*)data.ToPointer();
-          Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "SET_HW_RENDER: {0}, version={1}.{2}, dbg/cache={3}/{4}, depth/stencil = {5}/{6}{7}", info->context_type, info->version_minor, info->version_major, info->debug_context, info->cache_context, info->depth, info->stencil, info->bottom_left_origin ? " (bottomleft)" : "");
-          if (_glContext != null)
-          {
-            info->get_current_framebuffer = Marshal.GetFunctionPointerForDelegate(retro_hw_get_current_framebuffer_cb);
-            info->get_proc_address = Marshal.GetFunctionPointerForDelegate(retro_hw_get_proc_address_cb);
-            retro_hw_context_reset_cb = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_reset);
-            if (info->context_destroy != IntPtr.Zero)
-              retro_hw_context_destroy_cb = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_destroy);
-            _depthBuffer = info->depth;
-            _stencilBuffer = info->stencil;
-            _bottomLeftOrigin = info->bottom_left_origin;
-            return true;
-          }
           return false;
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_HW_RENDER:
+          return SetHardwareRenderer(data);
         case LibRetroCore.RETRO_ENVIRONMENT.GET_VARIABLE:
-          {
-            void** variablesPtr = (void**)data.ToPointer();
-            IntPtr pKey = new IntPtr(*variablesPtr++);
-            string key = Marshal.PtrToStringAnsi(pKey);
-            Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Requesting variable: {0}", key);
-            VariableDescription variable;
-            if (!_variables.TryGet(key, out variable))
-            {
-              Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "Variable {0}: not found", key);
-              return false;
-            }
-            Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Variable {0}: {1}", key, variable.SelectedOption);
-            *variablesPtr = _unmanagedResources.StringToHGlobalAnsiCached(variable.SelectedOption).ToPointer();
-            return true;
-          }
+          return GetVariable(data);
         case LibRetroCore.RETRO_ENVIRONMENT.SET_VARIABLES:
-          {
-            void** variablesPtr = (void**)data.ToPointer();
-            for (;;)
-            {
-              IntPtr pKey = new IntPtr(*variablesPtr++);
-              IntPtr pValue = new IntPtr(*variablesPtr++);
-              if (pKey == IntPtr.Zero)
-                break;
-              string key = Marshal.PtrToStringAnsi(pKey);
-              string value = Marshal.PtrToStringAnsi(pValue);
-              var vd = new VariableDescription() { Name = key };
-              var parts = value.Split(';');
-              vd.Description = parts[0];
-              vd.Options = parts[1].TrimStart(' ').Split('|');
-              _variables.AddOrUpdate(vd);
-              Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Set variable: Name: {0}, Description: {1}, Options: {2}", key, parts[0], parts[1].TrimStart(' '));
-            }
-            return false;
-          }
+          return SetVariables(data);
         case LibRetroCore.RETRO_ENVIRONMENT.GET_VARIABLE_UPDATE:
           return _variables.Updated;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_SUPPORT_NO_GAME:
@@ -524,7 +394,6 @@ namespace SharpRetro.LibRetro
           *(IntPtr*)data = Marshal.GetFunctionPointerForDelegate(retro_log_printf_cb);
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_PERF_INTERFACE:
-          //some builds of fmsx core crash without this set
           Marshal.StructureToPtr(retro_perf_callback, data, false);
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_LOCATION_INTERFACE:
@@ -532,29 +401,134 @@ namespace SharpRetro.LibRetro
         case LibRetroCore.RETRO_ENVIRONMENT.GET_CORE_ASSETS_DIRECTORY:
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_SAVE_DIRECTORY:
-          Directory.CreateDirectory(_saveDirectory);
           Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "returning save directory: " + _saveDirectory);
-          *((IntPtr*)data.ToPointer()) = _unmanagedResources.StringToHGlobalAnsiCached(_saveDirectory);
-          return true;
+          return GetAndCreateDirectory(data, _saveDirectory);
         case LibRetroCore.RETRO_ENVIRONMENT.SET_CONTROLLER_INFO:
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_MEMORY_MAPS:
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_GEOMETRY:
-          LibRetroCore.retro_game_geometry geometry = *((LibRetroCore.retro_game_geometry*)data.ToPointer());
-          VideoInfo videoInfo = new VideoInfo()
-          {
-            BufferWidth = (int)geometry.base_width,
-            BufferHeight = (int)geometry.base_height,
-            DAR = geometry.aspect_ratio
-          };
-          _videoInfo = videoInfo;
-          return true;
+          return SetGeometry(data);
         default:
           Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "Unknkown retro_environment command {0} - {1}", (int)cmd, cmd);
           return false;
       }
     }
+
+    protected bool SetMessage(IntPtr data)
+    {
+      LibRetroCore.retro_message msg = new LibRetroCore.retro_message();
+      Marshal.PtrToStructure(data, msg);
+      if (!string.IsNullOrEmpty(msg.msg))
+        Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "LibRetro Message: {0}", msg.msg);
+      return true;
+    }
+
+    protected bool GetAndCreateDirectory(IntPtr data, string directory)
+    {
+      try
+      {
+        Directory.CreateDirectory(directory);
+      }
+      catch (Exception ex)
+      {
+        Log(LibRetroCore.RETRO_LOG_LEVEL.ERROR, "Error creating directory '{0}' - {1}", directory, ex);
+        return false;
+      }
+      *((IntPtr*)data.ToPointer()) = _unmanagedResources.StringToHGlobalAnsiCached(directory);
+      return true;
+    }
+
+    protected bool SetPixelFormat(IntPtr data)
+    {
+      LibRetroCore.RETRO_PIXEL_FORMAT fmt = 0;
+      int[] tmp = new int[1];
+      Marshal.Copy(data, tmp, 0, 1);
+      fmt = (LibRetroCore.RETRO_PIXEL_FORMAT)tmp[0];
+      switch (fmt)
+      {
+        case LibRetroCore.RETRO_PIXEL_FORMAT.RGB565:
+        case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB1555:
+        case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB8888:
+          _pixelFormat = fmt;
+          Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "New pixel format set: {0}", _pixelFormat);
+          return true;
+        default:
+          Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Unrecognized pixel format: {0}", (int)_pixelFormat);
+          return false;
+      }
+    }
+
+    protected bool GetVariable(IntPtr data)
+    {
+      void** variablesPtr = (void**)data.ToPointer();
+      IntPtr pKey = new IntPtr(*variablesPtr++);
+      string key = Marshal.PtrToStringAnsi(pKey);
+      Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Requesting variable: {0}", key);
+      VariableDescription variable;
+      if (!_variables.TryGet(key, out variable))
+      {
+        Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "Variable {0}: not found", key);
+        return false;
+      }
+      Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Variable {0}: {1}", key, variable.SelectedOption);
+      *variablesPtr = _unmanagedResources.StringToHGlobalAnsiCached(variable.SelectedOption).ToPointer();
+      return true;
+    }
+
+    protected bool SetVariables(IntPtr data)
+    {
+      void** variablesPtr = (void**)data.ToPointer();
+      for (;;)
+      {
+        IntPtr pKey = new IntPtr(*variablesPtr++);
+        IntPtr pValue = new IntPtr(*variablesPtr++);
+        if (pKey == IntPtr.Zero)
+          break;
+        string key = Marshal.PtrToStringAnsi(pKey);
+        string value = Marshal.PtrToStringAnsi(pValue);
+        var vd = new VariableDescription() { Name = key };
+        var parts = value.Split(';');
+        vd.Description = parts[0];
+        vd.Options = parts[1].TrimStart(' ').Split('|');
+        _variables.AddOrUpdate(vd);
+        Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Set variable: Name: {0}, Description: {1}, Options: {2}", key, parts[0], parts[1].TrimStart(' '));
+      }
+      return true;
+    }
+
+    protected bool SetHardwareRenderer(IntPtr data)
+    {
+      //mupen64plus needs this, as well as 3dengine
+      LibRetroCore.retro_hw_render_callback* info = (LibRetroCore.retro_hw_render_callback*)data.ToPointer();
+      Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "SET_HW_RENDER: {0}, version={1}.{2}, dbg/cache={3}/{4}, depth/stencil = {5}/{6}{7}", info->context_type, info->version_minor, info->version_major, info->debug_context, info->cache_context, info->depth, info->stencil, info->bottom_left_origin ? " (bottomleft)" : "");
+      if (_glContext == null)
+        return false;
+
+      info->get_current_framebuffer = Marshal.GetFunctionPointerForDelegate(retro_hw_get_current_framebuffer_cb);
+      info->get_proc_address = Marshal.GetFunctionPointerForDelegate(retro_hw_get_proc_address_cb);
+      retro_hw_context_reset_cb = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_reset);
+      if (info->context_destroy != IntPtr.Zero)
+        retro_hw_context_destroy_cb = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_destroy);
+      _depthBuffer = info->depth;
+      _stencilBuffer = info->stencil;
+      _bottomLeftOrigin = info->bottom_left_origin;
+      return true;
+    }
+
+    protected bool SetGeometry(IntPtr data)
+    {
+      LibRetroCore.retro_game_geometry geometry = *((LibRetroCore.retro_game_geometry*)data.ToPointer());
+      VideoInfo videoInfo = new VideoInfo()
+      {
+        BufferWidth = (int)geometry.base_width,
+        BufferHeight = (int)geometry.base_height,
+        DAR = geometry.aspect_ratio
+      };
+      _videoInfo = videoInfo;
+      return true;
+    }
+
     #endregion
 
     #region LibRetro Video Delegates
@@ -587,15 +561,10 @@ namespace SharpRetro.LibRetro
         Log(LibRetroCore.RETRO_LOG_LEVEL.ERROR, "Unexpected libretro video buffer overrun?");
         return;
       }
+
       fixed (int* dst = &_videoBuffer[0])
-      {
-        if (_pixelFormat == LibRetroCore.RETRO_PIXEL_FORMAT.XRGB8888)
-          Blit888((int*)data, dst, (int)width, (int)height, (int)pitch / 4);
-        else if (_pixelFormat == LibRetroCore.RETRO_PIXEL_FORMAT.RGB565)
-          Blit565((short*)data, dst, (int)width, (int)height, (int)pitch / 2);
-        else
-          Blit555((short*)data, dst, (int)width, (int)height, (int)pitch / 2);
-      }
+        VideoBlitter.Blit(_pixelFormat, data, dst, (int)width, (int)height, (int)pitch);
+
       OnVideoReady();
     }
 
@@ -607,73 +576,6 @@ namespace SharpRetro.LibRetro
     IntPtr retro_hw_get_proc_address(IntPtr sym)
     {
       return _glContext != null ? _glContext.GetProcAddress(sym) : IntPtr.Zero;
-    }
-
-    void Blit555(short* src, int* dst, int width, int height, int pitch)
-    {
-      for (int j = 0; j < height; j++)
-      {
-        short* row = src;
-        for (int i = 0; i < width; i++)
-        {
-          short ci = *row;
-          int r = ci & 0x001f;
-          int g = ci & 0x03e0;
-          int b = ci & 0x7c00;
-
-          r = (r << 3) | (r >> 2);
-          g = (g >> 2) | (g >> 7);
-          b = (b >> 7) | (b >> 12);
-          int co = r | g | b | unchecked((int)0xff000000);
-
-          *dst = co;
-          dst++;
-          row++;
-        }
-        src += pitch;
-      }
-    }
-
-    void Blit565(short* src, int* dst, int width, int height, int pitch)
-    {
-      for (int j = 0; j < height; j++)
-      {
-        short* row = src;
-        for (int i = 0; i < width; i++)
-        {
-          short ci = *row;
-          int r = ci & 0x001f;
-          int g = (ci & 0x07e0) >> 5;
-          int b = (ci & 0xf800) >> 11;
-
-          r = (r << 3) | (r >> 2);
-          g = (g << 2) | (g >> 4);
-          b = (b << 3) | (b >> 2);
-          int co = (b << 16) | (g << 8) | r;
-
-          *dst = co;
-          dst++;
-          row++;
-        }
-        src += pitch;
-      }
-    }
-
-    void Blit888(int* src, int* dst, int width, int height, int pitch)
-    {
-      for (int j = 0; j < height; j++)
-      {
-        int* row = src;
-        for (int i = 0; i < width; i++)
-        {
-          int ci = *row;
-          int co = ci | unchecked((int)0xff000000);
-          *dst = co;
-          dst++;
-          row++;
-        }
-        src += pitch;
-      }
     }
     #endregion
 

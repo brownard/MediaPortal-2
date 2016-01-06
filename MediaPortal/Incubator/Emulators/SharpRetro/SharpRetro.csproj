@@ -69,15 +69,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controller\IRetroController.cs" />
+    <Compile Include="LibRetro\AudioBuffer.cs" />
     <Compile Include="LibRetro\LibRetroCore.cs" />
     <Compile Include="LibRetro\LibRetroEmulator.cs" />
     <Compile Include="LibRetro\LibRetroVariables.cs" />
+    <Compile Include="LibRetro\SystemInfo.cs" />
+    <Compile Include="LibRetro\TimingInfo.cs" />
+    <Compile Include="LibRetro\VideoInfo.cs" />
     <Compile Include="RetroGL\IRetroGLContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\InstanceDll.cs" />
     <Compile Include="Utils\Sprintf.cs" />
     <Compile Include="Utils\UnmanagedResourceHeap.cs" />
     <Compile Include="Utils\Win32Hacks.cs" />
+    <Compile Include="Video\VideoBlitter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
