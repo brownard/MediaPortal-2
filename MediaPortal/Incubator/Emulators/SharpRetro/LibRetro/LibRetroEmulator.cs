@@ -488,7 +488,9 @@ namespace SharpRetro.LibRetro
           _supportsNoGame = true;
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_LIBRETRO_PATH:
-          return false;
+          Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "returning libretro path: " + _corePath);
+          *((IntPtr*)data.ToPointer()) = _unmanagedResources.StringToHGlobalAnsiCached(_corePath);
+          return true;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_AUDIO_CALLBACK:
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_FRAME_TIME_CALLBACK:
