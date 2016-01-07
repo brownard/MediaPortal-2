@@ -64,6 +64,10 @@ namespace Emulators.LibRetro
 
     protected bool _syncToAudio;
     protected bool _autoSave;
+
+    protected bool _videoReady;
+    protected bool _frameBufferReady;
+    protected bool _audioReady;
     #endregion
 
     #region Ctor
@@ -250,9 +254,70 @@ namespace Emulators.LibRetro
       if (_syncToAudio || NeedsRender())
       {
         _retroEmulator.Run();
+        UpdateAudioVideo();
         if (_autoSave)
           _saveHandler.AutoSave();
       }
+    }
+
+    protected void UpdateAudioVideo()
+    {
+      if (_videoReady)
+        UpdateVideo();
+      if (_frameBufferReady)
+        UpdateFrameBuffer();
+      //Update audio last as we are potentially syncing our remaining frame time to audio
+      if (_audioReady)
+        UpdateAudio();
+    }
+
+    protected void UpdateVideo()
+    {
+      _videoReady = false;
+      lock (_surfaceLock)
+      {
+        if (_guiInitialized)
+          _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.VideoBuffer, _retroEmulator.VideoInfo.BufferWidth, _retroEmulator.VideoInfo.BufferHeight);
+      }
+    }
+
+    protected void UpdateFrameBuffer()
+    {
+      _frameBufferReady = false;
+      lock (_surfaceLock)
+      {
+        if (_guiInitialized)
+        {
+          int width = _retroEmulator.VideoInfo.BufferWidth;
+          int height = _retroEmulator.VideoInfo.BufferHeight;
+          _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.GLContext.Pixels, width, height, _retroEmulator.GLContext.BottomLeftOrigin);
+        }
+      }
+    }
+
+    protected void UpdateAudio()
+    {
+      _audioReady = false;
+      lock (_audioLock)
+      {
+        if (_soundOutput != null)
+          _soundOutput.WriteSamples(_retroEmulator.AudioBuffer.Data, _retroEmulator.AudioBuffer.Length, _syncToAudio);
+      }
+    }
+
+    protected void OnVideoReady(object sender, EventArgs e)
+    {
+      _videoReady = true;
+    }
+
+    protected void OnFrameBufferReady(object sender, EventArgs e)
+    {
+      _frameBufferReady = true;
+    }
+
+    protected void OnAudioReady(object sender, EventArgs e)
+    {
+      _audioReady = true;
     }
 
     protected bool NeedsRender()
@@ -317,37 +382,6 @@ namespace Emulators.LibRetro
       RenderDlgt dlgt = _renderDlgt;
       if (dlgt != null)
         dlgt();
-    }
-
-    protected void OnVideoReady(object sender, EventArgs e)
-    {
-      lock (_surfaceLock)
-      {
-        if (_guiInitialized)
-          _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.VideoBuffer, _retroEmulator.VideoInfo.BufferWidth, _retroEmulator.VideoInfo.BufferHeight);
-      }
-    }
-
-    protected void OnFrameBufferReady(object sender, EventArgs e)
-    {
-      lock (_surfaceLock)
-      {
-        if (_guiInitialized)
-        {
-          int width = _retroEmulator.VideoInfo.BufferWidth;
-          int height = _retroEmulator.VideoInfo.BufferHeight;
-          _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.GLContext.Pixels, width, height, _retroEmulator.GLContext.BottomLeftOrigin);
-        }
-      }
-    }
-
-    protected void OnAudioReady(object sender, EventArgs e)
-    {
-      lock (_audioLock)
-      {
-        if (_soundOutput != null)
-          _soundOutput.WriteSamples(_retroEmulator.AudioBuffer.Data, _retroEmulator.AudioBuffer.Length, _syncToAudio);
-      }
     }
 
     protected void RetroLogDlgt(LibRetroCore.RETRO_LOG_LEVEL level, string message)
