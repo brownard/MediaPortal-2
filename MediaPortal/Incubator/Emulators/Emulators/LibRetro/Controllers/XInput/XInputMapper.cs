@@ -129,7 +129,7 @@ namespace Emulators.LibRetro.Controllers.XInput
 
     public XInputMapper(Controller controller)
     {
-      _controller = new XInputControllerCache(controller);
+      _controller = new XInputControllerCache(controller, CONTROLLER_CONNECTED_TIMEOUT);
       InitializeInputs();
     }
 
@@ -141,7 +141,7 @@ namespace Emulators.LibRetro.Controllers.XInput
     public DeviceInput GetPressedInput()
     {
       State state;
-      if (!_controller.GetState(CONTROLLER_CONNECTED_TIMEOUT, out state))
+      if (!_controller.GetState(out state))
         return null;
       Gamepad gamepad = state.Gamepad;
 

@@ -32,4 +32,9 @@ namespace SharpRetro.Controller
     short GetPointerY();
     bool IsPointerPressed();
   }
+
+  public interface IRetroRumble
+  {
+    bool SetRumbleState(uint port, LibRetroCore.retro_rumble_effect effect, ushort strength);
+  }
 }

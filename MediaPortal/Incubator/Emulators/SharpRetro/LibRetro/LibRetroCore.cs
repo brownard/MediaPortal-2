@@ -529,6 +529,25 @@ namespace SharpRetro.LibRetro
       public retro_perf_log_t perf_log;
     }
 
+    //Rumble interface
+    public enum retro_rumble_effect
+    {
+      RETRO_RUMBLE_STRONG = 0,
+      RETRO_RUMBLE_WEAK = 1,
+
+      RETRO_RUMBLE_DUMMY = int.MaxValue
+    };
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    public delegate bool retro_set_rumble_state_t(uint port, retro_rumble_effect effect, ushort strength);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_rumble_interface
+    {
+      public retro_set_rumble_state_t set_rumble_state;
+    }
+
     #region callback prototypes
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void retro_log_printf_t(RETRO_LOG_LEVEL level, string fmt, IntPtr a0, IntPtr a1, IntPtr a2, IntPtr a3, IntPtr a4, IntPtr a5, IntPtr a6, IntPtr a7, IntPtr a8, IntPtr a9, IntPtr a10, IntPtr a11, IntPtr a12, IntPtr a13, IntPtr a14, IntPtr a15);

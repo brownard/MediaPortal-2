@@ -16,19 +16,27 @@ namespace Emulators.LibRetro.Controllers.XInput
   {
     protected Controller _controller;
     protected bool _isConnected;
+    protected int _cacheTimeoutMs;
     protected DateTime _lastCheck = DateTime.MinValue;
 
-    public XInputControllerCache(Controller controller)
+    public XInputControllerCache(Controller controller, int cacheTimeoutMs)
     {
       _controller = controller;
+      _cacheTimeoutMs = cacheTimeoutMs;
     }
 
     public Controller Controller { get { return _controller; } }
 
-    public bool GetState(int cacheTimeoutMs, out State state)
+    public bool IsConnected()
+    {
+      State state;
+      return GetState(out state);
+    }
+
+    public bool GetState(out State state)
     {
       DateTime now = DateTime.Now;
-      if (!_isConnected && (now - _lastCheck).TotalMilliseconds < cacheTimeoutMs)
+      if (!_isConnected && (now - _lastCheck).TotalMilliseconds < _cacheTimeoutMs)
       {
         state = default(State);
         return false;

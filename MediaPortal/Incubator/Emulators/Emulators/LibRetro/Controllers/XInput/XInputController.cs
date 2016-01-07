@@ -32,7 +32,7 @@ namespace Emulators.LibRetro.Controllers.XInput
     public bool PositiveValues { get; set; }
   }
 
-  class XInputController : IRetroPad, IRetroAnalog
+  class XInputController : IRetroPad, IRetroAnalog, IRetroRumble
   {
     const int MAX_CONTROLLERS = 4;
     const int CONTROLLER_CONNECTED_TIMEOUT = 2000;
@@ -51,10 +51,10 @@ namespace Emulators.LibRetro.Controllers.XInput
     protected void InitControllers()
     {
       _controllers = new XInputControllerCache[4];
-      _controllers[0] = new XInputControllerCache(new Controller(UserIndex.One));
-      _controllers[1] = new XInputControllerCache(new Controller(UserIndex.Two));
-      _controllers[2] = new XInputControllerCache(new Controller(UserIndex.Three));
-      _controllers[3] = new XInputControllerCache(new Controller(UserIndex.Four));
+      _controllers[0] = new XInputControllerCache(new Controller(UserIndex.One), CONTROLLER_CONNECTED_TIMEOUT);
+      _controllers[1] = new XInputControllerCache(new Controller(UserIndex.Two), CONTROLLER_CONNECTED_TIMEOUT);
+      _controllers[2] = new XInputControllerCache(new Controller(UserIndex.Three), CONTROLLER_CONNECTED_TIMEOUT);
+      _controllers[3] = new XInputControllerCache(new Controller(UserIndex.Four), CONTROLLER_CONNECTED_TIMEOUT);
     }
 
     protected void InitMapping(RetroPadMapping mapping)
@@ -145,10 +145,26 @@ namespace Emulators.LibRetro.Controllers.XInput
       return 0;
     }
 
+    public bool SetRumbleState(uint port, LibRetroCore.retro_rumble_effect effect, ushort strength)
+    {
+      if (port >= MAX_CONTROLLERS)
+        return false;
+      XInputControllerCache controller = _controllers[port];
+      if (!controller.IsConnected())
+        return false;
+
+      controller.Controller.SetVibration(new Vibration()
+      {
+        LeftMotorSpeed = strength,
+        RightMotorSpeed = strength
+      });
+      return true;
+    }
+
     protected bool TryGetGamepad(uint port, out Gamepad gamepad)
     {
       State state;
-      if (port < MAX_CONTROLLERS && _controllers[port].GetState(CONTROLLER_CONNECTED_TIMEOUT, out state))
+      if (port < MAX_CONTROLLERS && _controllers[port].GetState(out state))
       {
         gamepad = state.Gamepad;
         return true;

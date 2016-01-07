@@ -32,6 +32,7 @@ namespace SharpRetro.LibRetro
     LibRetroCore.retro_hw_get_proc_address_t retro_hw_get_proc_address_cb;
     LibRetroCore.retro_hw_context_reset_t retro_hw_context_reset_cb;
     LibRetroCore.retro_hw_context_reset_t retro_hw_context_destroy_cb;
+    LibRetroCore.retro_rumble_interface retro_rumble_interface = new LibRetroCore.retro_rumble_interface();
     #endregion
 
     #region Protected Members
@@ -67,6 +68,7 @@ namespace SharpRetro.LibRetro
     protected IRetroAnalog _retroAnalog;
     protected IRetroKeyboard _retroKeyboard;
     protected IRetroPointer _retroPointer;
+    protected IRetroRumble _retroRumble;
     #endregion
 
     #region Init
@@ -86,6 +88,7 @@ namespace SharpRetro.LibRetro
       retro_log_printf_cb = new LibRetroCore.retro_log_printf_t(retro_log_printf);
       retro_hw_get_current_framebuffer_cb = new LibRetroCore.retro_hw_get_current_framebuffer_t(retro_hw_get_current_framebuffer);
       retro_hw_get_proc_address_cb = new LibRetroCore.retro_hw_get_proc_address_t(retro_hw_get_proc_address);
+      retro_rumble_interface.set_rumble_state = new LibRetroCore.retro_set_rumble_state_t(retro_set_rumble_state);
 
       //no way (need new mechanism) to check for SSSE3, MMXEXT, SSE4, SSE42
       retro_perf_callback.get_cpu_features = new LibRetroCore.retro_get_cpu_features_t(() => (ulong)(
@@ -208,6 +211,7 @@ namespace SharpRetro.LibRetro
         _retroAnalog = value as IRetroAnalog;
         _retroKeyboard = value as IRetroKeyboard;
         _retroPointer = value as IRetroPointer;
+        _retroRumble = value as IRetroRumble;
       }
     }
 
@@ -490,7 +494,8 @@ namespace SharpRetro.LibRetro
         case LibRetroCore.RETRO_ENVIRONMENT.SET_FRAME_TIME_CALLBACK:
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_RUMBLE_INTERFACE:
-          return false;
+          Marshal.StructureToPtr(retro_rumble_interface, data, false);
+          return true;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_INPUT_DEVICE_CAPABILITIES:
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.GET_LOG_INTERFACE:
@@ -744,6 +749,11 @@ namespace SharpRetro.LibRetro
           return _retroAnalog.GetAnalog(port, analogIndex, analogDirection);
       }
       return 0;
+    }
+
+    bool retro_set_rumble_state(uint port, LibRetroCore.retro_rumble_effect effect, ushort strength)
+    {
+      return _retroRumble != null ? _retroRumble.SetRumbleState(port, effect, strength) : false;
     }
     #endregion
 

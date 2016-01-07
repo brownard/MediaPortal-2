@@ -10,10 +10,10 @@ using MediaPortal.UI.SkinEngine.SkinManagement;
 
 namespace Emulators.LibRetro.Controllers
 {
-  public class ControllerWrapper : IRetroPad, IRetroAnalog, IDisposable
+  public class ControllerWrapper : IRetroPad, IRetroAnalog, IRetroRumble, IDisposable
   {
     #region Dummy Controller
-    class DummyController : IRetroPad, IRetroAnalog
+    class DummyController : IRetroPad, IRetroAnalog, IRetroRumble
     {
       public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)
       {
@@ -23,12 +23,18 @@ namespace Emulators.LibRetro.Controllers
       {
         return 0;
       }
+
+      public bool SetRumbleState(uint port, LibRetroCore.retro_rumble_effect effect, ushort strength)
+      {
+        return false;
+      }
     }
     #endregion
 
     protected const int MAX_CONTROLLERS = 8;
     protected IRetroPad[] _retroPads;
     protected IRetroAnalog[] _retroAnalogs;
+    protected IRetroRumble[] _retroRumbles;
     protected List<IHidDevice> _hidDevices;
     protected HidListener _hidListener;
 
@@ -36,6 +42,7 @@ namespace Emulators.LibRetro.Controllers
     {
       _retroPads = new IRetroPad[MAX_CONTROLLERS];
       _retroAnalogs = new IRetroAnalog[MAX_CONTROLLERS];
+      _retroRumbles = new IRetroRumble[MAX_CONTROLLERS];
       _hidDevices = new List<IHidDevice>(MAX_CONTROLLERS);
 
       DummyController dummy = new DummyController();
@@ -43,6 +50,7 @@ namespace Emulators.LibRetro.Controllers
       {
         _retroPads[i] = dummy;
         _retroAnalogs[i] = dummy;
+        _retroRumbles[i] = dummy;
       }
     }
 
@@ -58,6 +66,10 @@ namespace Emulators.LibRetro.Controllers
       IRetroAnalog retroAnalog = controller as IRetroAnalog;
       if (retroAnalog != null)
         _retroAnalogs[port] = retroAnalog;
+
+      IRetroRumble retroRumble = controller as IRetroRumble;
+      if (retroRumble != null)
+        _retroRumbles[port] = retroRumble;
 
       IHidDevice hidDevice = controller as IHidDevice;
       if (hidDevice != null)
@@ -88,6 +100,11 @@ namespace Emulators.LibRetro.Controllers
     public short GetAnalog(uint port, LibRetroCore.RETRO_DEVICE_INDEX_ANALOG index, LibRetroCore.RETRO_DEVICE_ID_ANALOG direction)
     {
       return port < MAX_CONTROLLERS ? _retroAnalogs[port].GetAnalog(port, index, direction) : (short)0;
+    }
+
+    public bool SetRumbleState(uint port, LibRetroCore.retro_rumble_effect effect, ushort strength)
+    {
+      return port < MAX_CONTROLLERS ? _retroRumbles[port].SetRumbleState(port, effect, strength) : false;
     }
 
     public void Dispose()
