@@ -712,12 +712,7 @@ namespace SharpRetro.LibRetro
 
     #region LibRetro Input Delegates
     void retro_input_poll() { }
-
-    //meanings (they are kind of hazy, but once we're done implementing this it will be completely defined by example)
-    //port = console physical port?
-    //device = logical device type
-    //index = sub device index? (multitap?)
-    //id = button id (or key id)
+        
     short retro_input_state(uint port, uint device, uint index, uint id)
     {
       switch ((LibRetroCore.RETRO_DEVICE)device)
