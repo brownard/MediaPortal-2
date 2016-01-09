@@ -1,5 +1,6 @@
 ﻿using Emulators.LibRetro.Controllers;
 using Emulators.LibRetro.Controllers.Hid;
+using Emulators.LibRetro.Controllers.Mapping;
 using Emulators.LibRetro.Controllers.XInput;
 using Emulators.LibRetro.GLContexts;
 using Emulators.LibRetro.Settings;
@@ -188,8 +189,7 @@ namespace Emulators.LibRetro
     #region Protected Methods
     protected void InitializeLibRetro()
     {
-      _controllerWrapper = new ControllerWrapper();
-      _controllerWrapper.AddController(new XInputController(XInputMapper.GetDefaultMapping(false)), 0);
+      _controllerWrapper = new MappingProxy().CreateControllers();
       //_controllerWrapper.AddController(new HidGameControl(XBox360HidMapping.DEFAULT_MAPPING), 0);
 
       _retroEmulator = new LibRetroEmulator(_corePath)

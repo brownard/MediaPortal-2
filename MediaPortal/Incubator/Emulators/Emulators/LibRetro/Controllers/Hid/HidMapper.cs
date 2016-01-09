@@ -1,4 +1,5 @@
 ﻿using Emulators.LibRetro.Controllers.Mapping;
+using MediaPortal.UI.SkinEngine.SkinManagement;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,27 +8,27 @@ using System.Threading.Tasks;
 
 namespace Emulators.LibRetro.Controllers.Hid
 {
-  class HidMapper : IInputDeviceMapper
+  class HidMapper : IDeviceMapper, IDisposable
   {
-    protected string _deviceName;
+    protected ushort _vendorId;
+    protected ushort _productId;
     protected HidListener _hidListener;
     protected HidState _currentState;
 
-    public HidMapper(string deviceName, HidListener hidListener)
+    public HidMapper(ushort vendorId, ushort productId)
     {
-      _deviceName = deviceName;
-      _hidListener = hidListener;
+      _vendorId = vendorId;
+      _productId = productId;
+      _hidListener = new HidListener();
       _hidListener.StateChanged += HidListener_StateChanged;
+      _hidListener.Register(SkinContext.Form.Handle);
     }
 
     protected void HidListener_StateChanged(object sender, HidStateEventArgs e)
     {
-      _currentState = e.State;
-    }
-
-    public string DeviceName
-    {
-      get { return _deviceName; }
+      HidState state = e.State;
+      if (state.VendorId == _vendorId && state.ProductId == _productId)
+        _currentState = e.State;
     }
 
     public DeviceInput GetPressedInput()
@@ -51,7 +52,7 @@ namespace Emulators.LibRetro.Controllers.Hid
       foreach (HidAxisState axis in state.AxisStates.Values)
       {
         short value = NumericUtils.UIntToShort(axis.Value);
-        if (value > HidGameControl.AXIS_DEADZONE || value < -HidGameControl.AXIS_DEADZONE)
+        if (value > HidGameControl.DEFAULT_DEADZONE || value < -HidGameControl.DEFAULT_DEADZONE)
           return new DeviceInput(axis.Name, axis.Id.ToString(), InputType.Axis, value > 0);
       }
 
@@ -64,6 +65,15 @@ namespace Emulators.LibRetro.Controllers.Hid
         || directionPadState == SharpLib.Hid.DirectionPadState.Right
         || directionPadState == SharpLib.Hid.DirectionPadState.Down
         || directionPadState == SharpLib.Hid.DirectionPadState.Left;
+    }
+
+    public void Dispose()
+    {
+      if (_hidListener != null)
+      {
+        _hidListener.Dispose();
+        _hidListener = null;
+      }
     }
   }
 }

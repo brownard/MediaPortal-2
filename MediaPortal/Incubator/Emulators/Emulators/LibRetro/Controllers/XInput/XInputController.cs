@@ -7,63 +7,75 @@ using System.Threading.Tasks;
 using SharpDX.XInput;
 using SharpRetro.LibRetro;
 using Emulators.LibRetro.Controllers.Mapping;
+using System.Globalization;
 
 namespace Emulators.LibRetro.Controllers.XInput
 {
-  enum XInputAxisType
+  class XInputController : IRetroPad, IRetroAnalog, IRetroRumble, IMappableDevice
   {
-    LeftThumbX,
-    LeftThumbY,
-    RightThumbX,
-    RightThumbY,
-    LeftTrigger,
-    RightTrigger
-  }
-
-  class XInputAxis
-  {
-    public XInputAxis(XInputAxisType axisType, bool positiveValues)
-    {
-      AxisType = axisType;
-      PositiveValues = positiveValues;
-    }
-
-    public XInputAxisType AxisType { get; set; }
-    public bool PositiveValues { get; set; }
-  }
-
-  class XInputController : IRetroPad, IRetroAnalog, IRetroRumble
-  {
-    const int MAX_CONTROLLERS = 4;
+    public static readonly Guid DEVICE_ID = new Guid("FD60533F-00E0-4301-8B97-F9681D6FC67D");
+    public const string DEVICE_NAME = "XInput Controller";
     const int CONTROLLER_CONNECTED_TIMEOUT = 2000;
-    protected XInputControllerCache[] _controllers;
+
+    protected string _subDeviceId;
+    protected string _deviceName;
+    protected int _controllerIndex;
+    protected XInputControllerCache _controller;
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, GamepadButtonFlags> _buttonToButtonMappings;
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, XInputAxis> _analogToButtonMappings;
     protected Dictionary<RetroAnalogDevice, XInputAxis> _analogToAnalogMappings;
     protected Dictionary<RetroAnalogDevice, GamepadButtonFlags> _buttonToAnalogMappings;
 
-    public XInputController(RetroPadMapping mapping)
+    public Guid DeviceId
     {
-      InitControllers();
-      InitMapping(mapping);
+      get { return DEVICE_ID; }
     }
 
-    protected void InitControllers()
+    public string DeviceName
     {
-      _controllers = new XInputControllerCache[4];
-      _controllers[0] = new XInputControllerCache(new Controller(UserIndex.One), CONTROLLER_CONNECTED_TIMEOUT);
-      _controllers[1] = new XInputControllerCache(new Controller(UserIndex.Two), CONTROLLER_CONNECTED_TIMEOUT);
-      _controllers[2] = new XInputControllerCache(new Controller(UserIndex.Three), CONTROLLER_CONNECTED_TIMEOUT);
-      _controllers[3] = new XInputControllerCache(new Controller(UserIndex.Four), CONTROLLER_CONNECTED_TIMEOUT);
+      get { return _deviceName; }
     }
 
-    protected void InitMapping(RetroPadMapping mapping)
+    public string SubDeviceId
+    {
+      get { return _subDeviceId; }
+    }
+
+    public RetroPadMapping DefaultMapping
+    {
+      get { return XInputMapper.GetDefaultMapping(_subDeviceId, false); }
+    }
+
+    public XInputController(UserIndex userIndex)
     {
       _buttonToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, GamepadButtonFlags>();
       _analogToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, XInputAxis>();
       _analogToAnalogMappings = new Dictionary<RetroAnalogDevice, XInputAxis>();
       _buttonToAnalogMappings = new Dictionary<RetroAnalogDevice, GamepadButtonFlags>();
+      InitController(userIndex);
+    }
 
+    protected void InitController(UserIndex userIndex)
+    {
+      _controllerIndex = (int)userIndex;
+      _subDeviceId = _controllerIndex.ToString(CultureInfo.InvariantCulture);
+      _deviceName = string.Format("{0} {1}", DEVICE_NAME, _subDeviceId);
+      if (_controllerIndex > 3)
+        _controllerIndex = 0;
+      _controller = new XInputControllerCache(new Controller(userIndex), CONTROLLER_CONNECTED_TIMEOUT);
+    }
+
+    public IDeviceMapper CreateMapper()
+    {
+      return new XInputMapper(_controller);
+    }
+
+    public void Map(RetroPadMapping mapping)
+    {
+      if (mapping == null)
+        mapping = DefaultMapping;
+
+      ClearMappings();
       foreach (var kvp in mapping.ButtonMappings)
       {
         DeviceInput deviceInput = kvp.Value;
@@ -99,8 +111,23 @@ namespace Emulators.LibRetro.Controllers.XInput
       }
     }
 
+    protected void ClearMappings()
+    {
+      _buttonToButtonMappings.Clear();
+      _analogToButtonMappings.Clear();
+      _analogToAnalogMappings.Clear();
+      _buttonToAnalogMappings.Clear();
+    }
+
+    public bool IsConnected()
+    {
+      return _controller.IsConnected();
+    }
+
     public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)
     {
+      if (port != _controllerIndex)
+        return false;
       Gamepad gamepad;
       if (!TryGetGamepad(port, out gamepad))
         return false;
@@ -116,6 +143,8 @@ namespace Emulators.LibRetro.Controllers.XInput
 
     public short GetAnalog(uint port, LibRetroCore.RETRO_DEVICE_INDEX_ANALOG index, LibRetroCore.RETRO_DEVICE_ID_ANALOG direction)
     {
+      if (port != _controllerIndex)
+        return 0;
       Gamepad gamepad;
       if (!TryGetGamepad(port, out gamepad))
         return 0;
@@ -147,13 +176,12 @@ namespace Emulators.LibRetro.Controllers.XInput
 
     public bool SetRumbleState(uint port, LibRetroCore.retro_rumble_effect effect, ushort strength)
     {
-      if (port >= MAX_CONTROLLERS)
+      if (port != _controllerIndex)
         return false;
-      XInputControllerCache controller = _controllers[port];
-      if (!controller.IsConnected())
+      if (!_controller.IsConnected())
         return false;
 
-      controller.Controller.SetVibration(new Vibration()
+      _controller.Controller.SetVibration(new Vibration()
       {
         LeftMotorSpeed = strength,
         RightMotorSpeed = strength
@@ -164,7 +192,7 @@ namespace Emulators.LibRetro.Controllers.XInput
     protected bool TryGetGamepad(uint port, out Gamepad gamepad)
     {
       State state;
-      if (port < MAX_CONTROLLERS && _controllers[port].GetState(out state))
+      if (_controller.GetState(out state))
       {
         gamepad = state.Gamepad;
         return true;

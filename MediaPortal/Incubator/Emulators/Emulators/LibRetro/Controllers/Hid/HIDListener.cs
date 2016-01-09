@@ -97,6 +97,9 @@ namespace Emulators.LibRetro.Controllers.Hid
 
     void OnHidEvent(object aSender, SharpLib.Hid.Event aHidEvent)
     {
+      if (!aHidEvent.Device.IsGamePad)
+        return;
+
 #if DEBUG
       if (aHidEvent.IsRepeat)
       {
@@ -122,8 +125,19 @@ namespace Emulators.LibRetro.Controllers.Hid
         ushort id = entry.Key.NotRange.Usage;
         axisStates[id] = new HidAxisState(name, id, entry.Value, entry.Key.BitSize);
       }
+
       SharpLib.Hid.DirectionPadState directionPadState = aHidEvent.GetDirectionPadState();
-      HidState state = new HidState(aHidEvent.Device.Name, aHidEvent.Device.FriendlyName, buttons, axisStates, directionPadState);
+
+      HidState state = new HidState
+      {
+        VendorId = aHidEvent.Device.VendorId,
+        ProductId = aHidEvent.Device.ProductId,
+        Name = aHidEvent.Device.Name,
+        FriendlyName = aHidEvent.Device.FriendlyName,
+        Buttons = buttons,
+        AxisStates = axisStates,
+        DirectionPadState = directionPadState
+      };
       OnStateChanged(new HidStateEventArgs(state));
     }
 

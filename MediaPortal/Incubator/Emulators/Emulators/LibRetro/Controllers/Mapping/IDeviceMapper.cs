@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace Emulators.LibRetro.Controllers.Mapping
 {
-  interface IInputDeviceMapper
+  public interface IDeviceMapper
   {
-    string DeviceName { get; }
     DeviceInput GetPressedInput();
   }
 }

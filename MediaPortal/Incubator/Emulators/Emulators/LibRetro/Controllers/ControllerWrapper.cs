@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using SharpRetro.LibRetro;
 using Emulators.LibRetro.Controllers.Hid;
 using MediaPortal.UI.SkinEngine.SkinManagement;
+using Emulators.LibRetro.Controllers.Mapping;
 
 namespace Emulators.LibRetro.Controllers
 {
@@ -54,7 +55,7 @@ namespace Emulators.LibRetro.Controllers
       }
     }
 
-    public void AddController(IRetroController controller, int port)
+    public void AddController(IMappableDevice controller, int port)
     {
       if (port >= MAX_CONTROLLERS)
         return;

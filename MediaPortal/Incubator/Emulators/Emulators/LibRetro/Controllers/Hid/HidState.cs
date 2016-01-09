@@ -7,20 +7,14 @@ using System.Threading.Tasks;
 namespace Emulators.LibRetro.Controllers.Hid
 {
   public class HidState
-  {
-    public HidState(string name, string friendlyName, HashSet<ushort> buttons, Dictionary<ushort, HidAxisState> axisStates, SharpLib.Hid.DirectionPadState directionPadState)
-    {
-      Name = name;
-      FriendlyName = friendlyName;
-      Buttons = buttons;
-      AxisStates = axisStates;
-      DirectionPadState = directionPadState;
-    }
-    public string Name { get; private set; }
-    public string FriendlyName { get; private set; }
-    public HashSet<ushort> Buttons { get; private set; }
-    public Dictionary<ushort, HidAxisState> AxisStates { get; private set; }
-    public SharpLib.Hid.DirectionPadState DirectionPadState { get; private set; }
+  {    
+    public ushort VendorId { get; set; }
+    public ushort ProductId { get; set; }
+    public string Name { get; set; }
+    public string FriendlyName { get; set; }
+    public HashSet<ushort> Buttons { get; set; }
+    public Dictionary<ushort, HidAxisState> AxisStates { get; set; }
+    public SharpLib.Hid.DirectionPadState DirectionPadState { get; set; }
   }
 
   public class HidAxisState

@@ -181,4 +181,31 @@
     <Setter Property="ItemContainerStyle" Value="{ThemeResource SelectableEmulatorContainerStyle}"/>
   </Style>
 
+  <!-- Data template for a simple libretro option entry in the options list -->
+  <DataTemplate x:Key="MappingInputItemDataTemplate" DataType="{x:Type collections:ListItem}">
+    <Grid x:Name="ItemControl">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="100"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Label x:Name="InputName" Grid.Column="0" Content="{Binding [Name]}" FontSize="{ThemeResource SmallFontSize}"
+          HorizontalAlignment="Left" VerticalAlignment="Center"
+          Color="{ThemeResource TextColor}"/>
+      <Label x:Name="InputValue" Grid.Column="2" Content="{Binding [MappedInput]}" FontSize="{ThemeResource SmallFontSize}"
+          HorizontalAlignment="Right" VerticalAlignment="Center"
+          Color="{ThemeResource HintTextColor}"/>
+    </Grid>
+  </DataTemplate>
+
+  <!-- ListView style to be used for the LibRetro options list -->
+  <Style x:Key="LibRetroMappingInputsListViewStyle" BasedOn="{ThemeResource ContentsMenuListViewStyle}">
+    <Setter Property="ItemTemplate" Value="{ThemeResource MappingInputItemDataTemplate}"/>
+    <Setter Property="DataStringProvider" Value="{ThemeResource EmulatorItemDataStringProvider}"/>
+    <Setter Property="ItemContainerStyle" Value="{ThemeResource SelectableEmulatorContainerStyle}"/>
+  </Style>
+
 </ResourceDictionary>

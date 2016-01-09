@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Emulators.LibRetro.Controllers.XInput
 {
-  class XInputMapper : IInputDeviceMapper
+  class XInputMapper : IDeviceMapper
   {
     #region Available Inputs
     static readonly DeviceInput DPAD_LEFT = new DeviceInput("D-Pad Left", GamepadButtonFlags.DPadLeft.ToString(), InputType.Button);
@@ -71,9 +71,15 @@ namespace Emulators.LibRetro.Controllers.XInput
     #endregion
 
     #region DefaultMapping
-    public static RetroPadMapping GetDefaultMapping(bool mapAnalogToDPad)
+    
+    public static RetroPadMapping GetDefaultMapping(string subDeviceId, bool mapAnalogToDPad)
     {
-      RetroPadMapping mapping = new RetroPadMapping() { DeviceName = DEVICE_NAME };
+      RetroPadMapping mapping = new RetroPadMapping()
+      {
+        DeviceId = XInputController.DEVICE_ID,
+        SubDeviceId = subDeviceId,
+        DeviceName = XInputController.DEVICE_NAME
+      };
       mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.LEFT, DPAD_LEFT);
       mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.RIGHT, DPAD_RIGHT);
       mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.UP, DPAD_UP);
@@ -120,22 +126,15 @@ namespace Emulators.LibRetro.Controllers.XInput
       public DeviceInput DeviceInput { get; set; }
       public XInputAxis Axis { get; set; }
     }
-
-    const string DEVICE_NAME = "XInput Gamepad";
-    const int CONTROLLER_CONNECTED_TIMEOUT = 1000;
+    
     protected Dictionary<GamepadButtonFlags, DeviceInput> _buttonInputs;
     protected List<AxisDeviceInput> _axisInputs;
     protected XInputControllerCache _controller;
 
-    public XInputMapper(Controller controller)
+    public XInputMapper(XInputControllerCache controller)
     {
-      _controller = new XInputControllerCache(controller, CONTROLLER_CONNECTED_TIMEOUT);
+      _controller = controller;
       InitializeInputs();
-    }
-
-    public string DeviceName
-    {
-      get { return DEVICE_NAME; }
     }
 
     public DeviceInput GetPressedInput()

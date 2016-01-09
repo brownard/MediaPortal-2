@@ -78,6 +78,14 @@
   <string name="Emulators.SelectGoodmerge.Header">Choose GoodMerge file</string>
   <string name="Emulators.ExtractGoodmerge.Header">Extracting GoodMerge file</string>
 
+  <string name="Emulators.LibRetro.MapInputDevices">Map input devices</string>
+  <string name="Emulators.LibRetro.ChoosePlayer">Choose player</string>
+  <string name="Emulators.LibRetro.PlayerNumber">Player {0}</string>
+  <string name="Emulators.LibRetro.InputDevice">Input device</string>
+  <string name="Emulators.LibRetro.SelectDevice">Select device...</string>
+  <string name="Emulators.LibRetro.Mappings">Mappings</string>
+  <string name="Emulators.LibRetro.PressInput">Press input...</string>
+
   <string name="Emulators.ConfigureEmulatorNow.Header">Add a new emulator?</string>
   <string name="Emulators.ConfigureEmulatorNow.Label">You haven't added any emulators that can play this game. Do you want to add a new emulator now?</string>
 

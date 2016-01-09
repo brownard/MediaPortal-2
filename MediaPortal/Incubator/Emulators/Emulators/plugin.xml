@@ -34,6 +34,7 @@
     <Model Id="3ECB5E18-5B24-411D-9F06-533249BA6F00" Name="AddEmulatorAction" ClassName="Emulators.Actions.AddEmulatorAction"/>
     <Model Id="495F94B5-9E13-4548-BAAA-6DB424B58267" Name="RemoveEmulatorAction" ClassName="Emulators.Actions.RemoveEmulatorAction"/>
     <Model Id="940A868F-8360-42DA-B652-F3924B747CB5" Name="ClearGoodMergeCacheModel" ClassName="Emulators.Models.ClearGoodMergeCacheModel"/>
+    <Model Id="FD908F54-B37E-408F-9D53-EB72A2912617" Name="LibRetroMappingModel" ClassName="Emulators.Models.LibRetroMappingModel"/>
   </Register>
 
   <Register Location="/Services">
@@ -131,12 +132,26 @@
         MainScreen="emulator_config_arguments"
         WorkflowModel="6C96C335-7A79-45DA-90B7-541B3C7235EF"/>    <!-- Emulator config model -->
 
-    <!-- Edit emulator arguments -->
+    <!-- Edit libretro emulator options -->
     <WorkflowState Id="97E490B5-DF74-4894-9704-81B214C47EF8"
         Name="EditLibRetroOptions"
         DisplayLabel="[Emulators.Config.LibRetroSettings.Title]"
         MainScreen="emulator_config_libretro_options"
         WorkflowModel="6C96C335-7A79-45DA-90B7-541B3C7235EF"/>    <!-- Emulator config model -->
+    
+    <!-- Mapping choose player -->
+    <WorkflowState Id="02FEF896-7C0E-444D-9657-44660E0ED90A"
+        Name="MappingChoosePlayer"
+        DisplayLabel="[Emulators.LibRetro.ChoosePlayer]"
+        MainScreen="libretro_mapping_players"
+        WorkflowModel="FD908F54-B37E-408F-9D53-EB72A2912617"/>    <!-- LibRetro mapping model -->
+
+    <!-- Mapping configure device -->
+    <WorkflowState Id="499FFA69-A92A-4BC8-9F87-0A578A62815A"
+        Name="MappingConfigureDevice"
+        DisplayLabel="[Emulators.LibRetro.InputDevice]"
+        MainScreen="libretro_mapping_device"
+        WorkflowModel="FD908F54-B37E-408F-9D53-EB72A2912617"/>    <!-- LibRetro mapping model -->
 
     <!-- Dialog States -->
 
@@ -146,6 +161,13 @@
         DisplayLabel="[Emulators.Config.Setting.ClearGoodMergeCache]"
         DialogScreen="dialog_clear_goodmerge_cache"
         WorkflowModel="940A868F-8360-42DA-B652-F3924B747CB5"/>    <!-- Clear GoodMerge cache model -->
+
+    <!-- Mapping press input -->
+    <DialogState Id="AAFD9AD5-F31D-41FE-A717-D9D7801EC27F"
+        Name="MappingPressInput"
+        DisplayLabel="[Emulators.LibRetro.PressInput]"
+        DialogScreen="dialog_mapping_press_input"
+        WorkflowModel="FD908F54-B37E-408F-9D53-EB72A2912617"/>    <!-- LibRetro mapping model -->
   
   </Register>
 
@@ -189,6 +211,13 @@
         HelpText="[Emulators.Config.Setting.ConfigureEmulators.Help]"
         ClassName="Emulators.Settings.Configuration.EmulatorsConfigSetting"
         AdditionalData="WorkflowState=903DD5EB-56B2-42B5-B1D8-64106651296A,ConfAppPanel=..."/>
+        
+    <CustomConfigSetting
+        Id="LibRetroMapping"
+        Text="[Emulators.LibRetro.MapInputDevices]"
+        HelpText=""
+        ClassName="Emulators.Settings.Configuration.LibRetroMappingSetting"
+        AdditionalData="WorkflowState=02FEF896-7C0E-444D-9657-44660E0ED90A,ConfAppPanel=..."/>
 
     <!--<ConfigSetting
         Id="MinimiseOnStart"

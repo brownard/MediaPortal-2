@@ -9,18 +9,18 @@ using System.Threading.Tasks;
 
 namespace Emulators.LibRetro.Controllers.Hid
 {
-  static class XBox360HidMapping
+  public static class XBox360HidMapping
   {
-    const string DEVICE_NAME = "HID-0x20A1-0x045E";
-    public static readonly RetroPadMapping DEFAULT_MAPPING;
+    const string DEVICE_NAME = "XBox 360 Hid";
+    public static readonly RetroPadMapping DefaultMapping;
 
     static XBox360HidMapping()
     {
-      RetroPadMapping mapping = new RetroPadMapping() { DeviceName = DEVICE_NAME };
-      mapping.MapButton(LibRetroCore.RETRO_DEVICE_ID_JOYPAD.LEFT, new DeviceInput("Left", "Left", InputType.Button));
-      mapping.MapButton(LibRetroCore.RETRO_DEVICE_ID_JOYPAD.RIGHT, new DeviceInput("Right", "Right", InputType.Button));
-      mapping.MapButton(LibRetroCore.RETRO_DEVICE_ID_JOYPAD.UP, new DeviceInput("Up", "Up", InputType.Button));
-      mapping.MapButton(LibRetroCore.RETRO_DEVICE_ID_JOYPAD.DOWN, new DeviceInput("Down", "Down", InputType.Button));
+      RetroPadMapping mapping = new RetroPadMapping() { DeviceId = HidGameControl.DEVICE_ID, DeviceName = DEVICE_NAME };
+      mapping.MapButton(LibRetroCore.RETRO_DEVICE_ID_JOYPAD.LEFT, new DeviceInput("Left", DirectionPadState.Left.ToString(), InputType.Button));
+      mapping.MapButton(LibRetroCore.RETRO_DEVICE_ID_JOYPAD.RIGHT, new DeviceInput("Right", DirectionPadState.Right.ToString(), InputType.Button));
+      mapping.MapButton(LibRetroCore.RETRO_DEVICE_ID_JOYPAD.UP, new DeviceInput("Up", DirectionPadState.Up.ToString(), InputType.Button));
+      mapping.MapButton(LibRetroCore.RETRO_DEVICE_ID_JOYPAD.DOWN, new DeviceInput("Down", DirectionPadState.Down.ToString(), InputType.Button));
 
       mapping.MapButton(LibRetroCore.RETRO_DEVICE_ID_JOYPAD.A, new DeviceInput("2", "2", InputType.Button));
       mapping.MapButton(LibRetroCore.RETRO_DEVICE_ID_JOYPAD.B, new DeviceInput("1", "1", InputType.Button));
@@ -46,7 +46,7 @@ namespace Emulators.LibRetro.Controllers.Hid
       mapping.MapAnalog(RetroAnalogDevice.RightThumbUp, new DeviceInput("Ry", "52", InputType.Axis, false));
       mapping.MapAnalog(RetroAnalogDevice.RightThumbDown, new DeviceInput("Ry", "52", InputType.Axis, true));
 
-      DEFAULT_MAPPING = mapping;
+      DefaultMapping = mapping;
     }
   }
 }
