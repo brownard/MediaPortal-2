@@ -27,7 +27,7 @@
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Orientation="Vertical">
           <Label Margin="10" Content="[Emulators.LibRetro.InputDevice]" Color="{ThemeResource TextColor}"/>
-          <Button Margin="10" Style="{ThemeResource ButtonWideStyle}"
+          <Button Margin="10" Style="{ThemeResource ButtonWideStyle}" FontSize="{ThemeResource SmallFontSize}"
                 Command="{Command Source={StaticResource Model}, Path=ShowDeviceDialog}">
             <Button.Content>
               <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} != {null} ? {0} : {1}">

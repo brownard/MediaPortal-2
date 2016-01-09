@@ -12,17 +12,19 @@ namespace Emulators.Models.Navigation
 {
   public class PortMappingItem : ListItem
   {
-    protected PortMapping _port;
+    public const string KEY_MAPPED_DEVICE = "MappedDevice";
+    protected PortMapping _portMapping;
 
     public PortMapping PortMapping
     {
-      get { return _port; }
+      get { return _portMapping; }
     }
 
-    public PortMappingItem(string name, PortMapping port)
+    public PortMappingItem(string name, PortMapping portMapping)
       : base(Consts.KEY_NAME, name)
     {
-      _port = port;
+      _portMapping = portMapping;
+      SetLabel(KEY_MAPPED_DEVICE, portMapping.DeviceName);
     }
   }
 
