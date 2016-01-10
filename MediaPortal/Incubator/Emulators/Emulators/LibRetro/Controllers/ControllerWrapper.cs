@@ -90,7 +90,8 @@ namespace Emulators.LibRetro.Controllers
     private void HidListener_StateChanged(object sender, HidStateEventArgs e)
     {
       foreach (IHidDevice device in _hidDevices)
-        device.UpdateState(e.State);
+        if (device.UpdateState(e.State))
+          return;
     }
 
     public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)

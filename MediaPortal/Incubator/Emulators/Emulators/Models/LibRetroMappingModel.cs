@@ -17,6 +17,7 @@ using MediaPortal.Common.General;
 using MediaPortal.UI.Presentation.Screens;
 using MediaPortal.UiComponents.SkinBase.General;
 using MediaPortal.Common.Localization;
+using Emulators.LibRetro.Controllers;
 
 namespace Emulators.Models
 {
@@ -40,6 +41,7 @@ namespace Emulators.Models
     protected ItemsList _portsList = new ItemsList();
     protected ItemsList _deviceList = new ItemsList();
     protected ItemsList _inputList = new ItemsList();
+    protected DeviceProxy _deviceProxy = new DeviceProxy();
     protected MappingProxy _mappingProxy = new MappingProxy();
     protected PortMapping _currentPortMapping;
     protected IMappableDevice _currentDevice;
@@ -93,7 +95,7 @@ namespace Emulators.Models
     public void PortItemSelected(PortMappingItem item)
     {
       _currentPortMapping = item.PortMapping;
-      _currentDevice = _mappingProxy.GetDevice(_currentPortMapping.DeviceId, _currentPortMapping.SubDeviceId);
+      _currentDevice = _deviceProxy.GetDevice(_currentPortMapping.DeviceId, _currentPortMapping.SubDeviceId);
       CurrentDeviceName = _currentDevice != null ? _currentDevice.DeviceName : null;
       CurrentPlayerHeader = item.Label(Consts.KEY_NAME, "").Evaluate();
       var wm = ServiceRegistration.Get<IWorkflowManager>();
@@ -204,7 +206,7 @@ namespace Emulators.Models
     protected void UpdateDeviceList()
     {
       _deviceList.Clear();
-      foreach (IMappableDevice device in _mappingProxy.GetDevices(true))
+      foreach (IMappableDevice device in _deviceProxy.GetDevices(true))
       {
         MappableDeviceItem deviceItem = new MappableDeviceItem(device.DeviceName, device);
         _deviceList.Add(deviceItem);

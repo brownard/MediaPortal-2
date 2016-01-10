@@ -16,7 +16,6 @@ namespace Emulators.LibRetro.Controllers.Mapping
 {
   public class MappingProxy
   {
-    protected static readonly UserIndex[] XINPUT_USER_INDEXES = new[] { UserIndex.One, UserIndex.Two, UserIndex.Three, UserIndex.Four };
     LibRetroMappingSettings _settings;
 
     public MappingProxy()
@@ -24,6 +23,16 @@ namespace Emulators.LibRetro.Controllers.Mapping
       var sm = ServiceRegistration.Get<ISettingsManager>();
       _settings = sm.Load<LibRetroMappingSettings>();
       _settings.Ports.Sort((p1, p2) => p1.Port.CompareTo(p2.Port));
+    }
+
+    public List<PortMapping> PortMappings
+    {
+      get { return _settings.Ports; }
+    }
+
+    public List<RetroPadMapping> DeviceMappings
+    {
+      get { return _settings.Mappings; }
     }
 
     public PortMapping GetPortMapping(int port)
@@ -55,38 +64,6 @@ namespace Emulators.LibRetro.Controllers.Mapping
       _settings.Mappings.Add(deviceMapping);
     }
 
-    public List<IMappableDevice> GetDevices(bool connectedOnly)
-    {
-      List<IMappableDevice> deviceList = new List<IMappableDevice>();
-      AddXInputDevices(deviceList, connectedOnly);
-      AddHidDevices(deviceList);
-      return deviceList;
-    }
-
-    public IMappableDevice GetDevice(Guid deviceId, string subDeviceId)
-    {
-      if (deviceId == Guid.Empty)
-        return null;
-      return GetDevices(false).FirstOrDefault(d => d.DeviceId == deviceId && d.SubDeviceId == subDeviceId);
-    }
-
-    public ControllerWrapper CreateControllers()
-    {
-      List<IMappableDevice> deviceList = GetDevices(false);
-      ControllerWrapper controllerWrapper = new ControllerWrapper();
-      foreach (PortMapping port in _settings.Ports)
-      {
-        IMappableDevice device = deviceList.FirstOrDefault(d => d.DeviceId == port.DeviceId && d.SubDeviceId == port.SubDeviceId);
-        if (device != null)
-        {
-          RetroPadMapping mapping = _settings.Mappings.FirstOrDefault(m => m.DeviceId == port.DeviceId && m.SubDeviceId == port.SubDeviceId);
-          device.Map(mapping);
-          controllerWrapper.AddController(device, port.Port);
-        }
-      }
-      return controllerWrapper;
-    }
-
     public void Save()
     {
       var sm = ServiceRegistration.Get<ISettingsManager>();
@@ -101,26 +78,6 @@ namespace Emulators.LibRetro.Controllers.Mapping
         SubDeviceId = device.SubDeviceId,
         DeviceName = device.DeviceName
       };
-    }
-
-    protected void AddXInputDevices(List<IMappableDevice> deviceList, bool connectedOnly)
-    {
-      foreach (UserIndex userIndex in XINPUT_USER_INDEXES)
-      {
-        XInputController controller = new XInputController(userIndex);
-        if (!connectedOnly || controller.IsConnected())
-          deviceList.Add(controller);
-      }
-    }
-
-    protected void AddHidDevices(List<IMappableDevice> deviceList)
-    {
-      List<Device> devices = HidUtils.GetHidDevices();
-      foreach (Device device in devices)
-      {
-        if (device.IsGamePad)
-          deviceList.Add(new HidGameControl(device.VendorId, device.ProductId, device.Name, device.FriendlyName));
-      }
     }
   }
 }

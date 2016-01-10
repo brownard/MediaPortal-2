@@ -189,9 +189,7 @@ namespace Emulators.LibRetro
     #region Protected Methods
     protected void InitializeLibRetro()
     {
-      _controllerWrapper = new MappingProxy().CreateControllers();
-      //_controllerWrapper.AddController(new HidGameControl(XBox360HidMapping.DEFAULT_MAPPING), 0);
-
+      CreateControllerWrapper();
       _retroEmulator = new LibRetroEmulator(_corePath)
       {
         SaveDirectory = _saveDirectory,
@@ -230,6 +228,25 @@ namespace Emulators.LibRetro
         return;
       foreach (VariableDescription variable in coreSetting.Variables)
         _retroEmulator.Variables.AddOrUpdate(variable);
+    }
+
+    protected void CreateControllerWrapper()
+    {
+      _controllerWrapper = new ControllerWrapper();
+      DeviceProxy deviceProxy = new DeviceProxy();
+      List<IMappableDevice> deviceList = deviceProxy.GetDevices(false);
+      MappingProxy mappingProxy = new MappingProxy();
+
+      foreach (PortMapping port in mappingProxy.PortMappings)
+      {
+        IMappableDevice device = deviceProxy.GetDevice(port.DeviceId, port.SubDeviceId, deviceList);
+        if (device != null)
+        {
+          RetroPadMapping mapping = mappingProxy.GetDeviceMapping(device);
+          device.Map(mapping);
+          _controllerWrapper.AddController(device, port.Port);
+        }
+      }
     }
 
     protected bool LoadGame()

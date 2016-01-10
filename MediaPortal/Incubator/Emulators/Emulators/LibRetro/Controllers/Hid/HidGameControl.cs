@@ -56,12 +56,11 @@ namespace Emulators.LibRetro.Controllers.Hid
       set { _axisDeadZone = value; }
     }
 
-    public HidGameControl(ushort vendorId, ushort productId, string name, string friendlyName)
+    public HidGameControl(ushort vendorId, ushort productId, string friendlyName)
     {
       _vendorId = vendorId;
       _productId = productId;
-      _subDeviceId = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", vendorId, productId); 
-      _name = name;
+      _subDeviceId = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", vendorId, productId);
       _friendlyName = friendlyName;
       _buttonToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, ushort>();
       _analogToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, HidAxis>();
@@ -133,9 +132,21 @@ namespace Emulators.LibRetro.Controllers.Hid
       _directionPadToAnalogMappings.Clear();
     }
 
-    public void UpdateState(HidState state)
+    public bool UpdateState(HidState state)
     {
+      if (_name != null)
+      {
+        if (state.Name != _name)
+          return false;
+      }
+      else
+      {
+        if (state.ProductId != _productId || state.VendorId != _vendorId)
+          return false;
+        _name = state.Name;
+      }
       _currentState = state;
+      return true;
     }
 
     public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)

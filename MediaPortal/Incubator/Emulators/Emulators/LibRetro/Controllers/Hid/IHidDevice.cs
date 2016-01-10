@@ -8,6 +8,6 @@ namespace Emulators.LibRetro.Controllers.Hid
 {
   public interface IHidDevice
   {
-    void UpdateState(HidState state);
+    bool UpdateState(HidState state);
   }
 }

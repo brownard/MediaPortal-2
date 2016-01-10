@@ -95,6 +95,7 @@
     <Compile Include="Input\InputHandler.cs" />
     <Compile Include="Input\KeyboardHook.cs" />
     <Compile Include="LibRetro\Controllers\ControllerWrapper.cs" />
+    <Compile Include="LibRetro\Controllers\DeviceProxy.cs" />
     <Compile Include="LibRetro\Controllers\Hid\HidAxis.cs" />
     <Compile Include="LibRetro\Controllers\Hid\HidMapper.cs" />
     <Compile Include="LibRetro\Controllers\Hid\HidState.cs" />
