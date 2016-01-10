@@ -25,6 +25,8 @@ namespace Emulators.LibRetro.Controllers.XInput
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, XInputAxis> _analogToButtonMappings;
     protected Dictionary<RetroAnalogDevice, XInputAxis> _analogToAnalogMappings;
     protected Dictionary<RetroAnalogDevice, GamepadButtonFlags> _buttonToAnalogMappings;
+    protected ushort _leftMotorSpeed;
+    protected ushort _rightMotorSpeed;
 
     public Guid DeviceId
     {
@@ -178,13 +180,20 @@ namespace Emulators.LibRetro.Controllers.XInput
     {
       if (port != _controllerIndex)
         return false;
+
+      //Consider the low frequency (left) motor the "strong" one
+      if (effect == LibRetroCore.retro_rumble_effect.RETRO_RUMBLE_STRONG)
+        _leftMotorSpeed = strength;
+      else if (effect == LibRetroCore.retro_rumble_effect.RETRO_RUMBLE_WEAK)
+        _rightMotorSpeed = strength;
+
       if (!_controller.IsConnected())
         return false;
-      
+
       _controller.Controller.SetVibration(new Vibration()
       {
-        LeftMotorSpeed = strength,
-        RightMotorSpeed = strength
+        LeftMotorSpeed = _leftMotorSpeed,
+        RightMotorSpeed = _rightMotorSpeed
       });
       return true;
     }
