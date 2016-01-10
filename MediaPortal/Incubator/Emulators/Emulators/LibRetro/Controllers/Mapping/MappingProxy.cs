@@ -1,8 +1,10 @@
-﻿using Emulators.LibRetro.Controllers.XInput;
+﻿using Emulators.LibRetro.Controllers.Hid;
+using Emulators.LibRetro.Controllers.XInput;
 using Emulators.LibRetro.Settings;
 using MediaPortal.Common;
 using MediaPortal.Common.Settings;
 using SharpDX.XInput;
+using SharpLib.Hid;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -113,7 +115,12 @@ namespace Emulators.LibRetro.Controllers.Mapping
 
     protected void AddHidDevices(List<IMappableDevice> deviceList)
     {
-
+      List<Device> devices = HidUtils.GetHidDevices();
+      foreach (Device device in devices)
+      {
+        if (device.IsGamePad)
+          deviceList.Add(new HidGameControl(device.VendorId, device.ProductId, device.Name, device.FriendlyName));
+      }
     }
   }
 }

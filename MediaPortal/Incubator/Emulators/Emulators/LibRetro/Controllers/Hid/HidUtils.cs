@@ -1,6 +1,9 @@
-﻿using System;
+﻿using SharpLib.Hid;
+using SharpLib.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,6 +11,45 @@ namespace Emulators.LibRetro.Controllers.Hid
 {
   static class HidUtils
   {
+    public static List<Device> GetHidDevices()
+    {
+      List<Device> devices = new List<Device>();
+      //Get our list of devices
+      RAWINPUTDEVICELIST[] ridList = null;
+      uint deviceCount = 0;
+      int res = Function.GetRawInputDeviceList(ridList, ref deviceCount, (uint)Marshal.SizeOf(typeof(RAWINPUTDEVICELIST)));
+      if (res == -1)
+      {
+        //Just give up then
+        return devices;
+      }
+
+      ridList = new RAWINPUTDEVICELIST[deviceCount];
+      res = Function.GetRawInputDeviceList(ridList, ref deviceCount, (uint)Marshal.SizeOf(typeof(RAWINPUTDEVICELIST)));
+      if (res != deviceCount)
+      {
+        //Just give up then
+        return devices;
+      }
+
+      foreach (RAWINPUTDEVICELIST device in ridList)
+      {
+        Device hidDevice;
+        //Try create our HID device.
+        try
+        {
+          hidDevice = new Device(device.hDevice);
+        }
+        catch /*(System.Exception ex)*/
+        {
+          //Just skip that device then
+          continue;
+        }
+        devices.Add(hidDevice);
+      }
+      return devices;
+    }
+
     /// <summary>
     /// Provide the type for the usage corresponding to the given usage page.
     /// </summary>
