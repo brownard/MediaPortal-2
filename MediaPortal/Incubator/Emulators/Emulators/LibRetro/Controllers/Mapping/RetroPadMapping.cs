@@ -31,11 +31,13 @@ namespace Emulators.LibRetro.Controllers.Mapping
 
   public class RetroPadMapping
   {
+    protected List<MappedInput> _availableInputs;
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput> _buttonMappings;
     protected Dictionary<RetroAnalogDevice, DeviceInput> _analogMappings;
 
     public RetroPadMapping()
     {
+      _availableInputs = GetAvailableInputs();
       _buttonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput>();
       _analogMappings = new Dictionary<RetroAnalogDevice, DeviceInput>();
     }
@@ -43,6 +45,12 @@ namespace Emulators.LibRetro.Controllers.Mapping
     public Guid DeviceId { get; set; }
     public string SubDeviceId { get; set; }
     public string DeviceName { get; set; }
+
+    [XmlIgnore]
+    public List<MappedInput> AvailableInputs
+    {
+      get { return _availableInputs; }
+    }
 
     [XmlIgnore]
     public Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput> ButtonMappings

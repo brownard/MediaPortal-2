@@ -58,12 +58,12 @@ namespace Emulators.Models.Navigation
       : base(Consts.KEY_NAME, name)
     {
       _mappedInput = mappedInput;
+      Update();
     }
 
-    public void Update(DeviceInput deviceInput)
+    public void Update()
     {
-      _mappedInput.Input = deviceInput;
-      string label = deviceInput != null ? deviceInput.Label : "";
+      string label = _mappedInput.Input != null ? _mappedInput.Input.Label : "";
       SetLabel(KEY_MAPPED_INPUT, label);
     }
   }

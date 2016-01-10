@@ -231,20 +231,22 @@ namespace Emulators.Models
       if (create)
       {
         _inputList.Clear();
-        foreach (MappedInput mappedInput in _currentMapping.GetAvailableInputs())
+        foreach (MappedInput mappedInput in _currentMapping.AvailableInputs)
         {
+          DeviceInput input;
+          if ((mappedInput.Button.HasValue && _currentMapping.ButtonMappings.TryGetValue(mappedInput.Button.Value, out input))
+            || (mappedInput.Analog.HasValue && _currentMapping.AnalogMappings.TryGetValue(mappedInput.Analog.Value, out input)))
+            mappedInput.Input = input;
+
           MappedInputItem inputItem = new MappedInputItem(mappedInput.Name, mappedInput);
           inputItem.Command = new MethodDelegateCommand(() => InputItemSelected(inputItem));
           _inputList.Add(inputItem);
         }
       }
-
-      foreach (MappedInputItem item in _inputList)
+      else
       {
-        DeviceInput input;
-        if ((item.MappedInput.Button.HasValue && _currentMapping.ButtonMappings.TryGetValue(item.MappedInput.Button.Value, out input))
-          || (item.MappedInput.Analog.HasValue && _currentMapping.AnalogMappings.TryGetValue(item.MappedInput.Analog.Value, out input)))
-          item.Update(input);
+        foreach (MappedInputItem item in _inputList)
+          item.Update();
       }
       _inputList.FireChange();
     }
