@@ -131,7 +131,10 @@ namespace Emulators.Models
     protected void UpdateState(NavigationContext oldContext, NavigationContext newContext, bool push)
     {
       if (oldContext.WorkflowState.StateId == STATE_MAP_INPUT)
+      {
         EndMapping();
+        UpdateInputList(false);
+      }
 
       Guid newState = newContext.WorkflowState.StateId;
       if (newState == STATE_PORT_SELECT)
