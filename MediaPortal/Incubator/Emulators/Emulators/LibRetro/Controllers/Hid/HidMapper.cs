@@ -53,7 +53,10 @@ namespace Emulators.LibRetro.Controllers.Hid
       {
         short value = NumericUtils.UIntToShort(axis.Value);
         if (value > HidGameControl.DEFAULT_DEADZONE || value < -HidGameControl.DEFAULT_DEADZONE)
-          return new DeviceInput(axis.Name, axis.Id.ToString(), InputType.Axis, value > 0);
+        {
+          bool isPositive = value > 0;
+          return new DeviceInput(string.Format("{0}{1}", axis.Name, isPositive ? "+" : "-"), axis.Id.ToString(), InputType.Axis, isPositive);
+        }
       }
 
       return null;
