@@ -82,14 +82,14 @@ namespace Emulators.LibRetro.Controllers.Mapping
       inputList.Add(new MappedInput() { Name = "Left", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.LEFT });
       inputList.Add(new MappedInput() { Name = "Right", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.RIGHT });
 
-      inputList.Add(new MappedInput() { Name = "LX-", Analog = RetroAnalogDevice.LeftThumbLeft });
-      inputList.Add(new MappedInput() { Name = "LX+", Analog = RetroAnalogDevice.LeftThumbRight });
-      inputList.Add(new MappedInput() { Name = "LY+", Analog = RetroAnalogDevice.LeftThumbUp });
-      inputList.Add(new MappedInput() { Name = "LY-", Analog = RetroAnalogDevice.LeftThumbDown });
-      inputList.Add(new MappedInput() { Name = "RX-", Analog = RetroAnalogDevice.RightThumbLeft });
-      inputList.Add(new MappedInput() { Name = "RX+", Analog = RetroAnalogDevice.RightThumbRight });
-      inputList.Add(new MappedInput() { Name = "RY+", Analog = RetroAnalogDevice.RightThumbUp });
-      inputList.Add(new MappedInput() { Name = "RY-", Analog = RetroAnalogDevice.RightThumbDown });
+      inputList.Add(new MappedInput() { Name = "Left Analog X- (Left)", Analog = RetroAnalogDevice.LeftThumbLeft });
+      inputList.Add(new MappedInput() { Name = "Left Analog X+ (Right)", Analog = RetroAnalogDevice.LeftThumbRight });
+      inputList.Add(new MappedInput() { Name = "Left Analog Y- (Up)", Analog = RetroAnalogDevice.LeftThumbUp });
+      inputList.Add(new MappedInput() { Name = "Left Analog Y+ (Down)", Analog = RetroAnalogDevice.LeftThumbDown });
+      inputList.Add(new MappedInput() { Name = "Right Analog X- (Left)", Analog = RetroAnalogDevice.RightThumbLeft });
+      inputList.Add(new MappedInput() { Name = "Right Analog X+ (Right)", Analog = RetroAnalogDevice.RightThumbRight });
+      inputList.Add(new MappedInput() { Name = "Right Analog Y- (Up)", Analog = RetroAnalogDevice.RightThumbUp });
+      inputList.Add(new MappedInput() { Name = "Right Analog Y+ (Down)", Analog = RetroAnalogDevice.RightThumbDown });
 
       inputList.Add(new MappedInput() { Name = "A", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.A });
       inputList.Add(new MappedInput() { Name = "B", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.B });
