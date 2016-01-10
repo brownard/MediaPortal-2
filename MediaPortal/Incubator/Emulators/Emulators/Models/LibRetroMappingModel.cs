@@ -18,6 +18,8 @@ using MediaPortal.UI.Presentation.Screens;
 using MediaPortal.UiComponents.SkinBase.General;
 using MediaPortal.Common.Localization;
 using Emulators.LibRetro.Controllers;
+using MediaPortal.Common.Services.Settings;
+using Emulators.LibRetro.Settings;
 
 namespace Emulators.Models
 {
@@ -28,16 +30,16 @@ namespace Emulators.Models
     public static readonly Guid STATE_PORT_SELECT = new Guid("02FEF896-7C0E-444D-9657-44660E0ED90A");
     public static readonly Guid STATE_DEVICE_CONFIGURE = new Guid("499FFA69-A92A-4BC8-9F87-0A578A62815A");
     public static readonly Guid STATE_MAP_INPUT = new Guid("AAFD9AD5-F31D-41FE-A717-D9D7801EC27F");
-    public static string DIALOG_CHOOSE_DEVICE = "dialog_mapping_devices";
-
-    protected const int MAX_PLAYERS = 4;
+    public static string DIALOG_CHOOSE_DEVICE = "dialog_mapping_devices";    
     protected const int POLL_INTERVAL = 50;
     #endregion
 
     #region Protected Members
     protected AbstractProperty _currentPlayerHeaderProperty = new WProperty(typeof(string), null);
     protected AbstractProperty _currentDeviceNameProperty = new WProperty(typeof(string), null);
+    protected SettingsChangeWatcher<LibRetroSettings> _settings;
 
+    protected int _maxPlayers;
     protected ItemsList _portsList = new ItemsList();
     protected ItemsList _deviceList = new ItemsList();
     protected ItemsList _inputList = new ItemsList();
@@ -50,6 +52,15 @@ namespace Emulators.Models
     protected MappedInput _mappedInput;
     protected Thread _inputPollThread;
     protected volatile bool _doPoll;
+    #endregion
+
+    #region Constructor
+    public LibRetroMappingModel()
+    {
+      _settings = new SettingsChangeWatcher<LibRetroSettings>();
+      _settings.SettingsChanged += OnSettingsChanged;
+      InitSettings();
+    }
     #endregion
 
     #region Public Properties
@@ -130,6 +141,18 @@ namespace Emulators.Models
     #endregion
 
     #region Protected Methods
+    protected void OnSettingsChanged(object sender, EventArgs e)
+    {
+      InitSettings();
+    }
+
+    protected void InitSettings()
+    {      
+      _maxPlayers = _settings.Settings.MaxPlayers;
+      if (_maxPlayers < 1)
+        _maxPlayers = 1;
+    }
+
     protected void UpdateState(NavigationContext oldContext, NavigationContext newContext, bool push)
     {
       if (oldContext.WorkflowState.StateId == STATE_MAP_INPUT)
@@ -194,7 +217,7 @@ namespace Emulators.Models
     protected void UpdatePortsList()
     {
       _portsList.Clear();
-      for (int i = 0; i < MAX_PLAYERS; i++)
+      for (int i = 0; i < _maxPlayers; i++)
       {
         PortMappingItem portItem = new PortMappingItem(LocalizationHelper.Translate("[Emulators.LibRetro.PlayerNumber]", i + 1), _mappingProxy.GetPortMapping(i));
         portItem.Command = new MethodDelegateCommand(() => PortItemSelected(portItem));

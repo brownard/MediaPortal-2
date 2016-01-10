@@ -232,7 +232,8 @@ namespace Emulators.LibRetro
 
     protected void CreateControllerWrapper()
     {
-      _controllerWrapper = new ControllerWrapper();
+      int maxPlayers = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>().MaxPlayers;
+      _controllerWrapper = new ControllerWrapper(maxPlayers);
       DeviceProxy deviceProxy = new DeviceProxy();
       List<IMappableDevice> deviceList = deviceProxy.GetDevices(false);
       MappingProxy mappingProxy = new MappingProxy();
