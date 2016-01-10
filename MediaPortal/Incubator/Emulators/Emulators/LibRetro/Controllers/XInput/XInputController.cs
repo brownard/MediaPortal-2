@@ -129,7 +129,7 @@ namespace Emulators.LibRetro.Controllers.XInput
       if (port != _controllerIndex)
         return false;
       Gamepad gamepad;
-      if (!TryGetGamepad(port, out gamepad))
+      if (!TryGetGamepad(out gamepad))
         return false;
 
       GamepadButtonFlags buttonFlag;
@@ -146,7 +146,7 @@ namespace Emulators.LibRetro.Controllers.XInput
       if (port != _controllerIndex)
         return 0;
       Gamepad gamepad;
-      if (!TryGetGamepad(port, out gamepad))
+      if (!TryGetGamepad(out gamepad))
         return 0;
 
       RetroAnalogDevice positive;
@@ -180,7 +180,7 @@ namespace Emulators.LibRetro.Controllers.XInput
         return false;
       if (!_controller.IsConnected())
         return false;
-
+      
       _controller.Controller.SetVibration(new Vibration()
       {
         LeftMotorSpeed = strength,
@@ -189,7 +189,7 @@ namespace Emulators.LibRetro.Controllers.XInput
       return true;
     }
 
-    protected bool TryGetGamepad(uint port, out Gamepad gamepad)
+    protected bool TryGetGamepad(out Gamepad gamepad)
     {
       State state;
       if (_controller.GetState(out state))
