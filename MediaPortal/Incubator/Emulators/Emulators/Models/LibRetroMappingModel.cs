@@ -173,13 +173,17 @@ namespace Emulators.Models
 
     protected void Reset()
     {
+      EndMapping();
+      DisposeDeviceMapper();
       CurrentPlayerHeader = null;
       CurrentDeviceName = null;
       _currentDevice = null;
       _currentPortMapping = null;
       _currentMapping = null;
       _mappedInput = null;
-      DisposeDeviceMapper();
+      _portsList = new ItemsList();
+      _deviceList = new ItemsList();
+      _inputList = new ItemsList();
     }
 
     protected void UpdatePortsList()
@@ -214,20 +218,13 @@ namespace Emulators.Models
         {
           _deviceMapper = _currentDevice.CreateMapper();
           _currentMapping = _mappingProxy.GetDeviceMapping(_currentDevice);
+          UpdateInputList(create);
         }
       }
-      UpdateInputList(create);
     }
 
     protected void UpdateInputList(bool create)
     {
-      if (_currentMapping == null)
-      {
-        _inputList.Clear();
-        _inputList.FireChange();
-        return;
-      }
-
       if (create)
       {
         _inputList.Clear();
@@ -254,7 +251,7 @@ namespace Emulators.Models
       if (_deviceMapper == null || _currentMapping == null || _mappedInput == null)
         return;
       _doPoll = true;
-      _inputPollThread = new Thread(() => DoPoll(_deviceMapper, _currentMapping, _mappedInput));
+      _inputPollThread = new Thread(() => DoPoll(_deviceMapper, _currentMapping, _mappedInput)) { IsBackground = true };
       _inputPollThread.Start();
     }
 
@@ -269,7 +266,7 @@ namespace Emulators.Models
     }
 
     protected void DoPoll(IDeviceMapper mapper, RetroPadMapping currentMapping, MappedInput mappedInput)
-    {      
+    {
       while (_doPoll)
       {
         DeviceInput input = mapper.GetPressedInput();
@@ -292,7 +289,7 @@ namespace Emulators.Models
       IDisposable disposable = _deviceMapper as IDisposable;
       if (disposable != null)
         disposable.Dispose();
-      _deviceMapper = null; 
+      _deviceMapper = null;
     }
     #endregion
 
@@ -314,7 +311,7 @@ namespace Emulators.Models
 
     public void Deactivate(NavigationContext oldContext, NavigationContext newContext)
     {
-      
+
     }
 
     public void EnterModelContext(NavigationContext oldContext, NavigationContext newContext)
@@ -331,12 +328,12 @@ namespace Emulators.Models
 
     public void Reactivate(NavigationContext oldContext, NavigationContext newContext)
     {
-      
+
     }
 
     public void UpdateMenuActions(NavigationContext context, IDictionary<Guid, WorkflowAction> actions)
     {
-      
+
     }
 
     public ScreenUpdateMode UpdateScreen(NavigationContext context, ref string screen)
