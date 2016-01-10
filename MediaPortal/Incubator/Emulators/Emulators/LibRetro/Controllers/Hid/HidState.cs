@@ -19,15 +19,15 @@ namespace Emulators.LibRetro.Controllers.Hid
 
   public class HidAxisState
   {
-    public HidAxisState(string name, ushort id, uint value, ushort bitSize)
+    public HidAxisState(string name, ushort index, uint value, ushort bitSize)
     {
       Name = name;
-      Id = id;
+      Index = index;
       Value = value;
       BitSize = bitSize;
     }
     public string Name { get; private set; }
-    public ushort Id { get; private set; }
+    public ushort Index { get; private set; }
     public uint Value { get; private set; }
     public ushort BitSize { get; private set; }
   }

@@ -55,7 +55,7 @@ namespace Emulators.LibRetro.Controllers.Hid
         if (value > HidGameControl.DEFAULT_DEADZONE || value < -HidGameControl.DEFAULT_DEADZONE)
         {
           bool isPositive = value > 0;
-          return new DeviceInput(string.Format("{0}{1}", axis.Name, isPositive ? "+" : "-"), axis.Id.ToString(), InputType.Axis, isPositive);
+          return new DeviceInput(string.Format("{0}({1}){2}", axis.Index, axis.Name, isPositive ? "+" : "-"), axis.Index.ToString(), InputType.Axis, isPositive);
         }
       }
 

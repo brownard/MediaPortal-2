@@ -125,8 +125,8 @@ namespace Emulators.LibRetro.Controllers.Hid
           continue;
         //Get the name of our axis
         string name = Enum.GetName(usageType, entry.Key.NotRange.Usage);
-        ushort id = entry.Key.NotRange.Usage;
-        axisStates[id] = new HidAxisState(name, id, entry.Value, entry.Key.BitSize);
+        ushort index = entry.Key.NotRange.DataIndex;
+        axisStates[index] = new HidAxisState(name, index, entry.Value, entry.Key.BitSize);
       }
 
       DirectionPadState directionPadState = aHidEvent.GetDirectionPadState();
