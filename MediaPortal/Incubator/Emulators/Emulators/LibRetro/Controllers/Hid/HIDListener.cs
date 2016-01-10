@@ -10,6 +10,8 @@ using System.Runtime.InteropServices;
 using MediaPortal.Common.Messaging;
 using MediaPortal.UI.General;
 using System.Windows.Forms;
+using SharpLib.Hid;
+using SharpLib.Hid.Usage;
 
 namespace Emulators.LibRetro.Controllers.Hid
 {
@@ -110,11 +112,14 @@ namespace Emulators.LibRetro.Controllers.Hid
       foreach (ushort usage in aHidEvent.Usages)
         buttons.Add(usage);
 
+      int index = aHidEvent.GetValueCapabilitiesIndex((ushort)UsagePage.GenericDesktopControls, (ushort)GenericDesktop.HatSwitch);
+
       //For each axis
       Dictionary<ushort, HidAxisState> axisStates = new Dictionary<ushort, HidAxisState>();
       foreach (KeyValuePair<HIDP_VALUE_CAPS, uint> entry in aHidEvent.UsageValues)
       {
-        if (entry.Key.IsRange)
+        //HatSwitch is handled separately
+        if (entry.Key.IsRange || entry.Key.NotRange.Usage == (ushort)GenericDesktop.HatSwitch)
           continue;
         //Get our usage type
         Type usageType = HidUtils.UsageType((SharpLib.Hid.UsagePage)entry.Key.UsagePage);
