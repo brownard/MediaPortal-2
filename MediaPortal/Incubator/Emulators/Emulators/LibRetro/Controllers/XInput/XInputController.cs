@@ -14,7 +14,7 @@ namespace Emulators.LibRetro.Controllers.XInput
   class XInputController : IRetroPad, IRetroAnalog, IRetroRumble, IMappableDevice
   {
     public static readonly Guid DEVICE_ID = new Guid("FD60533F-00E0-4301-8B97-F9681D6FC67D");
-    public const string DEVICE_NAME = "XInput Controller";
+    public const string DEVICE_NAME = "Xbox 360 Controller (XInput)";
     const int CONTROLLER_CONNECTED_TIMEOUT = 2000;
 
     protected string _subDeviceId;
