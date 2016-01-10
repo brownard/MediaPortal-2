@@ -33,7 +33,7 @@ namespace Emulators.LibRetro.Controllers.Hid
     }
     #endregion
 
-    protected SharpLib.Hid.Handler _handler;
+    protected Handler _handler;
     protected AsynchronousMessageQueue _messageQueue;
 
     public event EventHandler<HidStateEventArgs> StateChanged;
@@ -69,7 +69,7 @@ namespace Emulators.LibRetro.Controllers.Hid
         {
           case WindowsMessaging.MessageType.WindowsBroadcast:
             Message msg = (Message)message.MessageData[WindowsMessaging.MESSAGE];
-            SharpLib.Hid.Handler handler = _handler;
+            Handler handler = _handler;
             if (handler != null)
               handler.ProcessInput(ref msg);
             break;
@@ -81,14 +81,14 @@ namespace Emulators.LibRetro.Controllers.Hid
     public void Register(IntPtr Hwnd)
     {
       RAWINPUTDEVICE[] rid = new RAWINPUTDEVICE[1];
-      rid[0].usUsagePage = (ushort)SharpLib.Hid.UsagePage.GenericDesktopControls;
+      rid[0].usUsagePage = (ushort)UsagePage.GenericDesktopControls;
       rid[0].usUsage = (ushort)SharpLib.Hid.UsageCollection.GenericDesktop.GamePad;
       rid[0].dwFlags = 0; // Const.RIDEV_EXINPUTSINK; //Handle background events
       rid[0].hwndTarget = Hwnd;
 
       int repeatDelay = -1;
       int repeatSpeed = -1;
-      _handler = new SharpLib.Hid.Handler(rid, true, repeatDelay, repeatSpeed);
+      _handler = new Handler(rid, true, repeatDelay, repeatSpeed);
       if (!_handler.IsRegistered)
       {
         Logger.Warn("Failed to register raw input devices: " + Marshal.GetLastWin32Error().ToString());
@@ -97,7 +97,7 @@ namespace Emulators.LibRetro.Controllers.Hid
       SubscribeToMessages();
     }
 
-    void OnHidEvent(object aSender, SharpLib.Hid.Event aHidEvent)
+    void OnHidEvent(object aSender, Event aHidEvent)
     {
       if (!aHidEvent.Device.IsGamePad)
         return;
@@ -120,7 +120,7 @@ namespace Emulators.LibRetro.Controllers.Hid
         if (entry.Key.IsRange || entry.Key.NotRange.Usage == (ushort)GenericDesktop.HatSwitch)
           continue;
         //Get our usage type
-        Type usageType = HidUtils.UsageType((SharpLib.Hid.UsagePage)entry.Key.UsagePage);
+        Type usageType = HidUtils.UsageType((UsagePage)entry.Key.UsagePage);
         if (usageType == null)
           continue;
         //Get the name of our axis
