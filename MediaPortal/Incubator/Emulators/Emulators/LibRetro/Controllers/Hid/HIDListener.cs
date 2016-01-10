@@ -112,13 +112,11 @@ namespace Emulators.LibRetro.Controllers.Hid
       foreach (ushort usage in aHidEvent.Usages)
         buttons.Add(usage);
 
-      int index = aHidEvent.GetValueCapabilitiesIndex((ushort)UsagePage.GenericDesktopControls, (ushort)GenericDesktop.HatSwitch);
-
       //For each axis
       Dictionary<ushort, HidAxisState> axisStates = new Dictionary<ushort, HidAxisState>();
       foreach (KeyValuePair<HIDP_VALUE_CAPS, uint> entry in aHidEvent.UsageValues)
       {
-        //HatSwitch is handled separately
+        //HatSwitch is handled separately as direction pad state
         if (entry.Key.IsRange || entry.Key.NotRange.Usage == (ushort)GenericDesktop.HatSwitch)
           continue;
         //Get our usage type
@@ -131,7 +129,7 @@ namespace Emulators.LibRetro.Controllers.Hid
         axisStates[id] = new HidAxisState(name, id, entry.Value, entry.Key.BitSize);
       }
 
-      SharpLib.Hid.DirectionPadState directionPadState = aHidEvent.GetDirectionPadState();
+      DirectionPadState directionPadState = aHidEvent.GetDirectionPadState();
 
       HidState state = new HidState
       {
