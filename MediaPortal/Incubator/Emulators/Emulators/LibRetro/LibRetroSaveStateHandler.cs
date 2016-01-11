@@ -20,12 +20,12 @@ namespace Emulators.LibRetro
     protected DateTime _lastSaveTime = DateTime.MinValue;
     protected byte[] _lastSaveRam;
 
-    public LibRetroSaveStateHandler(LibRetroEmulator retroEmulator, string gamePath, string saveDirectory, int autoSaveIntervalMs)
+    public LibRetroSaveStateHandler(LibRetroEmulator retroEmulator, string gamePath, string saveDirectory, int autoSaveInterval)
     {
       _retroEmulator = retroEmulator;
       _gamePath = gamePath;
       _saveDirectory = saveDirectory;
-      _autoSaveInterval = autoSaveIntervalMs;
+      _autoSaveInterval = autoSaveInterval;
     }
 
     public void LoadSaveRam()
@@ -50,7 +50,7 @@ namespace Emulators.LibRetro
     public void AutoSave()
     {
       DateTime now = DateTime.Now;
-      if ((now - _lastSaveTime).TotalMilliseconds < _autoSaveInterval)
+      if ((now - _lastSaveTime).TotalSeconds < _autoSaveInterval)
         return;
       _lastSaveTime = now;
       byte[] saveRam = _retroEmulator.SaveState(LibRetroCore.RETRO_MEMORY.SAVE_RAM);

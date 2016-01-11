@@ -79,7 +79,6 @@ namespace Emulators.LibRetro
       _saveDirectory = saveDirectory;
       _pauseWaitHandle = new ManualResetEventSlim(true);
       _syncToAudio = true;
-      _autoSave = true;
       _guiInitialized = true;
     }
     #endregion
@@ -118,7 +117,8 @@ namespace Emulators.LibRetro
       InitializeLibRetro();
       if (!LoadGame())
         return false;
-      InitializeOutputs();      
+      InitializeOutputs();
+      InitializeSaveStateHandler();
       _libretroInitialized = true;
       return true;
     }
@@ -216,7 +216,14 @@ namespace Emulators.LibRetro
         _soundOutput = null;
         _syncToAudio = false;
       }
-      _saveHandler = new LibRetroSaveStateHandler(_retroEmulator, _gamePath, _saveDirectory, AUTO_SAVE_INTERVAL);
+    }
+
+    protected void InitializeSaveStateHandler()
+    {
+      var sm = ServiceRegistration.Get<ISettingsManager>();
+      LibRetroSettings settings = sm.Load<LibRetroSettings>();
+      _autoSave = settings.AutoSave;
+      _saveHandler = new LibRetroSaveStateHandler(_retroEmulator, _gamePath, _saveDirectory, settings.AutoSaveInterval);
       _saveHandler.LoadSaveRam();
     }
 
