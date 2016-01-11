@@ -201,9 +201,16 @@
 
   <Register Location="/Configuration/Settings/Plugins/Emulators">
     <ConfigSection
+        Id="LibRetro"
+        Redundant="true"
+        Text="[Emulators.Config.Setting.LibRetro]"
+        Sort="a"/>
+    
+    <ConfigSection
         Id="Advanced"
         Redundant="true"
-        Text="[Emulators.Config.Setting.Advanced]"/>
+        Text="[Emulators.Config.Setting.Advanced]"
+        Sort="b"/>
     
     <CustomConfigSetting
         Id="EmulatorsConfiguration"
@@ -211,13 +218,6 @@
         HelpText="[Emulators.Config.Setting.ConfigureEmulators.Help]"
         ClassName="Emulators.Settings.Configuration.EmulatorsConfigSetting"
         AdditionalData="WorkflowState=903DD5EB-56B2-42B5-B1D8-64106651296A,ConfAppPanel=..."/>
-        
-    <CustomConfigSetting
-        Id="LibRetroMapping"
-        Text="[Emulators.LibRetro.MapInputDevices]"
-        HelpText=""
-        ClassName="Emulators.Settings.Configuration.LibRetroMappingSetting"
-        AdditionalData="WorkflowState=02FEF896-7C0E-444D-9657-44660E0ED90A,ConfAppPanel=..."/>
 
     <!--<ConfigSetting
         Id="MinimiseOnStart"
@@ -225,6 +225,33 @@
         HelpText="[Emulators.Config.Setting.MinimiseOnStart.Help]"
         ClassName="Emulators.Settings.Configuration.MinimiseOnStart"/>-->
     
+  </Register>
+
+  <Register Location="/Configuration/Settings/Plugins/Emulators/LibRetro">    
+    <ConfigSetting
+        Id="MaxPlayers"
+        Text="[Emulators.Config.LibRetro.MaximumPlayers]"
+        HelpText="[Emulators.Config.LibRetro.MaximumPlayers.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.MaxPlayersSetting"/>
+    
+    <CustomConfigSetting
+        Id="LibRetroMapping"
+        Text="[Emulators.Config.LibRetro.MapInputDevices]"
+        HelpText="[Emulators.Config.LibRetro.MapInputDevices.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.MappingSetting"
+        AdditionalData="WorkflowState=02FEF896-7C0E-444D-9657-44660E0ED90A,ConfAppPanel=..."/> 
+    
+    <ConfigSetting
+        Id="AutoSave"
+        Text="[Emulators.Config.LibRetro.AutoSave]"
+        HelpText="[Emulators.Config.LibRetro.AutoSave.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.AutoSaveSetting"/>
+
+    <ConfigSetting
+        Id="AutoSaveInterval"
+        Text="[Emulators.Config.LibRetro.AutoSaveInterval]"
+        HelpText="[Emulators.Config.LibRetro.AutoSaveInterval.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.AutoSaveIntervalSetting"/>
   </Register>
 
   <Register Location="/Configuration/Settings/Plugins/Emulators/Advanced">

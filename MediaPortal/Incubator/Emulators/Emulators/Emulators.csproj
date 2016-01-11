@@ -155,7 +155,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings\Configuration\ClearGoodMergeCache.cs" />
     <Compile Include="Settings\Configuration\EmulatorsConfigSetting.cs" />
-    <Compile Include="Settings\Configuration\LibRetroMappingSetting.cs" />
+    <Compile Include="Settings\Configuration\LibRetro\AutoSaveIntervalSetting.cs" />
+    <Compile Include="Settings\Configuration\LibRetro\AutoSaveSetting.cs" />
+    <Compile Include="Settings\Configuration\LibRetro\MappingSetting.cs" />
+    <Compile Include="Settings\Configuration\LibRetro\MaxPlayersSetting.cs" />
     <Compile Include="Settings\Configuration\MinimiseOnStart.cs" />
     <Compile Include="Settings\EmulatorsSettings.cs" />
     <Compile Include="Settings\SerializeableKeyValue.cs" />

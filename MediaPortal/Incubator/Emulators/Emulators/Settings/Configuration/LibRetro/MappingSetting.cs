@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Emulators.Settings.Configuration
+namespace Emulators.Settings.Configuration.LibRetro
 {
-  public class LibRetroMappingSetting : CustomConfigSetting
+  public class MappingSetting : CustomConfigSetting
   {
   }
 }

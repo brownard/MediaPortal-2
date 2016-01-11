@@ -16,6 +16,7 @@
 
   <string name="Emulators.Config.PluginSettingsLabel">Emulators</string>
   <string name="Emulators.Config.Setting.Advanced">Advanced</string>
+  <string name="Emulators.Config.Setting.LibRetro">Libretro</string>
   <string name="Emulators.Config.Setting.ConfigureEmulators">Configure emulators</string>
   <string name="Emulators.Config.Setting.ConfigureEmulators.Help">Add, edit and remove emulators</string>
 
@@ -69,7 +70,7 @@
   <string name="Emulators.Config.SelectWildcard.Game">Game path</string>
   <string name="Emulators.Config.SelectWildcard.GameNoExt">Game filename without extension</string>
   <string name="Emulators.Config.SelectWildcard.GameDir">Game directory</string>
-  
+
   <string name="Emulators.Config.LibRetroSettings.Title">LibRetro settings</string>
   <string name="Emulators.Config.LibRetroSettings.Label">Edit the settings to use for this LibRetro core</string>
   <string name="Emulators.Config.NoSettingsInThisView">No settings in this view</string>
@@ -78,7 +79,15 @@
   <string name="Emulators.SelectGoodmerge.Header">Choose GoodMerge file</string>
   <string name="Emulators.ExtractGoodmerge.Header">Extracting GoodMerge file</string>
 
-  <string name="Emulators.LibRetro.MapInputDevices">Map input devices</string>
+  <string name="Emulators.Config.LibRetro.MaximumPlayers">Maximum players</string>
+  <string name="Emulators.Config.LibRetro.MaximumPlayers.Help">Set the maximum number of players available when configuring input devices</string>
+  <string name="Emulators.Config.LibRetro.MapInputDevices">Map input devices</string>
+  <string name="Emulators.Config.LibRetro.MapInputDevices.Help">Edit the device and button mappings to use for each player</string>
+  <string name="Emulators.Config.LibRetro.AutoSave">Auto save</string>
+  <string name="Emulators.Config.LibRetro.AutoSave.Help">Whether to periodically save the Libretro core's save states during gameplay</string>
+  <string name="Emulators.Config.LibRetro.AutoSaveInterval">Auto save interval</string>
+  <string name="Emulators.Config.LibRetro.AutoSaveInterval.Help">The number of seconds between auto saves</string>
+
   <string name="Emulators.LibRetro.ChoosePlayer">Choose player</string>
   <string name="Emulators.LibRetro.PlayerNumber">Player {0}</string>
   <string name="Emulators.LibRetro.InputDevice">Input device</string>
