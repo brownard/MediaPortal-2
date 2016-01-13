@@ -10,7 +10,10 @@ namespace Emulators.LibRetro.VideoProviders
 {
   public class LibRetroTextureWrapper : ITextureProvider
   {
+    const int INT_COUNT_PER_PIXEL = 1;
+    const int BYTE_COUNT_PER_PIXEL = 4;
     const int TEXTURE_BUFFER_LENGTH = 2;
+
     protected Texture[] _textures = new Texture[TEXTURE_BUFFER_LENGTH];
     protected int _currentTextureIndex;
 
@@ -19,53 +22,40 @@ namespace Emulators.LibRetro.VideoProviders
       get { return _textures[_currentTextureIndex]; }
     }
 
-    public void UpdateTexture(Device device, int[] pixels, int width, int height)
+    public void UpdateTexture(Device device, int[] pixels, int width, int height, bool bottomLeftOrigin)
     {
-      if (pixels == null)
-        return;
-      _currentTextureIndex = (_currentTextureIndex + 1) % _textures.Length;
-      Texture texture = GetOrCreateTexture(device, width, height);
-      DataStream dataStream;
-      texture.LockRectangle(0, LockFlags.None, out dataStream);
-      using (dataStream)
-      {
-        dataStream.WriteRange(pixels, 0, width * height);
-        texture.UnlockRectangle(0);
-      }
+      UpdateTexture(device, pixels, width, height, INT_COUNT_PER_PIXEL, bottomLeftOrigin);
     }
 
     public void UpdateTexture(Device device, byte[] pixels, int width, int height, bool bottomLeftOrigin)
     {
+      UpdateTexture(device, pixels, width, height, BYTE_COUNT_PER_PIXEL, bottomLeftOrigin);
+    }
+
+    protected void UpdateTexture<T>(Device device, T[] pixels, int width, int height, int countPerPixel, bool bottomLeftOrigin) where T : struct
+    {
       if (pixels == null)
         return;
-      _currentTextureIndex = (_currentTextureIndex + 1) % _textures.Length;
+
       Texture texture = GetOrCreateTexture(device, width, height);
       DataStream dataStream;
-      texture.LockRectangle(0, LockFlags.None, out dataStream);
+      DataRectangle rectangle = texture.LockRectangle(0, LockFlags.None, out dataStream);
+      int padding = rectangle.Pitch - (width * sizeof(int));
+      int countPerLine = width * countPerPixel;
+
       using (dataStream)
       {
         if (bottomLeftOrigin)
-          FlipVertically(pixels, width, height, dataStream);
+          WritePixelsBottomLeft(pixels, height, countPerLine, padding, dataStream);
         else
-          dataStream.WriteRange(pixels, 0, width * height * 4);
+          WritePixels(pixels, height, countPerLine, padding, dataStream);
         texture.UnlockRectangle(0);
-      }
-    }
-
-    protected void FlipVertically(byte[] pixels, int width, int height, DataStream dataStream)
-    {
-      int byteWidth = width * 4;
-      int currentRow = height - 1;
-      while (currentRow >= 0)
-      {
-        int offset = currentRow * byteWidth;
-        dataStream.WriteRange(pixels, offset, byteWidth);
-        currentRow--;
       }
     }
 
     protected Texture GetOrCreateTexture(Device device, int width, int height)
     {
+      _currentTextureIndex = (_currentTextureIndex + 1) % _textures.Length;
       Texture texture = _textures[_currentTextureIndex];
       bool needsCreation = texture == null || texture.IsDisposed;
       if (!needsCreation)
@@ -83,6 +73,26 @@ namespace Emulators.LibRetro.VideoProviders
         _textures[_currentTextureIndex] = texture;
       }
       return texture;
+    }
+
+    protected void WritePixels<T>(T[] pixels, int height, int countPerLine, int padding, DataStream dataStream) where T : struct
+    {
+      for (int i = 0; i < height; i++)
+      {
+        if (padding > 0 && i > 0)
+          dataStream.Position += padding;
+        dataStream.WriteRange(pixels, i * countPerLine, countPerLine);
+      }
+    }
+
+    protected void WritePixelsBottomLeft<T>(T[] pixels, int height, int countPerLine, int padding, DataStream dataStream) where T : struct
+    {
+      for (int i = height - 1; i >= 0; i--)
+      {
+        if (padding > 0 && i < height - 1)
+          dataStream.Position += padding;
+        dataStream.WriteRange(pixels, i * countPerLine, countPerLine);
+      }
     }
 
     public void Release()

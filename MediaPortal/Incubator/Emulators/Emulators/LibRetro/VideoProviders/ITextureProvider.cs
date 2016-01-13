@@ -10,7 +10,7 @@ namespace Emulators.LibRetro.VideoProviders
   public interface ITextureProvider : IDisposable
   {
     Texture Texture { get; }
-    void UpdateTexture(Device device, int[] pixels, int width, int height);
+    void UpdateTexture(Device device, int[] pixels, int width, int height, bool bottomLeftOrigin);
     void UpdateTexture(Device device, byte[] pixels, int width, int height, bool bottomLeftOrigin);
     void Release();
   }
