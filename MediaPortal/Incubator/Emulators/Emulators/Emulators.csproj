@@ -196,15 +196,15 @@
       <Project>{4efed5be-2f6a-4944-bb96-053d5945ba1f}</Project>
       <Name>SkinBase</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\FanArtService.Client\FanArtService.Client.csproj">
+    <ProjectReference Include="..\..\..\Source\UI\FanArt\FanArtService.Client\FanArtService.Client.csproj">
       <Project>{cda7272f-e218-42a0-a53a-2d44e4015ff7}</Project>
       <Name>FanArtService.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\FanArtService.Interfaces\FanArtService.Interfaces.csproj">
+    <ProjectReference Include="..\..\..\Source\UI\FanArt\FanArtService.Interfaces\FanArtService.Interfaces.csproj">
       <Project>{587b806e-9afc-47d7-a024-1cec38c4d1d3}</Project>
       <Name>FanArtService.Interfaces</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\ServerSettings.Interfaces\ServerSettings.Interfaces.csproj">
+    <ProjectReference Include="..\..\..\Source\Backend\BackendComponents\ServerSettings.Interfaces\ServerSettings.Interfaces.csproj">
       <Project>{8e15fbe3-f6c8-4b76-a560-f391b4124e9c}</Project>
       <Name>ServerSettings.Interfaces</Name>
     </ProjectReference>

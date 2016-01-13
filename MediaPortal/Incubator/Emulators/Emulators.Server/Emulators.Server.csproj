@@ -60,7 +60,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\FanArtService.Interfaces\FanArtService.Interfaces.csproj">
+    <ProjectReference Include="..\..\..\Source\UI\FanArt\FanArtService.Interfaces\FanArtService.Interfaces.csproj">
       <Project>{587b806e-9afc-47d7-a024-1cec38c4d1d3}</Project>
       <Name>FanArtService.Interfaces</Name>
     </ProjectReference>
