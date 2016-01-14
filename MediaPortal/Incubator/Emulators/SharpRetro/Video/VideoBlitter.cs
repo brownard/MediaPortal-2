@@ -40,7 +40,7 @@ namespace SharpRetro.Video
           r = (r << 3) | (r >> 2);
           g = (g >> 2) | (g >> 7);
           b = (b >> 7) | (b >> 12);
-          int co = r | g | b | unchecked((int)0xff000000);
+          int co = (b << 16) | (g << 8) | r;
 
           *dst = co;
           dst++;
