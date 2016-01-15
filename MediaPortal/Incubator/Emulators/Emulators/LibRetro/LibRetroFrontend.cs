@@ -112,10 +112,22 @@ namespace Emulators.LibRetro
       catch (Exception ex)
       {
         Logger.Error("LibRetroFrontend: Error initialising Libretro core: {0}", ex);
+        if (_retroEmulator != null)
+        {
+          _retroEmulator.Dispose();
+          _retroEmulator = null;
+        }
         return false;
       }
       _libretroInitialized = true;
       return true;
+    }
+
+    public void ThreadedInitAndRun()
+    {
+      _doRender = true;
+      _renderThread = new Thread(InitAndRunLoop) { Name = "LibRetroRenderThread" };
+      _renderThread.Start();
     }
 
     public void Run()
@@ -290,6 +302,14 @@ namespace Emulators.LibRetro
     #endregion
 
     #region Render Thread
+    protected void InitAndRunLoop()
+    {
+      if (!Init())
+        return;
+      _controllerWrapper.Start();
+      DoRender();
+    }
+
     protected void DoRender()
     {
       try
