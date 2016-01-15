@@ -65,10 +65,6 @@ namespace Emulators.LibRetro
 
     protected bool _syncToAudio;
     protected bool _autoSave;
-
-    protected bool _videoReady;
-    protected bool _frameBufferReady;
-    protected bool _audioReady;
     #endregion
 
     #region Ctor
@@ -279,26 +275,13 @@ namespace Emulators.LibRetro
       if (_syncToAudio || NeedsRender())
       {
         _retroEmulator.Run();
-        UpdateAudioVideo();
         if (_autoSave)
           _saveHandler.AutoSave();
       }
     }
 
-    protected void UpdateAudioVideo()
-    {
-      if (_videoReady)
-        UpdateVideo();
-      if (_frameBufferReady)
-        UpdateFrameBuffer();
-      //Update audio last as we are potentially syncing our remaining frame time to audio
-      if (_audioReady)
-        UpdateAudio();
-    }
-
     protected void UpdateVideo()
     {
-      _videoReady = false;
       lock (_surfaceLock)
       {
         if (_guiInitialized)
@@ -308,7 +291,6 @@ namespace Emulators.LibRetro
 
     protected void UpdateFrameBuffer()
     {
-      _frameBufferReady = false;
       lock (_surfaceLock)
       {
         if (_guiInitialized)
@@ -322,7 +304,6 @@ namespace Emulators.LibRetro
 
     protected void UpdateAudio()
     {
-      _audioReady = false;
       lock (_audioLock)
       {
         if (_soundOutput != null)
@@ -332,17 +313,17 @@ namespace Emulators.LibRetro
 
     protected void OnVideoReady(object sender, EventArgs e)
     {
-      _videoReady = true;
+      UpdateVideo();
     }
 
     protected void OnFrameBufferReady(object sender, EventArgs e)
     {
-      _frameBufferReady = true;
+      UpdateFrameBuffer();
     }
 
     protected void OnAudioReady(object sender, EventArgs e)
     {
-      _audioReady = true;
+      UpdateAudio();
     }
 
     protected bool NeedsRender()
