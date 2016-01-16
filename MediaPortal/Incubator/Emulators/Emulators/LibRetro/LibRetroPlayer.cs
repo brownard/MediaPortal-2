@@ -29,7 +29,16 @@ namespace Emulators.LibRetro
     protected string _mediaItemTitle;
     protected bool _isMuted;
     protected int _volume;
+    protected CropSettings _cropSettings;
+    protected IGeometry _geometryOverride;
     protected ILocalFsResourceAccessor _accessor;
+    #endregion
+
+    #region Ctor
+    public LibRetroPlayer()
+    {
+      _cropSettings = ServiceRegistration.Get<IGeometryManager>().CropSettings;
+    }
     #endregion
 
     #region IPlayer
@@ -144,8 +153,8 @@ namespace Emulators.LibRetro
     #region Video
     public CropSettings CropSettings
     {
-      get { return null; }
-      set { }
+      get { return _cropSettings; }
+      set { _cropSettings = value; }
     }
 
     public SharpDX.Rectangle CropVideoRect
@@ -153,7 +162,7 @@ namespace Emulators.LibRetro
       get
       {
         SharpDX.Size2 videoSize = VideoSize.ToSize2();
-        return new SharpDX.Rectangle(0, 0, videoSize.Width, videoSize.Height);
+        return _cropSettings == null ? new SharpDX.Rectangle(0, 0, videoSize.Width, videoSize.Height) : _cropSettings.CropRect(videoSize.ToDrawingSize()).ToRect();
       }
     }
 
@@ -165,8 +174,8 @@ namespace Emulators.LibRetro
 
     public IGeometry GeometryOverride
     {
-      get { return null; }
-      set { }
+      get { return _geometryOverride; }
+      set { _geometryOverride = value; }
     }
 
     public object SurfaceLock
