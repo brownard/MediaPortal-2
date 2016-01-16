@@ -28,6 +28,7 @@ namespace Emulators.Models
     protected const string KEY_CONFIGURATION = "Emulator_Configuration";
     protected const string KEY_EMULATOR_TYPE = "Emulator_Type";
     protected const string KEY_WILDCARD = "Emulator_Wildcard";
+    protected const string KEY_PLATFORMS = "Platforms";
     protected const string DIALOG_SHOW_WILDCARDS = "dialog_choose_wildcard";
 
     public static readonly Guid MODEL_ID = new Guid("6C96C335-7A79-45DA-90B7-541B3C7235EF");
@@ -191,6 +192,7 @@ namespace Emulators.Models
       {
         ListItem item = new ListItem(Consts.KEY_NAME, configuration.Name);
         item.SetLabel(KEY_PATH, configuration.Path);
+        item.SetLabel(KEY_PLATFORMS, GetPlatformLabel(configuration.Platforms));
         item.AdditionalProperties[KEY_CONFIGURATION] = configuration;
         if (!removing)
           item.Command = new MethodDelegateCommand(() => EditEmulatorConfiguration(item));
@@ -248,6 +250,18 @@ namespace Emulators.Models
       var coreSettings = sm.Load<LibRetroCoreSettings>();
       coreSettings.AddOrUpdateCoreSetting(corePath, variables);
       sm.Save(coreSettings);
+    }
+
+    protected static string GetPlatformLabel(HashSet<string> platforms)
+    {
+      string platformLabel = "";
+      foreach (string platform in platforms)
+      {
+        if (platformLabel != "")
+          platformLabel += ", ";
+        platformLabel += platform;
+      }
+      return platformLabel;
     }
   }
 }

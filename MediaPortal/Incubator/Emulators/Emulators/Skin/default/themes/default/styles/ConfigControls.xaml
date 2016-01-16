@@ -20,6 +20,7 @@
               <Trigger Property="HasFocus" Value="True">
                 <Setter TargetName="EmulatorName" Property="Scroll" Value="Auto"/>
                 <Setter TargetName="EmulatorPath" Property="Scroll" Value="Auto"/>
+                <Setter TargetName="EmulatorPlatforms" Property="Scroll" Value="Auto"/>
                 <Setter Property="StackPanel.ZIndex" Value="100.0"/>
               </Trigger>
             </Button.Triggers>
@@ -41,6 +42,7 @@
               <Trigger Property="HasFocus" Value="True">
                 <Setter TargetName="EmulatorName" Property="Scroll" Value="Auto"/>
                 <Setter TargetName="EmulatorPath" Property="Scroll" Value="Auto"/>
+                <Setter TargetName="EmulatorPlatforms" Property="Scroll" Value="Auto"/>
                 <Setter TargetName="ItemControl" Property="Background">
                   <Setter.Value>
                     <SolidColorBrush Color="{ThemeResource PassiveFocusBackgroundColor}"/>
@@ -62,14 +64,18 @@
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="200"/>
+        <ColumnDefinition Width="300"/>
         <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="300"/>
       </Grid.ColumnDefinitions>
       <Label x:Name="EmulatorName" Grid.Column="0" Content="{Binding [Name]}" FontSize="{ThemeResource SmallFontSize}"
           HorizontalAlignment="Left" VerticalAlignment="Center"
           Color="{ThemeResource TextColor}"/>
       <Label x:Name="EmulatorPath" Grid.Column="1" Content="{Binding [Path]}" FontSize="{ThemeResource SmallFontSize}"
           HorizontalAlignment="Left" VerticalAlignment="Center"
+          Color="{ThemeResource HintTextColor}"/>
+      <Label x:Name="EmulatorPlatforms" Grid.Column="2" Content="{Binding [Platforms]}" FontSize="{ThemeResource SmallFontSize}"
+          HorizontalAlignment="Right" VerticalAlignment="Center"
           Color="{ThemeResource HintTextColor}"/>
     </Grid>
   </DataTemplate>
