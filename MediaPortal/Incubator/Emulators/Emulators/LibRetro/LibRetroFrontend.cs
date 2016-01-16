@@ -263,6 +263,8 @@ namespace Emulators.LibRetro
     {
       while (_doRender)
       {
+        if (!_syncToAudio)
+          WaitForRenderTime();
         RunEmulator();
         RenderFrame();
         CheckPauseState();
@@ -272,12 +274,9 @@ namespace Emulators.LibRetro
 
     protected void RunEmulator()
     {
-      if (_syncToAudio || NeedsRender())
-      {
-        _retroEmulator.Run();
-        if (_autoSave)
-          _saveHandler.AutoSave();
-      }
+      _retroEmulator.Run();
+      if (_autoSave)
+        _saveHandler.AutoSave();
     }
 
     protected void UpdateVideo()
@@ -326,14 +325,17 @@ namespace Emulators.LibRetro
       UpdateAudio();
     }
 
-    protected bool NeedsRender()
+    protected void WaitForRenderTime()
     {
       long currentTimestamp = Stopwatch.GetTimestamp();
-      double secondsPassed = (double)(currentTimestamp - _lastRenderTimestamp) / Stopwatch.Frequency;
-      if (secondsPassed < _secondsPerFrame)
-        return false;
+      double secondsRemaining = _secondsPerFrame - (double)(currentTimestamp - _lastRenderTimestamp) / Stopwatch.Frequency;
+      while (secondsRemaining > 0)
+      {
+        Thread.Sleep(TimeSpan.FromSeconds(secondsRemaining / 2));
+        currentTimestamp = Stopwatch.GetTimestamp();
+        secondsRemaining = _secondsPerFrame - (double)(currentTimestamp - _lastRenderTimestamp) / Stopwatch.Frequency;
+      }
       _lastRenderTimestamp = currentTimestamp;
-      return true;
     }
 
     protected void CheckPauseState()
