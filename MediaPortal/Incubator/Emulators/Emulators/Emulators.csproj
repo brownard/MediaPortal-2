@@ -223,6 +223,8 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Skin\BlueVision\images\A24958E2-538A-455E-A1DB-A7BB241AF7EC.jpg" />
+    <Content Include="Skin\BlueVision\themes\Titanium Extended\screens\MediaItemGameDetails.inc" />
+    <Content Include="Skin\BlueVision\themes\Titanium Extended\screens\MediaItemGameDetailsCover.inc" />
     <Content Include="Skin\default\workflow\Emulators-actions.xml" />
     <Content Include="Skin\Titanium\images\A24958E2-538A-455E-A1DB-A7BB241AF7EC.jpg" />
     <Content Include="Skin\Titanium\screens\MediaItemGameDetails.inc" />
@@ -394,6 +396,21 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Skin\default\screens\libretro_mapping_device.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Skin\BlueVision\themes\Titanium Extended\screens\GameShowItems.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Skin\BlueVision\themes\Titanium Extended\styles\EmuMediaStyles.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Skin\BlueVision\themes\Titanium Extended\styles\ConfigControls.xaml">
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
