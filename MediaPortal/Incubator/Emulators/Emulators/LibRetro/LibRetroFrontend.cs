@@ -9,6 +9,7 @@ using Emulators.LibRetro.VideoProviders;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.Settings;
+using MediaPortal.UI.Players.Video.Settings;
 using MediaPortal.UI.SkinEngine.Players;
 using MediaPortal.UI.SkinEngine.SkinManagement;
 using SharpDX.Direct3D9;
@@ -42,6 +43,7 @@ namespace Emulators.LibRetro
     protected readonly object _audioLock = new object();
     protected ManualResetEventSlim _pauseWaitHandle;
 
+    protected LibRetroSettings _settings;
     protected LibRetroEmulator _retroEmulator;
     protected LibRetroSaveStateHandler _saveHandler;
     protected ITextureProvider _textureProvider;
@@ -74,7 +76,6 @@ namespace Emulators.LibRetro
       _gamePath = gamePath;
       _saveDirectory = saveDirectory;
       _pauseWaitHandle = new ManualResetEventSlim(true);
-      _syncToAudio = true;
       _guiInitialized = true;
     }
     #endregion
@@ -110,6 +111,7 @@ namespace Emulators.LibRetro
     #region Public Methods
     public bool Init()
     {
+      _settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
       InitializeLibRetro();
       if (!LoadGame())
         return false;
@@ -124,7 +126,6 @@ namespace Emulators.LibRetro
       if (!_libretroInitialized)
         return;
       _controllerWrapper.Start();
-      _soundOutput.Play();
       _doRender = true;
       _renderThread = new Thread(DoRender);
       _renderThread.Start();
@@ -205,8 +206,19 @@ namespace Emulators.LibRetro
     {
       _secondsPerFrame = 1 / _retroEmulator.TimingInfo.VSyncRate;
       _textureProvider = new LibRetroTextureWrapper();
+      InitializeAudio();
+    }
+
+    protected void InitializeAudio()
+    {
+      VideoSettings videoSettings = ServiceRegistration.Get<ISettingsManager>().Load<VideoSettings>();
+      Guid audioRenderer;
+      if (videoSettings == null || videoSettings.AudioRenderer == null || !Guid.TryParse(videoSettings.AudioRenderer.CLSID, out audioRenderer))
+        audioRenderer = Guid.Empty;
+
+      _syncToAudio = _settings.SyncToAudio;
       _soundOutput = new LibRetroDirectSound();
-      if (!_soundOutput.Init(SkinContext.Form.Handle, (int)_retroEmulator.TimingInfo.SampleRate))
+      if (!_soundOutput.Init(SkinContext.Form.Handle, audioRenderer, (int)_retroEmulator.TimingInfo.SampleRate, _settings.AudioBufferSize))
       {
         _soundOutput.Dispose();
         _soundOutput = null;
@@ -216,10 +228,8 @@ namespace Emulators.LibRetro
 
     protected void InitializeSaveStateHandler()
     {
-      var sm = ServiceRegistration.Get<ISettingsManager>();
-      LibRetroSettings settings = sm.Load<LibRetroSettings>();
-      _autoSave = settings.AutoSave;
-      _saveHandler = new LibRetroSaveStateHandler(_retroEmulator, _gamePath, _saveDirectory, settings.AutoSaveInterval);
+      _autoSave = _settings.AutoSave;
+      _saveHandler = new LibRetroSaveStateHandler(_retroEmulator, _gamePath, _saveDirectory, _settings.AutoSaveInterval);
       _saveHandler.LoadSaveRam();
     }
 
@@ -235,8 +245,7 @@ namespace Emulators.LibRetro
 
     protected void CreateControllerWrapper()
     {
-      int maxPlayers = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>().MaxPlayers;
-      _controllerWrapper = new ControllerWrapper(maxPlayers);
+      _controllerWrapper = new ControllerWrapper(_settings.MaxPlayers);
       DeviceProxy deviceProxy = new DeviceProxy();
       List<IMappableDevice> deviceList = deviceProxy.GetDevices(false);
       MappingProxy mappingProxy = new MappingProxy();

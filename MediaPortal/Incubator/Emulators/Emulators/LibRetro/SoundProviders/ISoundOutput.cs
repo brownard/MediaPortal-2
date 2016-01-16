@@ -8,13 +8,11 @@ namespace Emulators.LibRetro.SoundProviders
 {
   public interface ISoundOutput : IDisposable
   {
-    int SampleRate { get; }
-    bool Init(IntPtr windowHandler, int sampleRate);
+    bool Init(IntPtr windowHandle, Guid audioRenderer, int sampleRate, double bufferSizeSeconds);
     bool Play();
     void Pause();
     void UnPause();
     void SetVolume(int volume);
     void WriteSamples(short[] samples, int count, bool synchronise);
-    int GetPlayedSize();
   }
 }

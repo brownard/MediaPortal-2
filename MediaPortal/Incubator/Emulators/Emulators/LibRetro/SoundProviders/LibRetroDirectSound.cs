@@ -1,7 +1,5 @@
 ﻿using MediaPortal.Common;
 using MediaPortal.Common.Logging;
-using MediaPortal.Common.Settings;
-using MediaPortal.UI.Players.Video.Settings;
 using SharpDX.DirectSound;
 using SharpDX.Multimedia;
 using System;
@@ -16,25 +14,21 @@ namespace Emulators.LibRetro.SoundProviders
 {
   public class LibRetroDirectSound : ISoundOutput
   {
+    public const double DEFAULT_BUFFER_SIZE_SECONDS = 0.25;
+
     protected DirectSound _directSound;
     protected SecondarySoundBuffer _secondaryBuffer;
-    protected int _sampleRate;
     protected int _bufferBytes;
     protected int _nextWrite;
     protected double _samplesPerMs;
+    protected bool _started;
 
-    public int SampleRate
+    public bool Init(IntPtr windowHandle, Guid audioRenderer, int sampleRate, double bufferSizeSeconds)
     {
-      get { return _sampleRate; }
-    }
-
-    public bool Init(IntPtr windowHandler, int sampleRate)
-    {
-      _sampleRate = sampleRate;
       try
       {
-        InitializeDirectSound(windowHandler);
-        InitializeAudio();
+        InitializeDirectSound(windowHandle, audioRenderer);
+        InitializeAudio(sampleRate, bufferSizeSeconds > 0 ? bufferSizeSeconds : DEFAULT_BUFFER_SIZE_SECONDS);
         return true;
       }
       catch (Exception ex)
@@ -44,23 +38,22 @@ namespace Emulators.LibRetro.SoundProviders
       }
     }
 
-    void InitializeDirectSound(IntPtr windowHandler)
+    void InitializeDirectSound(IntPtr windowHandle, Guid audioRenderer)
     {
-      VideoSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<VideoSettings>();
-      if (settings == null || settings.AudioRenderer == null || string.IsNullOrEmpty(settings.AudioRenderer.CLSID))
+      if (audioRenderer == Guid.Empty)
         _directSound = new DirectSound();
       else
-        _directSound = new DirectSound(new Guid(settings.AudioRenderer.CLSID));
+        _directSound = new DirectSound(audioRenderer);
       // Set the cooperative level to priority so the format of the primary sound buffer can be modified.
-      _directSound.SetCooperativeLevel(windowHandler, CooperativeLevel.Priority);
+      _directSound.SetCooperativeLevel(windowHandle, CooperativeLevel.Priority);
     }
 
-    protected void InitializeAudio()
+    protected void InitializeAudio(int sampleRate, double bufferSizeSeconds)
     {
-      var format = new WaveFormat(_sampleRate, 16, 2);
+      var format = new WaveFormat(sampleRate, 16, 2);
       var buffer = new SoundBufferDescription();
       buffer.Flags = BufferFlags.GlobalFocus | BufferFlags.ControlVolume;
-      buffer.BufferBytes = format.AverageBytesPerSecond / 8;
+      buffer.BufferBytes = (int)(format.AverageBytesPerSecond * bufferSizeSeconds);
       buffer.Format = format;
       buffer.AlgorithmFor3D = Guid.Empty;
       // Create a temporary sound buffer with the specific buffer settings.
@@ -68,31 +61,26 @@ namespace Emulators.LibRetro.SoundProviders
       _bufferBytes = _secondaryBuffer.Capabilities.BufferBytes;
       _samplesPerMs = format.AverageBytesPerSecond / (sizeof(short) * 1000d);
     }
-
-    public int GetPlayedSize()
-    {
-      int pPos;
-      int wPos;
-      _secondaryBuffer.GetCurrentPosition(out pPos, out wPos);
-      return wPos < _nextWrite ? wPos + _bufferBytes - _nextWrite : wPos - _nextWrite;
-    }
     
     public void WriteSamples(short[] samples, int count, bool synchronise)
     {
       if (count == 0)
         return;
-      if (synchronise)
-        Synchronize(count);
-      int bytes = GetPlayedSize();
-      if (bytes < 1)
-        return;
       if (_secondaryBuffer.Status == (int)BufferStatus.BufferLost)
         _secondaryBuffer.Restore();
-      count = Math.Min(count, bytes / 2);
+      //If synchronise and playback has been started, wait until there is enough free space
+      if (synchronise && _started)
+        Synchronize(count);
+      int samplesNeeded = GetSamplesNeeded();
+      if (samplesNeeded < 1)
+        return;
+      if (count > samplesNeeded)
+        count = samplesNeeded;
       _secondaryBuffer.Write(samples, 0, count, _nextWrite, LockFlags.None);
-      _nextWrite += count * 2;
-      if (_nextWrite >= _bufferBytes)
-        _nextWrite -= _bufferBytes;
+      IncrementWritePosition(count * 2);
+      //If playback hasn't been started and the buffer is half full, start playback
+      if (!_started && samplesNeeded - count < _bufferBytes / 4)
+        _started = Play();
     }
 
     public bool Play()
@@ -132,21 +120,35 @@ namespace Emulators.LibRetro.SoundProviders
         _secondaryBuffer.Volume = volume;
     }
 
+    protected void IncrementWritePosition(int count)
+    {
+      _nextWrite = (_nextWrite + count) % _bufferBytes;
+    }
+
     protected void Synchronize(int count)
     {
       int samplesNeeded = GetSamplesNeeded();
-      //ServiceRegistration.Get<MediaPortal.Common.Logging.ILogger>().Info("************Audio count {0} samplesneeded {1} total size {2}", count, samplesNeeded, _bufferBytes);
       while (samplesNeeded < count)
       {
         int sleepTime = (int)((count - samplesNeeded) / _samplesPerMs);
-        Thread.Sleep(Math.Max(sleepTime / 2, 1));
+        Thread.Sleep(sleepTime / 2);
         samplesNeeded = GetSamplesNeeded();
       }
     }
 
     protected int GetSamplesNeeded()
     {
-      return GetPlayedSize() / sizeof(short);
+      return GetBytesNeeded() / sizeof(short);
+    }
+
+    protected int GetBytesNeeded()
+    {
+      if (!_started)
+        return _bufferBytes - _nextWrite;
+      int pPos;
+      int wPos;
+      _secondaryBuffer.GetCurrentPosition(out pPos, out wPos);
+      return wPos < _nextWrite ? wPos + _bufferBytes - _nextWrite : wPos - _nextWrite;
     }
 
     public void Dispose()
