@@ -328,14 +328,20 @@ namespace Emulators.LibRetro
     protected void WaitForRenderTime()
     {
       long currentTimestamp = Stopwatch.GetTimestamp();
-      double secondsRemaining = _secondsPerFrame - (double)(currentTimestamp - _lastRenderTimestamp) / Stopwatch.Frequency;
+      double secondsRemaining = GetRemainingRenderTime(currentTimestamp);
       while (secondsRemaining > 0)
       {
         Thread.Sleep(TimeSpan.FromSeconds(secondsRemaining / 2));
         currentTimestamp = Stopwatch.GetTimestamp();
-        secondsRemaining = _secondsPerFrame - (double)(currentTimestamp - _lastRenderTimestamp) / Stopwatch.Frequency;
+        secondsRemaining = GetRemainingRenderTime(currentTimestamp);
       }
       _lastRenderTimestamp = currentTimestamp;
+    }
+
+    protected double GetRemainingRenderTime(long currentTimestamp)
+    {
+      double elapsed = (double)(currentTimestamp - _lastRenderTimestamp) / Stopwatch.Frequency;
+      return _secondsPerFrame - elapsed;
     }
 
     protected void CheckPauseState()
