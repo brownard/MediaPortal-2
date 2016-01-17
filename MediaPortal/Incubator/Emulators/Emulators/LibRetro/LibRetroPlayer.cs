@@ -16,7 +16,7 @@ using MediaPortal.Common.ResourceAccess;
 
 namespace Emulators.LibRetro
 {
-  public class LibRetroPlayer : ISharpDXVideoPlayer, IMediaPlaybackControl, IDisposable
+  public class LibRetroPlayer : ISharpDXVideoPlayer, IMediaPlaybackControl, IPlayerEvents, IDisposable
   {
     #region Protected Members
     protected const string AUDIO_STREAM_NAME = "Audio1";
@@ -32,6 +32,14 @@ namespace Emulators.LibRetro
     protected CropSettings _cropSettings;
     protected IGeometry _geometryOverride;
     protected ILocalFsResourceAccessor _accessor;
+    
+    // Player event delegates
+    protected PlayerEventDlgt _started = null;
+    protected PlayerEventDlgt _stateReady = null;
+    protected PlayerEventDlgt _stopped = null;
+    protected PlayerEventDlgt _ended = null;
+    protected PlayerEventDlgt _playbackStateChanged = null;
+    protected PlayerEventDlgt _playbackError = null;
     #endregion
 
     #region Ctor
@@ -75,6 +83,12 @@ namespace Emulators.LibRetro
       {
         _retro.Run();
         _state = PlayerState.Active;
+        FireStarted();
+        FireStateReady();
+      }
+      else
+      {
+        FireError();
       }
     }
 
@@ -82,6 +96,7 @@ namespace Emulators.LibRetro
     {
       Dispose();
       _state = PlayerState.Stopped;
+      FireStopped();
     }
     #endregion
 
@@ -93,14 +108,18 @@ namespace Emulators.LibRetro
 
     public void Pause()
     {
-      if (_retro != null)
-        _retro.Pause();
+      if (_retro == null || _retro.Paused)
+        return;
+      _retro.Pause();
+      FirePlaybackStateChanged();
     }
 
     public void Resume()
     {
-      if (_retro != null)
-        _retro.Unpause();
+      if (_retro == null || !_retro.Paused)
+        return;
+      _retro.Unpause();
+      FirePlaybackStateChanged();
     }
 
     public void Restart()
@@ -287,6 +306,67 @@ namespace Emulators.LibRetro
     }
 
     public void SetAudioStream(string audioStream) { }
+    #endregion
+
+    #region IPlayerEvents
+    public void InitializePlayerEvents(PlayerEventDlgt started, PlayerEventDlgt stateReady, PlayerEventDlgt stopped,
+        PlayerEventDlgt ended, PlayerEventDlgt playbackStateChanged, PlayerEventDlgt playbackError)
+    {
+      _started = started;
+      _stateReady = stateReady;
+      _stopped = stopped;
+      _ended = ended;
+      _playbackStateChanged = playbackStateChanged;
+      _playbackError = playbackError;
+    }
+
+    public void ResetPlayerEvents()
+    {
+      _started = null;
+      _stateReady = null;
+      _stopped = null;
+      _ended = null;
+      _playbackStateChanged = null;
+      _playbackError = null;
+    }
+    #endregion
+
+    #region Event handling
+    protected void FireStarted()
+    {
+      if (_started != null)
+        _started(this);
+    }
+
+    protected void FireStateReady()
+    {
+      if (_stateReady != null)
+        _stateReady(this);
+    }
+
+    protected void FireStopped()
+    {
+      if (_stopped != null)
+        _stopped(this);
+    }
+
+    protected void FireEnded()
+    {
+      if (_ended != null)
+        _ended(this);
+    }
+
+    protected void FirePlaybackStateChanged()
+    {
+      if (_playbackStateChanged != null)
+        _playbackStateChanged(this);
+    }
+
+    protected void FireError()
+    {
+      if (_playbackError != null)
+        _playbackError(this);
+    }
     #endregion
 
     #region IDisposable
