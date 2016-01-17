@@ -790,9 +790,14 @@ namespace SharpRetro.LibRetro
     {
       if (_retro != null)
       {
-        //Mupen64 crashes if deinit is called when run hasn't been called
-        if (!_firstRun)
-          _retro.retro_deinit();
+        try
+        {
+          //Mupen64 crashes if deinit is called when run hasn't been called
+          if (!_firstRun)
+            _retro.retro_deinit();
+        }
+        catch
+        { }
         _retro.Dispose();
         _retro = null;
       }

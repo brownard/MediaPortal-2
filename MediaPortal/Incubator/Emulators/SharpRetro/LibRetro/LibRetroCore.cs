@@ -668,11 +668,17 @@ namespace SharpRetro.LibRetro
     public LibRetroCore(string modulename)
     {
       dll = new InstanceDll(modulename);
+      if (!dll.IsLoaded)
+      {
+        dll = null;
+        throw new Exception("Unable to load LibRetro core. LoadLibrary failed.");
+      }
+
       if (!ConnectAllEntryPoints())
       {
         dll.Dispose();
         dll = null;
-        throw new Exception("Unable to load LibRetro core. ConnectAllEntryPoints() failed.");
+        throw new Exception("Unable to load LibRetro core. ConnectAllEntryPoints failed.");
       }
     }
 
