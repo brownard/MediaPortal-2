@@ -112,11 +112,19 @@ namespace Emulators.LibRetro
     public bool Init()
     {
       _settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
-      InitializeLibRetro();
-      if (!LoadGame())
+      try
+      {
+        InitializeLibRetro();
+        if (!LoadGame())
+          return false;
+        InitializeOutputs();
+        InitializeSaveStateHandler();
+      }
+      catch (Exception ex)
+      {
+        Logger.Error("LibRetroFrontend: Error initialising Libretro core: {0}", ex);
         return false;
-      InitializeOutputs();
-      InitializeSaveStateHandler();
+      }
       _libretroInitialized = true;
       return true;
     }
@@ -270,15 +278,24 @@ namespace Emulators.LibRetro
 
     protected void DoRender()
     {
-      while (_doRender)
+      try
       {
-        if (!_syncToAudio)
-          WaitForRenderTime();
-        RunEmulator();
-        RenderFrame();
-        CheckPauseState();
+        while (_doRender)
+        {
+          if (!_syncToAudio)
+            WaitForRenderTime();
+          RunEmulator();
+          RenderFrame();
+          CheckPauseState();
+        }
+        OnRenderThreadFinished();
       }
-      OnRenderThreadFinished();
+      catch (Exception ex)
+      {
+        Logger.Error("LibRetroFrontend: Error in DoRender: {0}", ex);
+        _retroEmulator.Dispose();
+        _retroEmulator = null;
+      }
     }
 
     protected void RunEmulator()
@@ -429,9 +446,9 @@ namespace Emulators.LibRetro
           break;
       }
     }
-    #endregion
+#endregion
 
-    #region IDisposable
+#region IDisposable
     public void Dispose()
     {
       _doRender = false;
@@ -464,6 +481,6 @@ namespace Emulators.LibRetro
         _soundOutput = null;
       }
     }
-    #endregion
+#endregion
   }
 }
