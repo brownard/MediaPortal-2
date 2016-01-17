@@ -159,6 +159,8 @@
     <Compile Include="Settings\Configuration\LibRetro\AutoSaveSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\MappingSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\MaxPlayersSetting.cs" />
+    <Compile Include="Settings\Configuration\LibRetro\AudioBufferSizeSetting.cs" />
+    <Compile Include="Settings\Configuration\LibRetro\SyncToAudioSetting.cs" />
     <Compile Include="Settings\Configuration\MinimiseOnStart.cs" />
     <Compile Include="Settings\EmulatorsSettings.cs" />
     <Compile Include="Settings\SerializeableKeyValue.cs" />

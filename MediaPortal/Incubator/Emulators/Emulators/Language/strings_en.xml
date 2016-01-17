@@ -87,6 +87,10 @@
   <string name="Emulators.Config.LibRetro.AutoSave.Help">Whether to periodically save the Libretro core's save states during gameplay</string>
   <string name="Emulators.Config.LibRetro.AutoSaveInterval">Auto save interval</string>
   <string name="Emulators.Config.LibRetro.AutoSaveInterval.Help">The number of seconds between auto saves</string>
+  <string name="Emulators.Config.LibRetro.SyncToAudio">Sync frame rate to audio</string>
+  <string name="Emulators.Config.LibRetro.SyncToAudio.Help">Enable for smoother audio at the cost of video smoothness</string>
+  <string name="Emulators.Config.LibRetro.AudioBufferSize">Audio buffer size</string>
+  <string name="Emulators.Config.LibRetro.AudioBufferSize.Help">The size in seconds of the audio buffer. A larger buffer reduces the chance of audio artifacts at the cost of increased latency</string>
 
   <string name="Emulators.LibRetro.ChoosePlayer">Choose player</string>
   <string name="Emulators.LibRetro.PlayerNumber">Player {0}</string>

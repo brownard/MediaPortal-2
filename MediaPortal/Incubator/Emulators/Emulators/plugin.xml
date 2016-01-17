@@ -252,6 +252,18 @@
         Text="[Emulators.Config.LibRetro.AutoSaveInterval]"
         HelpText="[Emulators.Config.LibRetro.AutoSaveInterval.Help]"
         ClassName="Emulators.Settings.Configuration.LibRetro.AutoSaveIntervalSetting"/>
+
+    <ConfigSetting
+        Id="SyncToAudio"
+        Text="[Emulators.Config.LibRetro.SyncToAudio]"
+        HelpText="[Emulators.Config.LibRetro.SyncToAudio.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.SyncToAudioSetting"/>
+
+    <ConfigSetting
+        Id="AudioBufferSize"
+        Text="[Emulators.Config.LibRetro.AudioBufferSize]"
+        HelpText="[Emulators.Config.LibRetro.AudioBufferSize.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.AudioBufferSizeSetting"/>
   </Register>
 
   <Register Location="/Configuration/Settings/Plugins/Emulators/Advanced">
