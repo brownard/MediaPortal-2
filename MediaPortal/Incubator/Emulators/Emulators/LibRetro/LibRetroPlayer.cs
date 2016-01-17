@@ -25,6 +25,7 @@ namespace Emulators.LibRetro
 
     protected readonly object _syncObj = new object();
     protected LibRetroFrontend _retro;
+    protected bool _isLibRetroRunning;
     protected PlayerState _state = PlayerState.Stopped;
     protected string _mediaItemTitle;
     protected bool _isMuted;
@@ -49,6 +50,40 @@ namespace Emulators.LibRetro
     }
     #endregion
 
+    #region LibRetroPlayer
+    public void SetMediaItem(LibRetroMediaItem mediaItem)
+    {
+      if (_retro != null)
+        return;
+
+      _state = PlayerState.Active;
+      string gamePath;
+      if (!string.IsNullOrEmpty(mediaItem.ExtractedPath))
+        gamePath = mediaItem.ExtractedPath;
+      else if (mediaItem.GetResourceLocator().TryCreateLocalFsAccessor(out _accessor))
+        gamePath = _accessor.LocalFileSystemPath;
+      else
+        return;
+
+      _retro = new LibRetroFrontend(mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY);
+    }
+
+    protected void RunLibRetro()
+    {
+      if (_retro.Init())
+      {
+        _retro.Run();
+        _isLibRetroRunning = true;
+        FireStarted();
+        FireStateReady();
+      }
+      else
+      {
+        FireError();
+      }
+    }
+    #endregion
+
     #region IPlayer
     public string MediaItemTitle
     {
@@ -65,36 +100,10 @@ namespace Emulators.LibRetro
       get { return _state; }
     }
 
-    public void Play(LibRetroMediaItem mediaItem)
-    {
-      if (_retro != null)
-        return;
-
-      string gamePath;
-      if (!string.IsNullOrEmpty(mediaItem.ExtractedPath))
-        gamePath = mediaItem.ExtractedPath;
-      else if (mediaItem.GetResourceLocator().TryCreateLocalFsAccessor(out _accessor))
-        gamePath = _accessor.LocalFileSystemPath;
-      else
-        return;
-      
-      _retro = new LibRetroFrontend(mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY);
-      if (_retro.Init())
-      {
-        _retro.Run();
-        _state = PlayerState.Active;
-        FireStarted();
-        FireStateReady();
-      }
-      else
-      {
-        FireError();
-      }
-    }
-
     public void Stop()
     {
       Dispose();
+      _isLibRetroRunning = false;
       _state = PlayerState.Stopped;
       FireStopped();
     }
@@ -116,10 +125,20 @@ namespace Emulators.LibRetro
 
     public void Resume()
     {
-      if (_retro == null || !_retro.Paused)
+      if (_retro == null)
         return;
-      _retro.Unpause();
-      FirePlaybackStateChanged();
+
+      if (!_isLibRetroRunning)
+      {
+        RunLibRetro();
+        return;
+      }
+
+      if (_retro.Paused)
+      {
+        _retro.Unpause();
+        FirePlaybackStateChanged();
+      }
     }
 
     public void Restart()
