@@ -26,6 +26,11 @@ namespace SharpRetro.Utils
       return ptr;
     }
 
+    ~UnmanagedResourceHeap()
+    {
+      Dispose();
+    }
+
     public void Dispose()
 		{
 			foreach (var h in hGlobals)
