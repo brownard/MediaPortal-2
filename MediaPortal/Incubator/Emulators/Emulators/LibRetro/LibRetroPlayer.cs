@@ -13,6 +13,7 @@ using MediaPortal.UI.SkinEngine;
 using MediaPortal.Common;
 using MediaPortal.Common.PathManager;
 using MediaPortal.Common.ResourceAccess;
+using MediaPortal.Common.Logging;
 
 namespace Emulators.LibRetro
 {
@@ -65,6 +66,7 @@ namespace Emulators.LibRetro
       else
         return;
 
+      ServiceRegistration.Get<ILogger>().Debug("LibRetroPlayer: Creating LibRetroFrontend: Core Path '{0}', Game Path '{1}', Save Directory '{2}'", mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY);
       _retro = new LibRetroFrontend(mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY);
     }
 
@@ -76,6 +78,7 @@ namespace Emulators.LibRetro
         _isLibRetroRunning = true;
         FireStarted();
         FireStateReady();
+        ServiceRegistration.Get<ILogger>().Debug("LibRetroPlayer: LibRetroFrontend started");
       }
       else
       {
