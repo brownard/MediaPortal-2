@@ -21,7 +21,6 @@ namespace Emulators.LibRetro.SoundProviders
     protected int _bufferBytes;
     protected int _nextWrite;
     protected double _samplesPerMs;
-    protected bool _started;
 
     public bool Init(IntPtr windowHandle, Guid audioRenderer, int sampleRate, double bufferSizeSeconds)
     {
@@ -68,8 +67,8 @@ namespace Emulators.LibRetro.SoundProviders
         return;
       if (_secondaryBuffer.Status == (int)BufferStatus.BufferLost)
         _secondaryBuffer.Restore();
-      //If synchronise and playback has been started, wait until there is enough free space
-      if (synchronise && _started)
+      //If synchronise wait until there is enough free space
+      if (synchronise)
         Synchronize(count);
       int samplesNeeded = GetSamplesNeeded();
       if (samplesNeeded < 1)
@@ -78,9 +77,6 @@ namespace Emulators.LibRetro.SoundProviders
         count = samplesNeeded;
       _secondaryBuffer.Write(samples, 0, count, _nextWrite, LockFlags.None);
       IncrementWritePosition(count * 2);
-      //If playback hasn't been started and the buffer is half full, start playback
-      if (!_started && samplesNeeded - count < _bufferBytes / 4)
-        _started = Play();
     }
 
     public bool Play()
@@ -143,8 +139,6 @@ namespace Emulators.LibRetro.SoundProviders
 
     protected int GetBytesNeeded()
     {
-      if (!_started)
-        return _bufferBytes - _nextWrite;
       int pPos;
       int wPos;
       _secondaryBuffer.GetCurrentPosition(out pPos, out wPos);

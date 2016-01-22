@@ -280,6 +280,7 @@ namespace Emulators.LibRetro
     {
       try
       {
+        _soundOutput.Play();
         while (_doRender)
         {
           if (!_syncToAudio)
