@@ -135,7 +135,7 @@ namespace Emulators.LibRetro
         return;
       _controllerWrapper.Start();
       _doRender = true;
-      _renderThread = new Thread(DoRender);
+      _renderThread = new Thread(DoRender) { Name = "LibRetroRenderThread" };
       _renderThread.Start();
     }
 
