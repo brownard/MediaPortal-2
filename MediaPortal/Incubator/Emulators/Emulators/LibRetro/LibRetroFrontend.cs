@@ -294,7 +294,8 @@ namespace Emulators.LibRetro
         _soundOutput.Play();
         while (_doRender)
         {
-          RunEmulator();
+          if (_synchronisationStrategy == null || !_synchronisationStrategy.ShouldDuplicate)
+            RunEmulator();
           RenderFrame();
           CheckPauseState();
         }
