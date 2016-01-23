@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Emulators.LibRetro.Render;
 
 namespace Emulators.LibRetro
 {
@@ -49,6 +50,7 @@ namespace Emulators.LibRetro
     protected ITextureProvider _textureProvider;
     protected ISoundOutput _soundOutput;
     protected ControllerWrapper _controllerWrapper;
+    protected SynchronisationStrategy _synchronisationStrategy;
 
     protected Thread _renderThread;
     protected volatile bool _doRender;
@@ -57,9 +59,6 @@ namespace Emulators.LibRetro
     protected bool _libretroInitialized;
     protected bool _guiInitialized;
     protected bool _isPaused;
-
-    protected double _secondsPerFrame;
-    protected long _lastRenderTimestamp;
 
     protected string _corePath;
     protected string _gamePath;
@@ -172,6 +171,8 @@ namespace Emulators.LibRetro
 
     public void ReallocGUIResources()
     {
+      if (_synchronisationStrategy != null)
+        _synchronisationStrategy.Update();
       lock (_surfaceLock)
         _guiInitialized = true;
     }
@@ -214,9 +215,10 @@ namespace Emulators.LibRetro
 
     protected void InitializeOutputs()
     {
-      _secondsPerFrame = 1 / _retroEmulator.TimingInfo.VSyncRate;
       _textureProvider = new LibRetroTextureWrapper();
       InitializeAudio();
+      if (!_syncToAudio)
+        _synchronisationStrategy = new SynchronisationStrategy(_retroEmulator.TimingInfo.VSyncRate, true);
     }
 
     protected void InitializeAudio()
@@ -285,8 +287,6 @@ namespace Emulators.LibRetro
         _soundOutput.Play();
         while (_doRender)
         {
-          if (!_syncToAudio)
-            WaitForRenderTime();
           RunEmulator();
           RenderFrame();
           CheckPauseState();
@@ -354,25 +354,6 @@ namespace Emulators.LibRetro
       UpdateAudio();
     }
 
-    protected void WaitForRenderTime()
-    {
-      long currentTimestamp = Stopwatch.GetTimestamp();
-      double secondsRemaining = GetRemainingRenderTime(currentTimestamp);
-      while (secondsRemaining > 0)
-      {
-        Thread.Sleep(TimeSpan.FromSeconds(secondsRemaining / 2));
-        currentTimestamp = Stopwatch.GetTimestamp();
-        secondsRemaining = GetRemainingRenderTime(currentTimestamp);
-      }
-      _lastRenderTimestamp = currentTimestamp;
-    }
-
-    protected double GetRemainingRenderTime(long currentTimestamp)
-    {
-      double elapsed = (double)(currentTimestamp - _lastRenderTimestamp) / Stopwatch.Frequency;
-      return _secondsPerFrame - elapsed;
-    }
-
     protected void CheckPauseState()
     {
       if (!_pauseWaitHandle.IsSet)
@@ -424,7 +405,15 @@ namespace Emulators.LibRetro
     {
       RenderDlgt dlgt = _renderDlgt;
       if (dlgt != null)
+      {
+        if (_synchronisationStrategy != null)
+          _synchronisationStrategy.Synchronise(false);
         dlgt();
+      }
+      else if (_synchronisationStrategy != null)
+      {
+        _synchronisationStrategy.Synchronise(true);
+      }
     }
 
     protected void RetroLogDlgt(LibRetroCore.RETRO_LOG_LEVEL level, string message)
@@ -482,6 +471,11 @@ namespace Emulators.LibRetro
       {
         _soundOutput.Dispose();
         _soundOutput = null;
+      }
+      if (_synchronisationStrategy != null)
+      {
+        _synchronisationStrategy.Stop();
+        _synchronisationStrategy = null;
       }
     }
 #endregion
