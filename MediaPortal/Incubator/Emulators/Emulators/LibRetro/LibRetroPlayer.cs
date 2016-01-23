@@ -14,6 +14,8 @@ using MediaPortal.Common;
 using MediaPortal.Common.PathManager;
 using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Common.Logging;
+using MediaPortal.Common.MediaManagement;
+using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 
 namespace Emulators.LibRetro
 {
@@ -26,6 +28,7 @@ namespace Emulators.LibRetro
 
     protected readonly object _syncObj = new object();
     protected LibRetroFrontend _retro;
+    protected bool _isLibretroInit;
     protected bool _isLibRetroRunning;
     protected PlayerState _state = PlayerState.Stopped;
     protected string _mediaItemTitle;
@@ -71,11 +74,18 @@ namespace Emulators.LibRetro
       string saveName = DosPathHelper.GetFileNameWithoutExtension(locator.NativeResourcePath.FileName);
       ServiceRegistration.Get<ILogger>().Debug("LibRetroPlayer: Creating LibRetroFrontend: Core Path '{0}', Game Path '{1}', Save Directory '{2}', Save Name '{3}'", mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY, saveName);
       _retro = new LibRetroFrontend(mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY, saveName);
+      _isLibretroInit = _retro.Init();
+      if (_isLibretroInit)
+      {
+        TimingInfo timingInfo = _retro.GetTimingInfo();
+        if (timingInfo != null)
+          MediaItemAspect.SetAttribute(mediaItem.Aspects, VideoAspect.ATTR_FPS, (int)timingInfo.FPS);
+      }
     }
 
     protected void RunLibRetro()
     {
-      if (_retro.Init())
+      if (_isLibretroInit)
       {
         _retro.Run();
         _isLibRetroRunning = true;

@@ -192,6 +192,13 @@ namespace Emulators.LibRetro
       LibRetroEmulator emulator = _retroEmulator;
       return emulator != null ? emulator.VideoInfo : null;
     }
+
+    public TimingInfo GetTimingInfo()
+    {
+      LibRetroEmulator emulator = _retroEmulator;
+      return emulator != null ? emulator.TimingInfo : null;
+    }
+
     #endregion
 
     #region Protected Methods
@@ -438,9 +445,9 @@ namespace Emulators.LibRetro
           break;
       }
     }
-#endregion
+    #endregion
 
-#region IDisposable
+    #region IDisposable
     public void Dispose()
     {
       _doRender = false;
@@ -478,6 +485,6 @@ namespace Emulators.LibRetro
         _synchronisationStrategy = null;
       }
     }
-#endregion
+    #endregion
   }
 }
