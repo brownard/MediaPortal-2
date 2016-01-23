@@ -15,15 +15,15 @@ namespace Emulators.LibRetro
     protected const string SAVE_RAM_EXTENSION = ".srm";
     protected int _autoSaveInterval;
     protected LibRetroEmulator _retroEmulator;
-    protected string _gamePath;
+    protected string _saveName;
     protected string _saveDirectory;
     protected DateTime _lastSaveTime = DateTime.MinValue;
     protected byte[] _lastSaveRam;
 
-    public LibRetroSaveStateHandler(LibRetroEmulator retroEmulator, string gamePath, string saveDirectory, int autoSaveInterval)
+    public LibRetroSaveStateHandler(LibRetroEmulator retroEmulator, string saveName, string saveDirectory, int autoSaveInterval)
     {
       _retroEmulator = retroEmulator;
-      _gamePath = gamePath;
+      _saveName = saveName;
       _saveDirectory = saveDirectory;
       _autoSaveInterval = autoSaveInterval;
     }
@@ -101,7 +101,7 @@ namespace Emulators.LibRetro
 
     protected string GetSaveFile(string extension)
     {
-      return Path.Combine(_saveDirectory, Path.GetFileNameWithoutExtension(_gamePath) + extension);
+      return Path.Combine(_saveDirectory, _saveName + extension);
     }
 
     protected static bool ShouldSave(byte[] original, byte[] updated)

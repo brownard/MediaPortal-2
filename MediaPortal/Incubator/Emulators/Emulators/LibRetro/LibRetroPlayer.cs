@@ -58,16 +58,19 @@ namespace Emulators.LibRetro
         return;
 
       _state = PlayerState.Active;
+      IResourceLocator locator = mediaItem.GetResourceLocator();
+
       string gamePath;
       if (!string.IsNullOrEmpty(mediaItem.ExtractedPath))
         gamePath = mediaItem.ExtractedPath;
-      else if (mediaItem.GetResourceLocator().TryCreateLocalFsAccessor(out _accessor))
+      else if (locator.TryCreateLocalFsAccessor(out _accessor))
         gamePath = _accessor.LocalFileSystemPath;
       else
         return;
 
-      ServiceRegistration.Get<ILogger>().Debug("LibRetroPlayer: Creating LibRetroFrontend: Core Path '{0}', Game Path '{1}', Save Directory '{2}'", mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY);
-      _retro = new LibRetroFrontend(mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY);
+      string saveName = DosPathHelper.GetFileNameWithoutExtension(locator.NativeResourcePath.FileName);
+      ServiceRegistration.Get<ILogger>().Debug("LibRetroPlayer: Creating LibRetroFrontend: Core Path '{0}', Game Path '{1}', Save Directory '{2}', Save Name '{3}'", mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY, saveName);
+      _retro = new LibRetroFrontend(mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY, saveName);
     }
 
     protected void RunLibRetro()
