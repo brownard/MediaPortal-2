@@ -35,7 +35,6 @@ namespace Emulators.LibRetro.Render
 
     public void Synchronise(bool force)
     {
-      double fps = SkinContext.RenderStrategy.TargetFrameRate;
       if (force || !_doVSync || System.Windows.Forms.Form.ActiveForm != SkinContext.Form)
         WaitForRenderTime();
     }
