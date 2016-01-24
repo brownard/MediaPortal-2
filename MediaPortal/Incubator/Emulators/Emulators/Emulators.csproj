@@ -117,6 +117,7 @@
     <Compile Include="LibRetro\Controllers\XInput\XInputControllerCache.cs" />
     <Compile Include="LibRetro\Controllers\XInput\XInputMapper.cs" />
     <Compile Include="LibRetro\GLContexts\FBORenderContextProvider.cs" />
+    <Compile Include="LibRetro\Render\RefreshRateHelper.cs" />
     <Compile Include="LibRetro\Render\SynchronisationStrategy.cs" />
     <Compile Include="LibRetro\Settings\LibRetroCoreSettings.cs" />
     <Compile Include="LibRetro\LibRetroFrontend.cs" />

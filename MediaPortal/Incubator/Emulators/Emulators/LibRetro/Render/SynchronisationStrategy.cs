@@ -1,4 +1,5 @@
 ﻿using MediaPortal.Common;
+using MediaPortal.Common.Logging;
 using MediaPortal.UI.Presentation.Players;
 using MediaPortal.UI.Presentation.Screens;
 using MediaPortal.UI.SkinEngine.SkinManagement;
@@ -27,13 +28,11 @@ namespace Emulators.LibRetro.Render
     public SynchronisationStrategy(double targetFps, bool allowVSync)
     {
       _targetFps = targetFps;
-      _actualFps = SkinContext.CurrentDisplayMode.RefreshRate;
       _secondsPerFrame = 1d / targetFps;
       _allowVSync = allowVSync;
       _currentFrame = 1;
       if (_allowVSync)
       {
-        CalculateDuplicateFrames();
         IScreenControl screenControl = ServiceRegistration.Get<IScreenControl>();
         screenControl.VideoPlayerSynchronizationStrategy.SynchronizeToVideoPlayerFramerate += SyncToPlayer;
       }
@@ -41,7 +40,7 @@ namespace Emulators.LibRetro.Render
 
     public bool ShouldDuplicate
     {
-      get { return _currentFrame % _duplicateFrameNum == 0; }
+      get { return _duplicateFrameNum > 0 && _currentFrame % _duplicateFrameNum == 0; }
     }
 
     public void Synchronise(bool force)
@@ -72,7 +71,10 @@ namespace Emulators.LibRetro.Render
 
     protected void SyncToPlayer(IVideoPlayer player)
     {
-      double fps = SkinContext.RenderStrategy.TargetFrameRate;
+      _actualFps = RefreshRateHelper.GetRefreshRate(SkinContext.Form);      
+      CalculateDuplicateFrames();
+      ServiceRegistration.Get<ILogger>().Debug("LibRetroSynchronisationStrategy: Target FPS {0}, Actual FPS {1}", _targetFps, _actualFps);
+
       if (player is LibRetroPlayer)
         SetVSyncStrategy();
       else
@@ -118,7 +120,8 @@ namespace Emulators.LibRetro.Render
 
     protected void CalculateDuplicateFrames()
     {
-      _duplicateFrameNum = (int)(_actualFps / (_actualFps - _targetFps));
+      if (_actualFps > _targetFps)
+        _duplicateFrameNum = (int)(_actualFps / (_actualFps - _targetFps));
     }
   }
 }
