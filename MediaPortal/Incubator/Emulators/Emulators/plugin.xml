@@ -254,6 +254,12 @@
         ClassName="Emulators.Settings.Configuration.LibRetro.AutoSaveIntervalSetting"/>
 
     <ConfigSetting
+        Id="EnableVSync"
+        Text="[Emulators.Config.LibRetro.EnableVSync]"
+        HelpText="[Emulators.Config.LibRetro.EnableVSync.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.EnableVSyncSetting"/>
+
+    <ConfigSetting
         Id="SyncToAudio"
         Text="[Emulators.Config.LibRetro.SyncToAudio]"
         HelpText="[Emulators.Config.LibRetro.SyncToAudio.Help]"

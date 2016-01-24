@@ -159,6 +159,7 @@
     <Compile Include="Settings\Configuration\EmulatorsConfigSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\AutoSaveIntervalSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\AutoSaveSetting.cs" />
+    <Compile Include="Settings\Configuration\LibRetro\EnableVSyncSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\MappingSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\MaxPlayersSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\AudioBufferSizeSetting.cs" />
