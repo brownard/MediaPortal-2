@@ -75,12 +75,12 @@ namespace Emulators.LibRetro
       ServiceRegistration.Get<ILogger>().Debug("LibRetroPlayer: Creating LibRetroFrontend: Core Path '{0}', Game Path '{1}', Save Directory '{2}', Save Name '{3}'", mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY, saveName);
       _retro = new LibRetroFrontend(mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY, saveName);
       _isLibretroInit = _retro.Init();
-      if (_isLibretroInit)
-      {
-        TimingInfo timingInfo = _retro.GetTimingInfo();
-        if (timingInfo != null)
-          MediaItemAspect.SetAttribute(mediaItem.Aspects, VideoAspect.ATTR_FPS, (int)timingInfo.FPS);
-      }
+      //if (_isLibretroInit)
+      //{
+      //  TimingInfo timingInfo = _retro.GetTimingInfo();
+      //  if (timingInfo != null)
+      //    MediaItemAspect.SetAttribute(mediaItem.Aspects, VideoAspect.ATTR_FPS, (int)timingInfo.FPS);
+      //}
     }
 
     protected void RunLibRetro()
