@@ -20,6 +20,9 @@ namespace Emulators.LibRetro.Settings
     public int AutoSaveInterval { get; set; }
 
     [Setting(SettingScope.User, false)]
+    public bool EnableVSync { get; set; }
+
+    [Setting(SettingScope.User, false)]
     public bool SyncToAudio { get; set; }
 
     [Setting(SettingScope.User, LibRetroDirectSound.DEFAULT_BUFFER_SIZE_SECONDS)]

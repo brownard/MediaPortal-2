@@ -225,7 +225,7 @@ namespace Emulators.LibRetro
       _textureProvider = new LibRetroTextureWrapper();
       InitializeAudio();
       if (!_syncToAudio)
-        _synchronisationStrategy = new SynchronisationStrategy(_retroEmulator.TimingInfo.VSyncRate, true);
+        _synchronisationStrategy = new SynchronisationStrategy(_retroEmulator.TimingInfo.VSyncRate, _settings.EnableVSync);
     }
 
     protected void InitializeAudio()
