@@ -88,7 +88,8 @@ namespace Emulators.LibRetro.GLContexts
 
     public void Dispose()
     {
-      Destroy();
+      if (_isInit)
+        Destroy();
     }
   }
 }
