@@ -35,10 +35,6 @@ namespace Emulators.LibRetro
     }
     #endregion
 
-    #region Consts
-    protected const int AUTO_SAVE_INTERVAL = 10 * 1000;
-    #endregion
-
     #region Protected Members
     protected readonly object _surfaceLock = new object();
     protected readonly object _audioLock = new object();
