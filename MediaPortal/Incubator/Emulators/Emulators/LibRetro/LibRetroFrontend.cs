@@ -371,6 +371,7 @@ namespace Emulators.LibRetro
     {
       _saveHandler.SaveSaveRam();
       _retroEmulator.UnloadGame();
+      _retroEmulator.DeInit();
     }
     #endregion
 

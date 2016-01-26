@@ -409,6 +409,14 @@ namespace SharpRetro.LibRetro
       fixed (byte* p = &serializedState[0])
         _retro.retro_unserialize((IntPtr)p, (uint)serializedState.Length);
     }
+
+    public void DeInit()
+    {
+      //Mupen64 crashes if deinit is called when run hasn't been called
+      if (!_firstRun)
+        _retro.retro_deinit();
+    }
+
     #endregion
 
     #region Load
@@ -789,15 +797,7 @@ namespace SharpRetro.LibRetro
     public void Dispose()
     {
       if (_retro != null)
-      {
-        try
-        {
-          //Mupen64 crashes if deinit is called when run hasn't been called
-          if (!_firstRun)
-            _retro.retro_deinit();
-        }
-        catch
-        { }
+      {        
         _retro.Dispose();
         _retro = null;
       }
