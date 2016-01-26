@@ -339,20 +339,7 @@ namespace SharpRetro.LibRetro
     /// </summary>
     public void Run()
     {
-      if (_firstRun)
-      {
-        if (_glContext != null)
-          _glContext.Init(_maxVideoWidth, _maxVideoHeight, _depthBuffer, _stencilBuffer, _bottomLeftOrigin);
-        if (retro_hw_context_reset_cb != null)
-          retro_hw_context_reset_cb();
-        _firstRun = false;
-      }
-      else if (_glContext != null && _glContext.NeedsReset)
-      {
-        if (retro_hw_context_reset_cb != null)
-          retro_hw_context_reset_cb();
-        _glContext.NeedsReset = false;
-      }
+      CheckGLContextStatus();
       _retro.retro_run();
     }
 
@@ -410,16 +397,36 @@ namespace SharpRetro.LibRetro
         _retro.retro_unserialize((IntPtr)p, (uint)serializedState.Length);
     }
 
+    /// <summary>
+    /// Deinitialize the LibRetro core
+    /// </summary>
     public void DeInit()
     {
       //Mupen64 crashes if deinit is called when run hasn't been called
       if (!_firstRun)
         _retro.retro_deinit();
     }
-
     #endregion
 
-    #region Load
+    #region Protected Methods
+    protected void CheckGLContextStatus()
+    {
+      if (_firstRun)
+      {
+        if (_glContext != null)
+          _glContext.Init(_maxVideoWidth, _maxVideoHeight, _depthBuffer, _stencilBuffer, _bottomLeftOrigin);
+        if (retro_hw_context_reset_cb != null)
+          retro_hw_context_reset_cb();
+        _firstRun = false;
+      }
+      else if (_glContext != null && _glContext.NeedsReset)
+      {
+        if (retro_hw_context_reset_cb != null)
+          retro_hw_context_reset_cb();
+        _glContext.NeedsReset = false;
+      }
+    }
+
     protected bool Load(LibRetroCore.retro_game_info gameInfo)
     {
       if (!_retro.retro_load_game(ref gameInfo))
@@ -449,6 +456,17 @@ namespace SharpRetro.LibRetro
         VSyncDen = 10000000
       };
       return true;
+    }
+
+    protected void UpdateVideoInfo(int width, int height, float dar)
+    {
+      VideoInfo videoInfo = new VideoInfo()
+      {
+        BufferWidth = width,
+        BufferHeight = height,
+        DAR = dar
+      };
+      _videoInfo = videoInfo;
     }
     #endregion
 
@@ -637,13 +655,7 @@ namespace SharpRetro.LibRetro
     protected bool SetGeometry(IntPtr data)
     {
       LibRetroCore.retro_game_geometry geometry = *((LibRetroCore.retro_game_geometry*)data.ToPointer());
-      VideoInfo videoInfo = new VideoInfo()
-      {
-        BufferWidth = (int)geometry.base_width,
-        BufferHeight = (int)geometry.base_height,
-        DAR = geometry.aspect_ratio
-      };
-      _videoInfo = videoInfo;
+      UpdateVideoInfo((int)geometry.base_width, (int)geometry.base_height, geometry.aspect_ratio);
       return true;
     }
 
@@ -655,13 +667,7 @@ namespace SharpRetro.LibRetro
       if (data == IntPtr.Zero) // dup frame
         return;
 
-      VideoInfo videoInfo = new VideoInfo()
-      {
-        BufferWidth = (int)width,
-        BufferHeight = (int)height,
-        DAR = _videoInfo.DAR
-      };
-      _videoInfo = videoInfo;
+      UpdateVideoInfo((int)width, (int)height, _videoInfo.DAR);
 
       //Frame buffer ready
       if (data.ToInt32() == LibRetroCore.RETRO_HW_FRAME_BUFFER_VALID)
