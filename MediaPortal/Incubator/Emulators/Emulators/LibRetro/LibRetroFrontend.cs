@@ -1,7 +1,5 @@
 ﻿using Emulators.LibRetro.Controllers;
-using Emulators.LibRetro.Controllers.Hid;
 using Emulators.LibRetro.Controllers.Mapping;
-using Emulators.LibRetro.Controllers.XInput;
 using Emulators.LibRetro.GLContexts;
 using Emulators.LibRetro.Settings;
 using Emulators.LibRetro.SoundProviders;
@@ -292,11 +290,10 @@ namespace Emulators.LibRetro
     {
       try
       {
-        _soundOutput.Play();
+        OnRenderThreadStarted();
         while (_doRender)
         {
-          if (_synchronisationStrategy == null || !_synchronisationStrategy.ShouldDuplicate)
-            RunEmulator();
+          RunEmulator();
           RenderFrame();
           CheckPauseState();
         }
@@ -315,6 +312,9 @@ namespace Emulators.LibRetro
 
     protected void RunEmulator()
     {
+      if (_synchronisationStrategy != null && _synchronisationStrategy.ShouldDuplicate)
+        return;
+
       _retroEmulator.Run();
       if (_autoSave)
         _saveHandler.AutoSave();
@@ -323,16 +323,10 @@ namespace Emulators.LibRetro
     protected void RenderFrame()
     {
       RenderDlgt dlgt = _renderDlgt;
+      if (_synchronisationStrategy != null)
+        _synchronisationStrategy.Synchronise(dlgt == null);
       if (dlgt != null)
-      {
-        if (_synchronisationStrategy != null)
-          _synchronisationStrategy.Synchronise(false);
         dlgt();
-      }
-      else if (_synchronisationStrategy != null)
-      {
-        _synchronisationStrategy.Synchronise(true);
-      }
     }
 
     protected void CheckPauseState()
@@ -343,6 +337,11 @@ namespace Emulators.LibRetro
         _pauseWaitHandle.Wait();
         OnRenderThreadUnPaused();
       }
+    }
+
+    protected void OnRenderThreadStarted()
+    {
+      _soundOutput.Play();
     }
 
     protected void OnRenderThreadPaused()
