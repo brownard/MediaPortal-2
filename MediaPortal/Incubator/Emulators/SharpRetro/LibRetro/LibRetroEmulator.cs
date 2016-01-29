@@ -344,13 +344,43 @@ namespace SharpRetro.LibRetro
     }
 
     /// <summary>
-    /// Retrieves memory data of the specified type from the LibRetro core.
+    /// Returns the size of the specified memory type
+    /// </summary>
+    /// <param name="memoryType">The type of memory</param>
+    /// <returns>The size of the memory type</returns>
+    public int GetMemorySize(LibRetroCore.RETRO_MEMORY memoryType)
+    {
+      return (int)_retro.retro_get_memory_size(memoryType);
+    }
+
+    /// <summary>
+    /// Writes the specified memory data to the provided buffer
+    /// </summary>
+    /// <param name="memoryType">The type of memory</param>
+    /// <param name="buffer">A buffer to write the memory to. This should be at least the size returned by <see cref="GetMemorySize(LibRetroCore.RETRO_MEMORY)"/></param>
+    /// <returns>True if the memory data was successfully retrieved</returns>
+    public bool GetMemoryData(LibRetroCore.RETRO_MEMORY memoryType, byte[] buffer)
+    {
+      int size = (int)_retro.retro_get_memory_size(memoryType);
+      if (size == 0)
+        return false;
+      IntPtr ptr = _retro.retro_get_memory_data(memoryType);
+      if (ptr == IntPtr.Zero)
+        return false;
+      Marshal.Copy(ptr, buffer, 0, size);
+      return true;
+    }
+
+    /// <summary>
+    /// Convenience method for <see cref="GetMemoryData(LibRetroCore.RETRO_MEMORY, byte[])"/> that allocates and returns a buffer containing the memory data
     /// </summary>
     /// <param name="memoryType">The type of memory to retrieve</param>
     /// <returns>A byte array containing the memory data</returns>
-    public byte[] SaveState(LibRetroCore.RETRO_MEMORY memoryType)
+    public byte[] GetMemoryData(LibRetroCore.RETRO_MEMORY memoryType)
     {
       uint size = _retro.retro_get_memory_size(memoryType);
+      if (size == 0)
+        return null;
       IntPtr ptr = _retro.retro_get_memory_data(memoryType);
       if (ptr == IntPtr.Zero)
         return null;
@@ -363,38 +393,64 @@ namespace SharpRetro.LibRetro
     /// Loads memory data of the specified type into the LibRetro core
     /// </summary>
     /// <param name="memoryType">The type of memory to load</param>
-    /// <param name="saveBuffer">A byte array containing the memory data</param>
-    public void LoadState(LibRetroCore.RETRO_MEMORY memoryType, byte[] saveBuffer)
+    /// <param name="buffer">A byte array containing the memory data</param>
+    /// <returns>True if the memory data was successfully loaded</returns>
+    public bool SetMemoryData(LibRetroCore.RETRO_MEMORY memoryType, byte[] buffer)
     {
-      if (saveBuffer == null || saveBuffer.Length == 0)
-        return;
       uint size = _retro.retro_get_memory_size(memoryType);
       IntPtr ptr = _retro.retro_get_memory_data(memoryType);
-      if (ptr != IntPtr.Zero)
-        Marshal.Copy(saveBuffer, 0, ptr, Math.Min(saveBuffer.Length, (int)size));
+      if (ptr == IntPtr.Zero)
+        return false;
+      Marshal.Copy(buffer, 0, ptr, Math.Min(buffer.Length, (int)size));
+      return true;
     }
 
     /// <summary>
-    /// Serializes the current state of the LibRetro core into a byte array
+    /// Gets the size of the serialized state
     /// </summary>
-    /// <returns>A byte array containg the current state of the LibRetro core</returns>
+    /// <returns>The size of the serialized state</returns>
+    public int GetSerializeSize()
+    {
+      return (int)_retro.retro_serialize_size();
+    }
+
+    /// <summary>
+    /// Serializes the current state of the LibRetro core to the provided buffer
+    /// </summary>
+    /// <param name="buffer">The buffer to write the serialized state to. This should be at least the size returned by <see cref="GetSerializeSize"/></param>
+    /// <returns>True if the state was successfully serialized</returns>
+    public bool Serialize(byte[] buffer)
+    {
+      uint size = _retro.retro_serialize_size();
+      if (size == 0)
+        return false;
+      fixed (byte* p = &buffer[0])
+        return _retro.retro_serialize((IntPtr)p, size);
+    }
+
+    /// <summary>
+    /// Convenience method for <see cref="Serialize(byte[])"/> that allocates and returns a buffer containing the serialized state
+    /// </summary>
+    /// <returns>A buffer containing the current state of the LibRetro core if successful, otherwise null</returns>
     public byte[] Serialize()
     {
       uint size = _retro.retro_serialize_size();
       byte[] buffer = new byte[size];
+      bool result;
       fixed (byte* p = &buffer[0])
-        _retro.retro_serialize((IntPtr)p, size);
-      return buffer;
+        result = _retro.retro_serialize((IntPtr)p, size);
+      return result ? buffer : null;
     }
 
     /// <summary>
     /// Unserializes a serialized state into the LibRetro core
     /// </summary>
-    /// <param name="serializedState">A byte array containing the state</param>
-    public void Unserialize(byte[] serializedState)
+    /// <param name="buffer">A buffer containing the serialized state</param>
+    public void Unserialize(byte[] buffer)
     {
-      fixed (byte* p = &serializedState[0])
-        _retro.retro_unserialize((IntPtr)p, (uint)serializedState.Length);
+      uint size = _retro.retro_serialize_size();
+      fixed (byte* p = &buffer[0])
+        _retro.retro_unserialize((IntPtr)p, size);
     }
 
     /// <summary>

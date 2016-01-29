@@ -18,6 +18,7 @@ namespace Emulators.LibRetro
     protected string _saveName;
     protected string _saveDirectory;
     protected DateTime _lastSaveTime = DateTime.MinValue;
+    protected byte[] _currentSaveRam;
     protected byte[] _lastSaveRam;
 
     public LibRetroSaveStateHandler(LibRetroEmulator retroEmulator, string saveName, string saveDirectory, int autoSaveInterval)
@@ -34,14 +35,14 @@ namespace Emulators.LibRetro
       byte[] saveRam;
       if (TryReadFromFile(saveFile, out saveRam))
       {
-        _retroEmulator.LoadState(LibRetroCore.RETRO_MEMORY.SAVE_RAM, saveRam);
+        _retroEmulator.SetMemoryData(LibRetroCore.RETRO_MEMORY.SAVE_RAM, saveRam);
         _lastSaveRam = saveRam;
       }
     }
 
     public void SaveSaveRam()
     {
-      byte[] saveRam = _retroEmulator.SaveState(LibRetroCore.RETRO_MEMORY.SAVE_RAM);
+      byte[] saveRam = _retroEmulator.GetMemoryData(LibRetroCore.RETRO_MEMORY.SAVE_RAM);
       if (saveRam == null)
         return;
       TryWriteToFile(GetSaveFile(SAVE_RAM_EXTENSION), saveRam);
@@ -53,15 +54,29 @@ namespace Emulators.LibRetro
       if ((now - _lastSaveTime).TotalSeconds < _autoSaveInterval)
         return;
       _lastSaveTime = now;
-      byte[] saveRam = _retroEmulator.SaveState(LibRetroCore.RETRO_MEMORY.SAVE_RAM);
-      if (!ShouldSave(_lastSaveRam, saveRam))
+      CheckSaveBuffer();
+      if (!_retroEmulator.GetMemoryData(LibRetroCore.RETRO_MEMORY.SAVE_RAM, _currentSaveRam) || !ShouldSave(_lastSaveRam, _currentSaveRam))
         return;
       string savePath = GetSaveFile(SAVE_RAM_EXTENSION);
-      if (TryWriteToFile(savePath, saveRam))
+      if (TryWriteToFile(savePath, _currentSaveRam))
       {
         ServiceRegistration.Get<ILogger>().Debug("LibRetroSaveStateHandler: Auto saved to '{0}'", GetSaveFile(SAVE_RAM_EXTENSION));
-        _lastSaveRam = saveRam;
+        SwitchBuffers();
       }
+    }
+
+    protected void CheckSaveBuffer()
+    {
+      int size = _retroEmulator.GetMemorySize(LibRetroCore.RETRO_MEMORY.SAVE_RAM);
+      if (_currentSaveRam == null || _currentSaveRam.Length < size)
+        _currentSaveRam = new byte[size];
+    }
+
+    protected void SwitchBuffers()
+    {
+      byte[] dummy = _lastSaveRam;
+      _lastSaveRam = _currentSaveRam;
+      _currentSaveRam = dummy;
     }
 
     protected bool TryReadFromFile(string path, out byte[] fileBytes)
