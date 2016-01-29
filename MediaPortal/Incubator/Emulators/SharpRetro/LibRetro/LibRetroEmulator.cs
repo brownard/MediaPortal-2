@@ -28,11 +28,9 @@ namespace SharpRetro.LibRetro
     LibRetroCore.retro_input_state_t retro_input_state_cb;
     LibRetroCore.retro_log_printf_t retro_log_printf_cb;
     LibRetroCore.retro_perf_callback retro_perf_callback = new LibRetroCore.retro_perf_callback();
+    LibRetroCore.retro_rumble_interface retro_rumble_interface = new LibRetroCore.retro_rumble_interface();
     LibRetroCore.retro_hw_get_current_framebuffer_t retro_hw_get_current_framebuffer_cb;
     LibRetroCore.retro_hw_get_proc_address_t retro_hw_get_proc_address_cb;
-    LibRetroCore.retro_hw_context_reset_t retro_hw_context_reset_cb;
-    LibRetroCore.retro_hw_context_reset_t retro_hw_context_destroy_cb;
-    LibRetroCore.retro_rumble_interface retro_rumble_interface = new LibRetroCore.retro_rumble_interface();
     #endregion
 
     #region Protected Members
@@ -53,9 +51,6 @@ namespace SharpRetro.LibRetro
     protected int[] _videoBuffer;
     protected int _maxVideoWidth;
     protected int _maxVideoHeight;
-    protected bool _depthBuffer;
-    protected bool _stencilBuffer;
-    protected bool _bottomLeftOrigin;
     protected AudioBuffer _audioBuffer;
 
     protected SystemInfo _systemInfo;
@@ -86,8 +81,6 @@ namespace SharpRetro.LibRetro
       retro_input_poll_cb = new LibRetroCore.retro_input_poll_t(retro_input_poll);
       retro_input_state_cb = new LibRetroCore.retro_input_state_t(retro_input_state);
       retro_log_printf_cb = new LibRetroCore.retro_log_printf_t(retro_log_printf);
-      retro_hw_get_current_framebuffer_cb = new LibRetroCore.retro_hw_get_current_framebuffer_t(retro_hw_get_current_framebuffer);
-      retro_hw_get_proc_address_cb = new LibRetroCore.retro_hw_get_proc_address_t(retro_hw_get_proc_address);
       retro_rumble_interface.set_rumble_state = new LibRetroCore.retro_set_rumble_state_t(retro_set_rumble_state);
 
       //no way (need new mechanism) to check for SSSE3, MMXEXT, SSE4, SSE42
@@ -467,20 +460,12 @@ namespace SharpRetro.LibRetro
     #region Protected Methods
     protected void CheckGLContextStatus()
     {
-      if (_firstRun)
-      {
-        if (_glContext != null)
-          _glContext.Init(_maxVideoWidth, _maxVideoHeight, _depthBuffer, _stencilBuffer, _bottomLeftOrigin);
-        if (retro_hw_context_reset_cb != null)
-          retro_hw_context_reset_cb();
-        _firstRun = false;
-      }
-      else if (_glContext != null && _glContext.NeedsReset)
-      {
-        if (retro_hw_context_reset_cb != null)
-          retro_hw_context_reset_cb();
-        _glContext.NeedsReset = false;
-      }
+      if (!_firstRun)
+        return;
+
+      _firstRun = false;
+      if (_glContext != null)
+        _glContext.Create(_maxVideoWidth, _maxVideoHeight);
     }
 
     protected bool Load(LibRetroCore.retro_game_info gameInfo)
@@ -696,14 +681,17 @@ namespace SharpRetro.LibRetro
       if (_glContext == null)
         return false;
 
+      retro_hw_get_current_framebuffer_cb = new LibRetroCore.retro_hw_get_current_framebuffer_t(_glContext.GetCurrentFramebuffer);
       info->get_current_framebuffer = Marshal.GetFunctionPointerForDelegate(retro_hw_get_current_framebuffer_cb);
+      retro_hw_get_proc_address_cb = new LibRetroCore.retro_hw_get_proc_address_t(_glContext.GetProcAddress);
       info->get_proc_address = Marshal.GetFunctionPointerForDelegate(retro_hw_get_proc_address_cb);
-      retro_hw_context_reset_cb = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_reset);
+
+      LibRetroCore.retro_hw_context_reset_t contextReset = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_reset);
+      LibRetroCore.retro_hw_context_reset_t contextDestroy = null;
       if (info->context_destroy != IntPtr.Zero)
-        retro_hw_context_destroy_cb = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_destroy);
-      _depthBuffer = info->depth;
-      _stencilBuffer = info->stencil;
-      _bottomLeftOrigin = info->bottom_left_origin;
+        contextDestroy = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_destroy);
+
+      _glContext.Init(info->depth, info->stencil, info->bottom_left_origin, contextReset, contextDestroy);
       return true;
     }
 
@@ -745,16 +733,6 @@ namespace SharpRetro.LibRetro
         VideoBlitter.Blit(_pixelFormat, data, dst, (int)width, (int)height, (int)pitch);
 
       OnVideoReady();
-    }
-
-    uint retro_hw_get_current_framebuffer()
-    {
-      return _glContext != null ? _glContext.FrameBufferId : 0;
-    }
-
-    IntPtr retro_hw_get_proc_address(IntPtr sym)
-    {
-      return _glContext != null ? _glContext.GetProcAddress(sym) : IntPtr.Zero;
     }
     #endregion
 
