@@ -516,13 +516,12 @@ namespace SharpRetro.LibRetro
 
     protected void UpdateVideoInfo(int width, int height, float dar)
     {
-      VideoInfo videoInfo = new VideoInfo()
+      _videoInfo = new VideoInfo()
       {
         BufferWidth = width,
         BufferHeight = height,
         DAR = dar
       };
-      _videoInfo = videoInfo;
     }
     #endregion
 
