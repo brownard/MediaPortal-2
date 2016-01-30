@@ -9,6 +9,6 @@ namespace Emulators.Game
 {
   public interface IGameLauncher
   {
-    bool LaunchGame(MediaItem mediaItem);
+    void LaunchGame(MediaItem mediaItem);
   }
 }

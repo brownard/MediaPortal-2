@@ -35,6 +35,7 @@
     <Model Id="495F94B5-9E13-4548-BAAA-6DB424B58267" Name="RemoveEmulatorAction" ClassName="Emulators.Actions.RemoveEmulatorAction"/>
     <Model Id="940A868F-8360-42DA-B652-F3924B747CB5" Name="ClearGoodMergeCacheModel" ClassName="Emulators.Models.ClearGoodMergeCacheModel"/>
     <Model Id="FD908F54-B37E-408F-9D53-EB72A2912617" Name="LibRetroMappingModel" ClassName="Emulators.Models.LibRetroMappingModel"/>
+    <Model Id="ED801805-42FC-47A2-B978-64B61BD48FE9" Name="QueryCreateConfigurationModel" ClassName="Emulators.Models.QueryCreateConfigurationModel"/>
   </Register>
 
   <Register Location="/Services">

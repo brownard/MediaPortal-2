@@ -9,13 +9,11 @@ using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
-using MediaPortal.Common.Messaging;
 using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Common.Services.Settings;
 using MediaPortal.Common.SystemCommunication;
 using MediaPortal.UI.Control.InputManager;
 using MediaPortal.UI.Presentation.Screens;
-using MediaPortal.UI.Presentation.Workflow;
 using MediaPortal.UI.ServerCommunication;
 using MediaPortal.UiComponents.Media.Models;
 using System;
@@ -34,112 +32,48 @@ namespace Emulators.Game
     protected MediaItem _mediaItem;
     protected ILocalFsResourceAccessor _resourceAccessor;
     protected EmulatorProcess _emulatorProcess;
-    protected Guid _doConfigureDialogHandle = Guid.Empty;
-    protected AsynchronousMessageQueue _messageQueue;
     protected SettingsChangeWatcher<EmulatorsSettings> _settingsChangeWatcher = new SettingsChangeWatcher<EmulatorsSettings>();
 
-    public GameLauncher()
-    {
-      _messageQueue = new AsynchronousMessageQueue(this, new [] { DialogManagerMessaging.CHANNEL });
-      _messageQueue.MessageReceived += OnMessageReceived;
-      _messageQueue.Start();
-    }
-
-    private void OnMessageReceived(AsynchronousMessageQueue queue, SystemMessage message)
-    {
-      if (message.ChannelName == DialogManagerMessaging.CHANNEL)
-      {
-        DialogManagerMessaging.MessageType messageType = (DialogManagerMessaging.MessageType)message.MessageType;
-        if (messageType == DialogManagerMessaging.MessageType.DialogClosed)
-        {
-          Guid dialogHandle = (Guid)message.MessageData[DialogManagerMessaging.DIALOG_HANDLE];
-          bool doConfigure = false;
-          lock (_syncRoot)
-            if (_doConfigureDialogHandle == dialogHandle)
-            {
-              _doConfigureDialogHandle = Guid.Empty;
-              DialogResult dialogResult = (DialogResult)message.MessageData[DialogManagerMessaging.DIALOG_RESULT];
-              if (dialogResult == DialogResult.Yes)
-                doConfigure = true;
-            }
-          if (doConfigure)
-            DoConfigureNewEmulator();
-        }
-      }
-    }
-
-    public bool LaunchGame(MediaItem mediaItem)
+    public void LaunchGame(MediaItem mediaItem)
     {
       _mediaItem = mediaItem;
       EmulatorConfiguration configuration;
       if (!TryGetConfiguration(mediaItem, out configuration))
       {
-        ShowNoConfigurationDialog();
-        return false;
+        QueryCreateConfigurationModel.Instance().QueryCreateConfiguration();
+        return;
       }
 
       lock (_syncRoot)
       {
         Cleanup();
         if (!mediaItem.GetResourceLocator().TryCreateLocalFsAccessor(out _resourceAccessor))
-          return false;
+          return;
         ServiceRegistration.Get<ILogger>().Debug("GameLauncher: Created LocalFsAccessor: {0}, {1}", _resourceAccessor.CanonicalLocalResourcePath, _resourceAccessor.LocalFileSystemPath);
 
-        IEnumerable<string> goodmergeItems;
-        if (MediaItemAspect.TryGetAttribute(mediaItem.Aspects, GoodMergeAspect.ATTR_GOODMERGE_ITEMS, out goodmergeItems))
-        {
-          string selectedItem;
-          MediaItemAspect.TryGetAttribute(mediaItem.Aspects, GoodMergeAspect.ATTR_LAST_PLAYED_ITEM, out selectedItem);
-          LaunchGoodmergeGame(_resourceAccessor, goodmergeItems, selectedItem, configuration);
-          return true;
-        }
-        return LaunchGame(_resourceAccessor.LocalFileSystemPath, configuration, false);
-      }
-    }    
-
-    protected void LaunchGoodmergeGame(ILocalFsResourceAccessor accessor, IEnumerable<string> goodmergeItems, string lastPlayedItem, EmulatorConfiguration configuration)
-    {
-      GoodMergeSelectModel.Instance().Extract(accessor, goodmergeItems, lastPlayedItem, e => OnExtractionCompleted(e, configuration));
-    }
-
-    protected void OnExtractionCompleted(ExtractionCompletedEventArgs e, EmulatorConfiguration configuration)
-    {
-      lock (_syncRoot)
-      {
-        Cleanup();
-        if (e.Success)
-        {
-          UpdateMediaItem(_mediaItem, GoodMergeAspect.ATTR_LAST_PLAYED_ITEM, e.ExtractedItem);
-          LaunchGame(e.ExtractedPath, configuration, true);
-        }
+        if (mediaItem.Aspects.ContainsKey(GoodMergeAspect.ASPECT_ID))
+          LaunchGoodmergeGame(configuration);
+        else if (configuration.IsLibRetro)
+          LaunchLibRetroGame(_resourceAccessor.LocalFileSystemPath, configuration, false);
         else
-        {
-          ShowErrorDialog("[Emulators.ExtractionError.Label]");
-        }
+          LaunchGame(_resourceAccessor.LocalFileSystemPath, configuration);
       }
     }
 
-    protected bool LaunchGame(string path, EmulatorConfiguration configuration, bool isExtractedPath)
+    protected void LaunchGame(string path, EmulatorConfiguration configuration)
     {
-      if (configuration.IsLibRetro)
-        return LaunchLibRetroGame(path, configuration, isExtractedPath);
-
       _emulatorProcess = new EmulatorProcess(path, configuration, _mappedKey);
       _emulatorProcess.Exited += ProcessExited;
-      bool result = TryStartProcess();
-      if (result)
-      {
-        OnGameStarted();
-      }
-      else
+      if (!_emulatorProcess.TryStart())
       {
         Cleanup();
         ShowErrorDialog("[Emulators.LaunchError.Label]");
+        return;
       }
-      return result;
+      OnGameStarted();
     }
 
-    protected bool LaunchLibRetroGame(string path, EmulatorConfiguration configuration, bool isExtractedPath)
+    protected void LaunchLibRetroGame(string path, EmulatorConfiguration configuration, bool isExtractedPath)
     {
       LibRetroMediaItem mediaItem = new LibRetroMediaItem(configuration.Path, _mediaItem.Aspects);
       if (isExtractedPath)
@@ -147,7 +81,35 @@ namespace Emulators.Game
       else
         Cleanup();
       PlayItemsModel.CheckQueryPlayAction(mediaItem);
-      return true;
+    }
+
+    protected void LaunchGoodmergeGame(EmulatorConfiguration configuration)
+    {
+      IEnumerable<string> goodmergeItems;
+      if (!MediaItemAspect.TryGetAttribute(_mediaItem.Aspects, GoodMergeAspect.ATTR_GOODMERGE_ITEMS, out goodmergeItems))
+        return;
+      string selectedItem;
+      MediaItemAspect.TryGetAttribute(_mediaItem.Aspects, GoodMergeAspect.ATTR_LAST_PLAYED_ITEM, out selectedItem);
+      GoodMergeSelectModel.Instance().Extract(_resourceAccessor, goodmergeItems, selectedItem, e => OnExtractionCompleted(e, configuration));
+    }
+
+    protected void OnExtractionCompleted(ExtractionCompletedEventArgs e, EmulatorConfiguration configuration)
+    {
+      lock (_syncRoot)
+      {
+        Cleanup();
+        if (!e.Success)
+        {
+          ShowErrorDialog("[Emulators.ExtractionError.Label]");
+          return;
+        }
+
+        UpdateMediaItem(_mediaItem, GoodMergeAspect.ATTR_LAST_PLAYED_ITEM, e.ExtractedItem);
+        if (configuration.IsLibRetro)
+          LaunchLibRetroGame(e.ExtractedPath, configuration, true);
+        else
+          LaunchGame(e.ExtractedPath, configuration);
+      }
     }
 
     protected bool TryGetConfiguration(MediaItem mediaItem, out EmulatorConfiguration configuration)
@@ -157,19 +119,6 @@ namespace Emulators.Game
       if (mediaItem == null || !MediaItemAspect.TryGetAttribute(mediaItem.Aspects, MediaAspect.ATTR_MIME_TYPE, out mimeType))
         return false;
       return ServiceRegistration.Get<IEmulatorManager>().TryGetConfiguration(mimeType, out configuration);
-    }
-
-    protected bool TryStartProcess()
-    {
-      try
-      {
-        return _emulatorProcess.Start();
-      }
-      catch (Exception ex)
-      {
-        ServiceRegistration.Get<ILogger>().Error("GameLauncher: Error starting process", ex);
-      }
-      return false;
     }
 
     protected void ProcessExited(object sender, EventArgs e)
@@ -189,7 +138,6 @@ namespace Emulators.Game
     {
       Cleanup();
       if (_settingsChangeWatcher.Settings.MinimiseOnGameStart)
-        //SkinContext.Form.BeginInvoke((System.Windows.Forms.MethodInvoker)(() => ServiceRegistration.Get<IScreenControl>().Restore()));
         ServiceRegistration.Get<IScreenControl>().Restore();
     }
 
@@ -211,18 +159,6 @@ namespace Emulators.Game
     protected void ShowErrorDialog(string text)
     {
       ServiceRegistration.Get<IDialogManager>().ShowDialog("[Emulators.Dialog.Error.Header]", text, DialogType.OkDialog, false, DialogButtonType.Ok);
-    }
-
-    protected void ShowNoConfigurationDialog()
-    {
-      Guid doConfigureHandle = ServiceRegistration.Get<IDialogManager>().ShowDialog("[Emulators.ConfigureEmulatorNow.Header]", "[Emulators.ConfigureEmulatorNow.Label]", DialogType.YesNoDialog, false, DialogButtonType.Yes);
-      lock(_syncRoot)
-        _doConfigureDialogHandle = doConfigureHandle;
-    }
-
-    protected void DoConfigureNewEmulator()
-    {
-      ServiceRegistration.Get<IWorkflowManager>().NavigatePush(EmulatorConfigurationModel.STATE_OVERVIEW);
     }
 
     protected void Cleanup()

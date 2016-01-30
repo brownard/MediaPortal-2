@@ -153,6 +153,7 @@
     <Compile Include="Models\Navigation\GameItem.cs" />
     <Compile Include="Models\Navigation\MappingItems.cs" />
     <Compile Include="Models\PathBrowser.cs" />
+    <Compile Include="Models\QueryCreateConfigurationModel.cs" />
     <Compile Include="Models\Sorting\SortByRatingDesc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings\Configuration\ClearGoodMergeCache.cs" />

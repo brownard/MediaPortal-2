@@ -36,6 +36,19 @@ namespace Emulators.Emulator
         Exited(this, e);
     }
 
+    public bool TryStart()
+    {
+      try
+      {
+        return Start();
+      }
+      catch (Exception ex)
+      {
+        ServiceRegistration.Get<ILogger>().Error("EmulatorProcess: Error starting process", ex);
+        return false;
+      }
+    }
+
     public bool Start()
     {
       string path = CreatePath(_emulatorConfiguration, _gamePath);
