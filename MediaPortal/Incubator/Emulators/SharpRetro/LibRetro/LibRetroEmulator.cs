@@ -657,20 +657,17 @@ namespace SharpRetro.LibRetro
 
     protected bool SetPixelFormat(IntPtr data)
     {
-      LibRetroCore.RETRO_PIXEL_FORMAT fmt = 0;
-      int[] tmp = new int[1];
-      Marshal.Copy(data, tmp, 0, 1);
-      fmt = (LibRetroCore.RETRO_PIXEL_FORMAT)tmp[0];
-      switch (fmt)
+      LibRetroCore.RETRO_PIXEL_FORMAT format = (LibRetroCore.RETRO_PIXEL_FORMAT)Marshal.ReadInt32(data);
+      switch (format)
       {
         case LibRetroCore.RETRO_PIXEL_FORMAT.RGB565:
         case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB1555:
         case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB8888:
-          _pixelFormat = fmt;
+          _pixelFormat = format;
           Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "New pixel format set: {0}", _pixelFormat);
           return true;
         default:
-          Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Unrecognized pixel format: {0}", (int)_pixelFormat);
+          Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Unrecognized pixel format: {0}", (int)format);
           return false;
       }
     }
