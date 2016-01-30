@@ -16,6 +16,8 @@ namespace Emulators.LibRetro.GLContexts
     [DllImport("opengl32", EntryPoint = "wglGetProcAddress", ExactSpelling = true)]
     private static extern IntPtr wglGetProcAddress(IntPtr function_name);
 
+    protected LibRetroCore.retro_hw_get_current_framebuffer_t _getCurrentFramebufferDlgt;
+    protected LibRetroCore.retro_hw_get_proc_address_t _getProcAddressDlgt;
     protected LibRetroCore.retro_hw_context_reset_t _contextReset;
     protected LibRetroCore.retro_hw_context_reset_t _contextDestroy;
     protected byte[] _pixels;
@@ -24,14 +26,25 @@ namespace Emulators.LibRetro.GLContexts
     protected int _maxWidth;
     protected int _maxHeight;
 
-    public byte[] Pixels
-    {
-      get { return _pixels; }
-    }
-
     public bool BottomLeftOrigin
     {
       get { return _bottomLeftOrigin; }
+    }
+
+    public LibRetroCore.retro_hw_get_current_framebuffer_t GetCurrentFramebufferDlgt
+    {
+      get { return _getCurrentFramebufferDlgt; }
+    }
+
+    public LibRetroCore.retro_hw_get_proc_address_t GetProcAddressDlgt
+    {
+      get { return _getProcAddressDlgt; }
+    }
+
+    public RetroGLContextProvider()
+    {
+      _getCurrentFramebufferDlgt = new LibRetroCore.retro_hw_get_current_framebuffer_t(GetCurrentFramebuffer);
+      _getProcAddressDlgt = new LibRetroCore.retro_hw_get_proc_address_t(GetProcAddress);
     }
 
     public void Init(bool depth, bool stencil, bool bottomLeftOrigin, LibRetroCore.retro_hw_context_reset_t contextReset, LibRetroCore.retro_hw_context_reset_t contextDestroy)
@@ -54,30 +67,25 @@ namespace Emulators.LibRetro.GLContexts
         _contextReset();
     }
 
-    public IntPtr GetProcAddress(IntPtr sym)
+    public byte[] GetPixels(int width, int height)
+    {
+      if (deviceContextHandle == IntPtr.Zero)
+        return null;
+      //  Set the read buffer.
+      gl.ReadBuffer(OpenGL.GL_COLOR_ATTACHMENT0_EXT);
+      gl.ReadPixels(0, 0, width, height, OpenGL.GL_BGRA, OpenGL.GL_UNSIGNED_BYTE, _pixels);
+      return _pixels;
+    }
+
+    protected IntPtr GetProcAddress(IntPtr sym)
     {
       IntPtr ptr = wglGetProcAddress(sym);
       return ptr;
     }
 
-    public uint GetCurrentFramebuffer()
+    protected uint GetCurrentFramebuffer()
     {
       return frameBufferID;
-    }
-
-    public void OnFrameBufferReady(int width, int height)
-    {
-      UpdatePixels(width, height);
-    }
-
-    protected void UpdatePixels(int width, int height)
-    {
-      if (deviceContextHandle != IntPtr.Zero)
-      {
-        //  Set the read buffer.
-        gl.ReadBuffer(OpenGL.GL_COLOR_ATTACHMENT0_EXT);
-        gl.ReadPixels(0, 0, width, height, OpenGL.GL_BGRA, OpenGL.GL_UNSIGNED_BYTE, _pixels);
-      }
     }
 
     public void Dispose()

@@ -8,20 +8,27 @@ namespace SharpRetro.LibRetro
 {
   public class VideoInfo
   {
+    public VideoInfo(int width, int height, float dar)
+    {
+      Width = width;
+      Height = height;
+      DAR = dar;
+    }
+
+    public int Width { get; set; }
+    public int Height { get; set; }
     public float DAR { get; set; }
-    public int BufferWidth { get; set; }
-    public int BufferHeight { get; set; }
 
     public int VirtualWidth
     {
       get
       {
         if (DAR <= 0)
-          return BufferWidth;
+          return Width;
         else if (DAR > 1.0f)
-          return (int)(BufferHeight * DAR);
+          return (int)(Height * DAR);
         else
-          return BufferWidth;
+          return Width;
       }
     }
 
@@ -30,11 +37,11 @@ namespace SharpRetro.LibRetro
       get
       {
         if (DAR <= 0)
-          return BufferHeight;
+          return Height;
         if (DAR < 1.0f)
-          return (int)(BufferWidth / DAR);
+          return (int)(Width / DAR);
         else
-          return BufferHeight;
+          return Height;
       }
     }
   }

@@ -8,14 +8,13 @@ namespace SharpRetro.LibRetro
 {
   public class TimingInfo
   {
-    public int VSyncNum { get; set; }
-    public int VSyncDen { get; set; }
+    public TimingInfo(double fps, double sampleRate)
+    {
+      FPS = fps;
+      SampleRate = sampleRate;
+    }
+
     public double FPS { get; set; }
     public double SampleRate { get; set; }
-
-    public double VSyncRate
-    {
-      get { return VSyncNum / (double)VSyncDen; }
-    }
   }
 }
