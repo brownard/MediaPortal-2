@@ -698,17 +698,12 @@ namespace SharpRetro.LibRetro
       for (;;)
       {
         IntPtr pKey = new IntPtr(*variablesPtr++);
-        IntPtr pValue = new IntPtr(*variablesPtr++);
         if (pKey == IntPtr.Zero)
           break;
-        string key = Marshal.PtrToStringAnsi(pKey);
-        string value = Marshal.PtrToStringAnsi(pValue);
-        var vd = new VariableDescription() { Name = key };
-        var parts = value.Split(';');
-        vd.Description = parts[0];
-        vd.Options = parts[1].TrimStart(' ').Split('|');
-        _variables.AddOrUpdate(vd);
-        Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Set variable: Name: {0}, Description: {1}, Options: {2}", key, parts[0], parts[1].TrimStart(' '));
+        IntPtr pValue = new IntPtr(*variablesPtr++);
+        VariableDescription variable = new VariableDescription(pKey, pValue);
+        _variables.AddOrUpdate(variable);
+        Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Set variable: {0}", variable);
       }
       return true;
     }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -57,6 +58,18 @@ namespace SharpRetro.LibRetro
   {
     protected string _selectedOption;
 
+    public VariableDescription() { }
+
+    public VariableDescription(IntPtr keyPtr, IntPtr variablePtr)
+    {
+      string key = Marshal.PtrToStringAnsi(keyPtr);
+      string[] parts = Marshal.PtrToStringAnsi(variablePtr).Split(';');
+
+      Name = key;
+      Description = parts[0];
+      Options = parts[1].TrimStart(' ').Split('|');
+    }
+
     public string Name { get; set; }
     public string Description { get; set; }
     public string[] Options { get; set; }
@@ -78,7 +91,7 @@ namespace SharpRetro.LibRetro
 
     public override string ToString()
     {
-      return string.Format("{0} ({1}) = ({2})", Name, Description, string.Join("|", Options));
+      return string.Format("Name: {0}, Description: {1}, Options: {2}", Name, Description, string.Join("|", Options));
     }
   }
 }
