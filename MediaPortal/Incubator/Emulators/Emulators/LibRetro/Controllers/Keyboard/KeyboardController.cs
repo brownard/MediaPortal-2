@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SharpRetro.LibRetro;
-using LibRetro = SharpRetro.LibRetro.LibRetroCore;
 using Emulators.LibRetro.Controllers.Mapping;
 
 namespace Emulators.LibRetro.Controllers.Keyboard
