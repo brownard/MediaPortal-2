@@ -62,7 +62,7 @@ namespace Emulators.LibRetro.Controllers.Keyboard
       if (_analogMappings.TryGetValue(positive, out key) && Keyboard.IsKeyDown(key))
         positivePosition = short.MaxValue;
       if (_analogMappings.TryGetValue(negative, out key) && Keyboard.IsKeyDown(key))
-        negativePosition = short.MaxValue;
+        negativePosition = short.MinValue;
 
       if (positivePosition != 0 && negativePosition == 0)
         return positivePosition;
