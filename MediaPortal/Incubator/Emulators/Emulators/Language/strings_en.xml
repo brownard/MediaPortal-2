@@ -97,6 +97,7 @@
   <string name="Emulators.LibRetro.ChoosePlayer">Choose player</string>
   <string name="Emulators.LibRetro.PlayerNumber">Player {0}</string>
   <string name="Emulators.LibRetro.InputDevice">Input device</string>
+  <string name="Emulators.LibRetro.InputDevice.None">None</string>
   <string name="Emulators.LibRetro.SelectDevice">Select device...</string>
   <string name="Emulators.LibRetro.Mappings">Mappings</string>
   <string name="Emulators.LibRetro.PressInput">Press input...</string>

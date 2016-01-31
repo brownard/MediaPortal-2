@@ -22,7 +22,6 @@ namespace Emulators.LibRetro.Controllers.Mapping
     {
       var sm = ServiceRegistration.Get<ISettingsManager>();
       _settings = sm.Load<LibRetroMappingSettings>();
-      _settings.Ports.Sort((p1, p2) => p1.Port.CompareTo(p2.Port));
     }
 
     public List<PortMapping> PortMappings
@@ -37,17 +36,21 @@ namespace Emulators.LibRetro.Controllers.Mapping
 
     public PortMapping GetPortMapping(int port)
     {
-      if (_settings.Ports.Count < port + 1)
-        return new PortMapping() { Port = port };
-      return _settings.Ports[port];
+      PortMapping portMapping = _settings.Ports.FirstOrDefault(p => p.Port == port);
+      if (portMapping == null)
+        portMapping = new PortMapping() { Port = port };
+      return portMapping;
     }
 
     public void AddPortMapping(PortMapping portMapping)
     {
-      if (_settings.Ports.Count < portMapping.Port + 1)
-        _settings.Ports.Add(portMapping);
-      else
-        _settings.Ports[portMapping.Port] = portMapping;
+      RemovePortMapping(portMapping.Port);
+      _settings.Ports.Add(portMapping);
+    }
+
+    public void RemovePortMapping(int port)
+    {
+      _settings.Ports.RemoveAll(p => p.Port == port);
     }
 
     public RetroPadMapping GetDeviceMapping(IMappableDevice device)
@@ -66,6 +69,7 @@ namespace Emulators.LibRetro.Controllers.Mapping
 
     public void Save()
     {
+      _settings.Ports.Sort((p1, p2) => p1.Port.CompareTo(p2.Port));
       var sm = ServiceRegistration.Get<ISettingsManager>();
       sm.Save(_settings);
     }
