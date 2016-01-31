@@ -14,7 +14,6 @@ namespace Emulators.LibRetro.Controllers.Keyboard
   {
     public static readonly Guid DEVICE_ID = new Guid("7910C3E3-F3D2-405F-B09B-8C73EEFB6C70");
     
-    protected uint _port;
     protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, Keys> _buttonMappings;
     protected Dictionary<RetroAnalogDevice, Keys> _analogMappings;
 
@@ -47,7 +46,7 @@ namespace Emulators.LibRetro.Controllers.Keyboard
     public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)
     {
       Keys key;
-      return port == _port && _buttonMappings.TryGetValue(button, out key) && Keyboard.IsKeyDown(key);
+      return _buttonMappings.TryGetValue(button, out key) && Keyboard.IsKeyDown(key);
     }
 
     public short GetAnalog(uint port, LibRetroCore.RETRO_DEVICE_INDEX_ANALOG index, LibRetroCore.RETRO_DEVICE_ID_ANALOG direction)
