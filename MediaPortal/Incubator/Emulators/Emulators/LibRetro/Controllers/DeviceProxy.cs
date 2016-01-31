@@ -1,4 +1,5 @@
 ﻿using Emulators.LibRetro.Controllers.Hid;
+using Emulators.LibRetro.Controllers.Keyboard;
 using Emulators.LibRetro.Controllers.Mapping;
 using Emulators.LibRetro.Controllers.XInput;
 using SharpDX.XInput;
@@ -21,6 +22,7 @@ namespace Emulators.LibRetro.Controllers
       List<IMappableDevice> deviceList = new List<IMappableDevice>();
       AddXInputDevices(deviceList, connectedOnly);
       AddHidDevices(deviceList);
+      deviceList.Add(new KeyboardController());
       return deviceList;
     }
 

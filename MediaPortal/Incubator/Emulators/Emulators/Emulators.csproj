@@ -106,6 +106,8 @@
     <Compile Include="LibRetro\Controllers\Hid\XBox360HidMapping.cs" />
     <Compile Include="LibRetro\Controllers\Keyboard\Keyboard.cs" />
     <Compile Include="LibRetro\Controllers\Keyboard\KeyboardController.cs" />
+    <Compile Include="LibRetro\Controllers\Keyboard\KeyboardListener.cs" />
+    <Compile Include="LibRetro\Controllers\Keyboard\KeyboardMapper.cs" />
     <Compile Include="LibRetro\Controllers\Mapping\PortMapping.cs" />
     <Compile Include="LibRetro\Controllers\Mapping\DeviceInput.cs" />
     <Compile Include="LibRetro\Controllers\Mapping\IDeviceMapper.cs" />
