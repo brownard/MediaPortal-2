@@ -28,6 +28,8 @@ namespace Emulators.Common
     public const string METADATAEXTRACTOR_ID_STR = "7ED0605F-E3B3-4B4A-AD58-AE56BC17A3E5";
     public static Guid METADATAEXTRACTOR_ID = new Guid(METADATAEXTRACTOR_ID_STR);
 
+    protected static readonly Guid ISORESOURCEPROVIDER_ID = new Guid("112728B1-F71D-4284-9E5C-3462E8D3C74D");
+
     protected static ICollection<MediaCategory> MEDIA_CATEGORIES = new List<MediaCategory>();
     protected static MediaCategory _gameCategory;
     protected static ConcurrentDictionary<string, MediaCategory> _platformCategories = new ConcurrentDictionary<string, MediaCategory>();
@@ -72,9 +74,11 @@ namespace Emulators.Common
     {
       try
       {
-        if (forceQuickMode)
+        //Exclude mounted files contained within isos. The importer seems to try and import files in isos even if
+        //we successfully import the iso file itself??
+        if (forceQuickMode || mediaItemAccessor.ParentProvider.Metadata.ResourceProviderId == ISORESOURCEPROVIDER_ID)
           return false;
-
+        
         IFileSystemResourceAccessor fsra = mediaItemAccessor as IFileSystemResourceAccessor;
         if (fsra == null || !fsra.IsFile)
           return false;
