@@ -56,15 +56,15 @@
     <Compile Include="Matchers\IOnlineMatcher.cs" />
     <Compile Include="Matchers\MemoryCache.cs" />
     <Compile Include="MobyGames\AbstractMobyGamesResult.cs" />
-    <Compile Include="MobyGames\IMobyGamesResult.cs" />
     <Compile Include="MobyGames\MobyGamesCoverArt.cs" />
-    <Compile Include="MobyGames\MobyGamesDownloader.cs" />
     <Compile Include="MobyGames\MobyGamesResult.cs" />
     <Compile Include="MobyGames\MobyGamesSearchResults.cs" />
     <Compile Include="MobyGames\MobyGamesWrapper.cs" />
     <Compile Include="Settings\CommonSettings.cs" />
     <Compile Include="TheGamesDb\TheGamesDbSettings.cs" />
     <Compile Include="WebRequests\AbstractDownloader.cs" />
+    <Compile Include="WebRequests\HtmlDownloader.cs" />
+    <Compile Include="WebRequests\IHtmlDeserializable.cs" />
     <Compile Include="WebRequests\XmlDownloader.cs" />
     <Compile Include="FanartProvider\GameFanartTypes.cs" />
     <Compile Include="Games\GameAspect.cs" />

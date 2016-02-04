@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Emulators.Common.WebRequests;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ using System.Web;
 
 namespace Emulators.Common.MobyGames
 {
-  abstract class AbstractMobyGamesResult : IMobyGamesResult
+  abstract class AbstractMobyGamesResult : IHtmlDeserializable
   {
     public abstract bool Deserialize(string response);
         

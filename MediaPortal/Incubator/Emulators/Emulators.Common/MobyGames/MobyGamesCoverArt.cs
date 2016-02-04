@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Emulators.Common.WebRequests;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Emulators.Common.MobyGames
 {
-  class MobyGamesCoverArt : IMobyGamesResult
+  class MobyGamesCoverArt : IHtmlDeserializable
   {
     protected static readonly Regex FRONT_REGEX = new Regex(@"background-image:url\(([^\)]*)[^>]*>(<[^>]*>\s*){4}Front Cover");
     protected static readonly Regex BACK_REGEX = new Regex(@"background-image:url\(([^\)]*)[^>]*>(<[^>]*>\s*){4}Back Cover");

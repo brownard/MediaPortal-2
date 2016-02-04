@@ -13,6 +13,7 @@ using System.IO;
 using System.Web;
 using System.Globalization;
 using Emulators.Common.NameProcessing;
+using Emulators.Common.WebRequests;
 
 namespace Emulators.Common.MobyGames
 {
@@ -37,7 +38,7 @@ namespace Emulators.Common.MobyGames
     protected const string COVER_PATH = "cover-art";
     protected static readonly string _matchesSettingsFile = Path.Combine(CACHE_PATH, "Matches.xml");
 
-    protected MobyGamesDownloader _downloader = new MobyGamesDownloader() { Encoding = Encoding.UTF8 };
+    protected HtmlDownloader _downloader = new HtmlDownloader() { Encoding = Encoding.UTF8 };
 
     public Guid MatcherId
     {

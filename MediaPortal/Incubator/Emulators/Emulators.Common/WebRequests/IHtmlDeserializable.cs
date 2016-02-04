@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Emulators.Common.MobyGames
+namespace Emulators.Common.WebRequests
 {
-  interface IMobyGamesResult
+  public interface IHtmlDeserializable
   {
-    bool Deserialize(string response);
+    bool Deserialize(string html);
   }
 }
