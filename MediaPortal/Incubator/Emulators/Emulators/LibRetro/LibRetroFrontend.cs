@@ -282,6 +282,8 @@ namespace Emulators.LibRetro
 
     protected bool LoadGame()
     {
+      if (_retroEmulator.SupportsNoGame)
+        return _retroEmulator.LoadGame(new LibRetroCore.retro_game_info());
       byte[] gameData = _retroEmulator.SystemInfo.NeedsFullPath ? null : File.ReadAllBytes(_gamePath);
       return _retroEmulator.LoadGame(_gamePath, gameData);
     }

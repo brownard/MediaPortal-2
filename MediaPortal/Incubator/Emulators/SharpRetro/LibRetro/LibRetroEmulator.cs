@@ -180,6 +180,11 @@ namespace SharpRetro.LibRetro
       set { _canDupe = value; }
     }
 
+    public bool SupportsNoGame
+    {
+      get { return _supportsNoGame; }
+    }
+
     /// <summary>
     /// Gets the suggested performance level of the frontend.
     /// Values range from 1 - 15, where 1 is low performance and 15 high performance.
