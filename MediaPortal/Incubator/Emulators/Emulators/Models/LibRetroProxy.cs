@@ -118,7 +118,11 @@ namespace Emulators.Models
         return;
       SystemInfo coreInfo = _retro.SystemInfo;
       _name = coreInfo.LibraryName;
-      _extensions = coreInfo.ValidExtensions.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries).Select(s => "." + s.ToLowerInvariant()).ToList();
+      if (coreInfo.ValidExtensions != null)
+        _extensions = coreInfo.ValidExtensions.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries).Select(s => "." + s.ToLowerInvariant()).ToList();
+      else
+        _extensions = new List<string>();
+
       _variables = _retro.Variables.GetAllVariables();
       UpdateVariablesFromSettings();
       CreateVariableItems();
