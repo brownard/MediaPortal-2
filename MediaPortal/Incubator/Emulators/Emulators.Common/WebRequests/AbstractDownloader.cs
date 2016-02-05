@@ -34,7 +34,12 @@ namespace Emulators.Common.WebRequests
 
     public virtual bool DownloadFile(string url, string downloadFile)
     {
-      if (File.Exists(downloadFile))
+      return DownloadFile(url, downloadFile, false);
+    }
+
+    public virtual bool DownloadFile(string url, string downloadFile, bool overwrite)
+    {
+      if (! overwrite && File.Exists(downloadFile))
         return true;
       try
       {
