@@ -69,6 +69,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controller\IRetroController.cs" />
+    <Compile Include="Info\Firmware.cs" />
+    <Compile Include="Info\CoreInfo.cs" />
     <Compile Include="LibRetro\AudioBuffer.cs" />
     <Compile Include="LibRetro\LibRetroCore.cs" />
     <Compile Include="LibRetro\LibRetroEmulator.cs" />
