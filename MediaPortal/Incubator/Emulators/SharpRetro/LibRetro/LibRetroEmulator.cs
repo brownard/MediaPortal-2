@@ -716,14 +716,13 @@ namespace SharpRetro.LibRetro
       Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "SET_HW_RENDER: {0}, version={1}.{2}, dbg/cache={3}/{4}, depth/stencil = {5}/{6}{7}", info->context_type, info->version_minor, info->version_major, info->debug_context, info->cache_context, info->depth, info->stencil, info->bottom_left_origin ? " (bottomleft)" : "");
       if (_glContext == null)
         return false;
-      
+
       info->get_current_framebuffer = Marshal.GetFunctionPointerForDelegate(_glContext.GetCurrentFramebufferDlgt);
       info->get_proc_address = Marshal.GetFunctionPointerForDelegate(_glContext.GetProcAddressDlgt);
 
       LibRetroCore.retro_hw_context_reset_t contextReset = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_reset);
-      LibRetroCore.retro_hw_context_reset_t contextDestroy = null;
-      if (info->context_destroy != IntPtr.Zero)
-        contextDestroy = Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_destroy);
+      LibRetroCore.retro_hw_context_reset_t contextDestroy = info->context_destroy != IntPtr.Zero ?
+        Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_destroy) : null;
       _glContext.Init(info->depth, info->stencil, info->bottom_left_origin, contextReset, contextDestroy);
       return true;
     }
