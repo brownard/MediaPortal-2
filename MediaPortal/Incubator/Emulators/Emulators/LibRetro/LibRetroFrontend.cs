@@ -294,7 +294,11 @@ namespace Emulators.LibRetro
 
     protected bool LoadGame()
     {
-      if (_retroEmulator.SupportsNoGame)
+      //A core can support running without a game as well as with a game.
+      //There is currently no way to check which case is needed as we currently use a dummy game
+      //to import/load standalone cores.
+      //Checking ValidExtensions is currently a hack which works better than nothing
+      if (_retroEmulator.SupportsNoGame && _retroEmulator.SystemInfo.ValidExtensions == null)
         return _retroEmulator.LoadGame(new LibRetroCore.retro_game_info());
       byte[] gameData = _retroEmulator.SystemInfo.NeedsFullPath ? null : File.ReadAllBytes(_gamePath);
       return _retroEmulator.LoadGame(_gamePath, gameData);
