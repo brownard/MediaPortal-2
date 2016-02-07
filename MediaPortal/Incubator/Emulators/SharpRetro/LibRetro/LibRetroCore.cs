@@ -548,6 +548,74 @@ namespace SharpRetro.LibRetro
       public retro_set_rumble_state_t set_rumble_state;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_subsystem_memory_info
+    {
+      /* The extension associated with a memory type, e.g. "psram". */
+      public string extension;
+
+      /* The memory type for retro_get_memory(). This should be at 
+       * least 0x100 to avoid conflict with standardized 
+       * libretro memory types. */
+      uint type;
+    };
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_subsystem_rom_info
+    {
+      /* Describes what the content is (SGB BIOS, GB ROM, etc). */
+      public string desc; //const char *
+
+      /* Same definition as retro_get_system_info(). */
+      public string valid_extensions; //const char *
+
+      /* Same definition as retro_get_system_info(). */
+      [MarshalAs(UnmanagedType.U1)]
+      public bool need_fullpath;
+
+      /* Same definition as retro_get_system_info(). */
+      [MarshalAs(UnmanagedType.U1)]
+      public bool block_extract;
+
+      /* This is set if the content is required to load a game. 
+       * If this is set to false, a zeroed-out retro_game_info can be passed. */
+      [MarshalAs(UnmanagedType.U1)]
+      public bool required;
+
+      /* Content can have multiple associated persistent 
+       * memory types (retro_get_memory()). */
+      public IntPtr memory; //retro_subsystem_memory_info *
+      public uint num_memory;
+    };
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct retro_subsystem_info
+    {
+      /* Human-readable string of the subsystem type, e.g. "Super GameBoy" */
+      public string desc;
+
+      /* A computer friendly short string identifier for the subsystem type.
+       * This name must be [a-z].
+       * E.g. if desc is "Super GameBoy", this can be "sgb".
+       * This identifier can be used for command-line interfaces, etc.
+       */
+      public string ident;
+
+      /* Infos for each content file. The first entry is assumed to be the 
+       * "most significant" content for frontend purposes.
+       * E.g. with Super GameBoy, the first content should be the GameBoy ROM, 
+       * as it is the most "significant" content to a user.
+       * If a frontend creates new file paths based on the content used 
+       * (e.g. savestates), it should use the path for the first ROM to do so. */
+      public IntPtr roms; //retro_subsystem_rom_info*
+
+      /* Number of content files associated with a subsystem. */
+      public uint num_roms;
+
+      /* The type passed to retro_load_game_special(). */
+      public uint id;
+    };
+
     #region callback prototypes
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void retro_log_printf_t(RETRO_LOG_LEVEL level, string fmt, IntPtr a0, IntPtr a1, IntPtr a2, IntPtr a3, IntPtr a4, IntPtr a5, IntPtr a6, IntPtr a7, IntPtr a8, IntPtr a9, IntPtr a10, IntPtr a11, IntPtr a12, IntPtr a13, IntPtr a14, IntPtr a15);
