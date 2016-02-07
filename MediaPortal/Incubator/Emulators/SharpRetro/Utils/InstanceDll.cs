@@ -1,10 +1,11 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace SharpRetro.Utils
 {
-	public class InstanceDll : IDisposable
+  public class InstanceDll : IDisposable
   {
     [Flags]
     enum LoadLibraryFlags : uint
@@ -32,21 +33,18 @@ namespace SharpRetro.Utils
     {
       //try to locate dlls in the current directory (for libretro cores)
       //this isnt foolproof but its a little better than nothing
-      var envpath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+      string path = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
       try
       {
-        string envpath_new = Path.GetDirectoryName(dllPath) + ";" + envpath;
-        Environment.SetEnvironmentVariable("PATH", envpath_new, EnvironmentVariableTarget.Process);
+        string assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        string dllDirectory = Path.GetDirectoryName(dllPath);
+        string alteredPath = string.Format("{0};{1};{2}", assemblyDirectory, dllDirectory, path);
+        Environment.SetEnvironmentVariable("PATH", alteredPath, EnvironmentVariableTarget.Process);
         _hModule = LoadLibrary(dllPath);
-        if (_hModule == IntPtr.Zero)
-        {
-          var error = Marshal.GetLastWin32Error();
-          return;
-        }
       }
       finally
       {
-        Environment.SetEnvironmentVariable("PATH", envpath, EnvironmentVariableTarget.Process);
+        Environment.SetEnvironmentVariable("PATH", path, EnvironmentVariableTarget.Process);
       }
     }
 
@@ -55,18 +53,18 @@ namespace SharpRetro.Utils
       get { return _hModule != IntPtr.Zero; }
     }
 
-		public IntPtr GetProcAddress(string procName)
-		{
-			return GetProcAddress(_hModule, procName);
-		}
+    public IntPtr GetProcAddress(string procName)
+    {
+      return GetProcAddress(_hModule, procName);
+    }
 
-		public void Dispose()
-		{
-			if (_hModule != IntPtr.Zero)
-			{
-				FreeLibrary(_hModule);
-				_hModule = IntPtr.Zero;
-			}
-		}
-	}
+    public void Dispose()
+    {
+      if (_hModule != IntPtr.Zero)
+      {
+        FreeLibrary(_hModule);
+        _hModule = IntPtr.Zero;
+      }
+    }
+  }
 }
