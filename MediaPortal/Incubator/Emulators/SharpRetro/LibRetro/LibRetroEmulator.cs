@@ -623,6 +623,8 @@ namespace SharpRetro.LibRetro
           return false;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_GEOMETRY:
           return SetGeometry(data);
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_SUBSYSTEM_INFO:
+          return SetSubsystemInfo(data);
         default:
           Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "Unknkown retro_environment command {0} - {1}", (int)cmd, cmd);
           return false;
@@ -707,6 +709,11 @@ namespace SharpRetro.LibRetro
         _variables.AddOrUpdate(variable);
         Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "Set variable: {0}", variable);
       }
+      return true;
+    }
+
+    protected bool SetSubsystemInfo(IntPtr data)
+    {      
       return true;
     }
 
