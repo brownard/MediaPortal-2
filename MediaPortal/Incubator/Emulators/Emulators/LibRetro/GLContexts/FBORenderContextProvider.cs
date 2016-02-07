@@ -57,6 +57,8 @@ namespace Emulators.LibRetro.GLContexts
       gl.FramebufferRenderbufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, OpenGL.GL_DEPTH_ATTACHMENT_EXT,
           OpenGL.GL_RENDERBUFFER_EXT, depthRenderBufferID);
 
+      gl.BindRenderbufferEXT(OpenGL.GL_RENDERBUFFER_EXT, 0);
+      gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, 0);
       return true;
     }
 

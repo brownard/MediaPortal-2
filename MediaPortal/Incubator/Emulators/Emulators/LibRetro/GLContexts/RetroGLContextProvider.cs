@@ -72,8 +72,10 @@ namespace Emulators.LibRetro.GLContexts
       if (deviceContextHandle == IntPtr.Zero)
         return null;
       //  Set the read buffer.
+      gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, frameBufferID);
       gl.ReadBuffer(OpenGL.GL_COLOR_ATTACHMENT0_EXT);
       gl.ReadPixels(0, 0, width, height, OpenGL.GL_BGRA, OpenGL.GL_UNSIGNED_BYTE, _pixels);
+      gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, 0);
       return _pixels;
     }
 
