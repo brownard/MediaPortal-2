@@ -20,8 +20,6 @@ namespace Emulators.LibRetro.Render
     protected string _renderMode;
     protected double _targetFps;
     protected double _actualFps;
-    protected int _currentFrame;
-    protected int _duplicateFrameNum;
     protected double _secondsPerFrame;
     protected long _lastRenderTimestamp;
 
@@ -30,7 +28,6 @@ namespace Emulators.LibRetro.Render
       _targetFps = targetFps;
       _secondsPerFrame = 1d / targetFps;
       _allowVSync = allowVSync;
-      _currentFrame = 1;
       if (_allowVSync)
       {
         IScreenControl screenControl = ServiceRegistration.Get<IScreenControl>();
@@ -38,16 +35,10 @@ namespace Emulators.LibRetro.Render
       }
     }
 
-    public bool ShouldDuplicate
-    {
-      get { return _duplicateFrameNum > 0 && _currentFrame % _duplicateFrameNum == 0; }
-    }
-
     public void Synchronise(bool force)
     {
       if (force || !_doVSync || System.Windows.Forms.Form.ActiveForm != SkinContext.Form)
         WaitForRenderTime();
-      _currentFrame++;
     }
 
     public void Update()
@@ -72,7 +63,6 @@ namespace Emulators.LibRetro.Render
     protected void SyncToPlayer(IVideoPlayer player)
     {
       _actualFps = RefreshRateHelper.GetRefreshRate(SkinContext.Form);      
-      CalculateDuplicateFrames();
       ServiceRegistration.Get<ILogger>().Debug("LibRetroSynchronisationStrategy: Target FPS {0}, Actual FPS {1}", _targetFps, _actualFps);
 
       if (player is LibRetroPlayer)
@@ -116,12 +106,6 @@ namespace Emulators.LibRetro.Render
     {
       double elapsed = (double)(currentTimestamp - _lastRenderTimestamp) / Stopwatch.Frequency;
       return _secondsPerFrame - elapsed;
-    }
-
-    protected void CalculateDuplicateFrames()
-    {
-      if (_actualFps > _targetFps)
-        _duplicateFrameNum = (int)(_actualFps / (_actualFps - _targetFps));
     }
   }
 }

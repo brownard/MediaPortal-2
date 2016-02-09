@@ -338,9 +338,6 @@ namespace Emulators.LibRetro
 
     protected void RunEmulator()
     {
-      if (_synchronisationStrategy != null && _synchronisationStrategy.ShouldDuplicate)
-        return;
-
       _retroEmulator.Run();
       if (_autoSave)
         _saveHandler.AutoSave();
