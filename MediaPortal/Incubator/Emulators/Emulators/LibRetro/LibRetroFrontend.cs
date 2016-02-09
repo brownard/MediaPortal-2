@@ -103,11 +103,15 @@ namespace Emulators.LibRetro
       _settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
       try
       {
+        CreateControllerWrapper();
         InitializeLibRetro();
         if (!LoadGame())
           return false;
-        InitializeOutputs();
+        InitializeVideo();
+        InitializeAudio();
         InitializeSaveStateHandler();
+        if (!_syncToAudio)
+          _synchronisationStrategy = new SynchronisationStrategy(_retroEmulator.TimingInfo.FPS, _settings.EnableVSync);
       }
       catch (Exception ex)
       {
@@ -203,18 +207,11 @@ namespace Emulators.LibRetro
       LibRetroEmulator emulator = _retroEmulator;
       return emulator != null ? emulator.VideoInfo : null;
     }
-
-    public TimingInfo GetTimingInfo()
-    {
-      LibRetroEmulator emulator = _retroEmulator;
-      return emulator != null ? emulator.TimingInfo : null;
-    }
     #endregion
 
     #region Init
     protected void InitializeLibRetro()
     {
-      CreateControllerWrapper();
       _glContext = new RetroGLContextProvider();
       _retroEmulator = new LibRetroEmulator(_corePath)
       {
@@ -231,12 +228,10 @@ namespace Emulators.LibRetro
       _retroEmulator.Init();
     }
 
-    protected void InitializeOutputs()
+    protected void InitializeVideo()
     {
-      _textureProvider = new LibRetroTextureWrapper();
-      InitializeAudio();
-      if (!_syncToAudio)
-        _synchronisationStrategy = new SynchronisationStrategy(_retroEmulator.TimingInfo.FPS, _settings.EnableVSync);
+      lock (_surfaceLock)
+        _textureProvider = new LibRetroTextureWrapper();
     }
 
     protected void InitializeAudio()
@@ -246,13 +241,16 @@ namespace Emulators.LibRetro
       if (videoSettings == null || videoSettings.AudioRenderer == null || !Guid.TryParse(videoSettings.AudioRenderer.CLSID, out audioRenderer))
         audioRenderer = Guid.Empty;
 
-      _syncToAudio = _settings.SyncToAudio;
-      _soundOutput = new LibRetroDirectSound();
-      if (!_soundOutput.Init(SkinContext.Form.Handle, audioRenderer, (int)_retroEmulator.TimingInfo.SampleRate, _settings.AudioBufferSize))
+      lock (_audioLock)
       {
-        _soundOutput.Dispose();
-        _soundOutput = null;
-        _syncToAudio = false;
+        _syncToAudio = _settings.SyncToAudio;
+        _soundOutput = new LibRetroDirectSound();
+        if (!_soundOutput.Init(SkinContext.Form.Handle, audioRenderer, (int)_retroEmulator.TimingInfo.SampleRate, _settings.AudioBufferSize))
+        {
+          _soundOutput.Dispose();
+          _soundOutput = null;
+          _syncToAudio = false;
+        }
       }
     }
 
@@ -369,25 +367,23 @@ namespace Emulators.LibRetro
 
     protected void OnRenderThreadStarted()
     {
-      _soundOutput.Play();
+      lock (_audioLock)
+        if (_soundOutput != null)
+          _soundOutput.Play();
     }
 
     protected void OnRenderThreadPaused()
     {
       lock (_audioLock)
-      {
         if (_soundOutput != null)
           _soundOutput.Pause();
-      }
     }
 
     protected void OnRenderThreadUnPaused()
     {
       lock (_audioLock)
-      {
         if (_soundOutput != null)
           _soundOutput.UnPause();
-      }
     }
 
     protected void OnRenderThreadFinished()
