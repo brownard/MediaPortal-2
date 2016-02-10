@@ -115,7 +115,8 @@ namespace Emulators.LibRetro
       if (_isPaused)
         return;
       _isPaused = true;
-      OnPausedChanged();
+      if (_retroThread != null)
+        _retroThread.Pause();
     }
 
     public void Unpause()
@@ -123,17 +124,7 @@ namespace Emulators.LibRetro
       if (!_isPaused)
         return;
       _isPaused = false;
-      OnPausedChanged();
-    }
-
-    protected void OnPausedChanged()
-    {
-      if (_retroThread == null)
-        return;
-
-      if (_isPaused)
-        _retroThread.Pause();
-      else
+      if (_retroThread != null)
         _retroThread.UnPause();
     }
 
