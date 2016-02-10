@@ -36,22 +36,17 @@ namespace Emulators.LibRetro
     #region Protected Members
     protected readonly object _surfaceLock = new object();
     protected readonly object _audioLock = new object();
-    protected ManualResetEventSlim _pauseWaitHandle;
 
     protected LibRetroSettings _settings;
+    protected LibRetroThread _retroThread;
     protected LibRetroEmulator _retroEmulator;
     protected LibRetroSaveStateHandler _saveHandler;
     protected RetroGLContextProvider _glContext;
     protected ITextureProvider _textureProvider;
     protected ISoundOutput _soundOutput;
     protected ControllerWrapper _controllerWrapper;
-    protected SynchronisationStrategy _synchronisationStrategy;
-
-    protected Thread _renderThread;
-    protected volatile bool _doRender;
-    protected RenderDlgt _renderDlgt;
-
-    protected bool _libretroInitialized;
+    protected SynchronisationStrategy _synchronisationStrategy;    
+    protected RenderDlgt _renderDlgt;    
     protected bool _guiInitialized;
     protected bool _isPaused;
 
@@ -69,7 +64,6 @@ namespace Emulators.LibRetro
       _corePath = corePath;
       _gamePath = gamePath;
       _saveName = saveName;
-      _pauseWaitHandle = new ManualResetEventSlim(true);
       _guiInitialized = true;
     }
     #endregion
@@ -98,48 +92,22 @@ namespace Emulators.LibRetro
     #region Public Methods
     public bool Init()
     {
-      _settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
-      try
-      {
-        CreateControllerWrapper();
-        InitializeLibRetro();
-        if (!LoadGame())
-          return false;
-        InitializeVideo();
-        InitializeAudio();
-        InitializeSaveStateHandler();
-        if (!_syncToAudio)
-          _synchronisationStrategy = new SynchronisationStrategy(_retroEmulator.TimingInfo.FPS, _settings.EnableVSync);
-      }
-      catch (Exception ex)
-      {
-        Logger.Error("LibRetroFrontend: Error initialising Libretro core: {0}", ex);
-        if (_retroEmulator != null)
-        {
-          _retroEmulator.Dispose();
-          _retroEmulator = null;
-        }
-        return false;
-      }
-      _libretroInitialized = true;
-      return true;
-    }
-
-    public void ThreadedInitAndRun()
-    {
-      _doRender = true;
-      _renderThread = new Thread(InitAndRunLoop) { Name = "LibRetroRenderThread" };
-      _renderThread.Start();
+      _retroThread = new LibRetroThread();
+      _retroThread.Initializing += _retroThread_Initializing;
+      _retroThread.Started += _retroThread_Started;
+      _retroThread.Running += _retroThread_Running;
+      _retroThread.Finishing += _retroThread_Finishing;
+      _retroThread.Finished += _retroThread_Finished;
+      _retroThread.Paused += _retroThread_Paused;
+      _retroThread.UnPaused += _retroThread_UnPaused;
+      return _retroThread.Init();
     }
 
     public void Run()
     {
-      if (!_libretroInitialized)
+      if (_retroThread == null || !_retroThread.IsInit)
         return;
-      _controllerWrapper.Start();
-      _doRender = true;
-      _renderThread = new Thread(DoRender) { Name = "LibRetroRenderThread" };
-      _renderThread.Start();
+      _retroThread.Run();
     }
 
     public void Pause()
@@ -160,13 +128,13 @@ namespace Emulators.LibRetro
 
     protected void OnPausedChanged()
     {
-      if (_pauseWaitHandle == null)
+      if (_retroThread == null)
         return;
 
       if (_isPaused)
-        _pauseWaitHandle.Reset();
+        _retroThread.Pause();
       else
-        _pauseWaitHandle.Set();
+        _retroThread.UnPause();
     }
 
     public void SetVolume(int volume)
@@ -301,37 +269,46 @@ namespace Emulators.LibRetro
     }
     #endregion
 
-    #region Render Thread
-    protected void InitAndRunLoop()
+    #region Retro Thread
+    private void _retroThread_Initializing(object sender, EventArgs e)
     {
-      if (!Init())
-        return;
-      _controllerWrapper.Start();
-      DoRender();
-    }
-
-    protected void DoRender()
-    {
+      _settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
       try
       {
-        OnRenderThreadStarted();
-        while (_doRender)
-        {
-          RunEmulator();
-          RenderFrame();
-          CheckPauseState();
-        }
-        OnRenderThreadFinished();
+        CreateControllerWrapper();
+        InitializeLibRetro();
+        if (!LoadGame())
+          return;
+        InitializeVideo();
+        InitializeAudio();
+        InitializeSaveStateHandler();
+        if (!_syncToAudio)
+          _synchronisationStrategy = new SynchronisationStrategy(_retroEmulator.TimingInfo.FPS, _settings.EnableVSync);
+        _retroThread.IsInit = true;
       }
       catch (Exception ex)
       {
-        Logger.Error("LibRetroFrontend: Error in DoRender: {0}", ex);
+        Logger.Error("LibRetroFrontend: Error initialising Libretro core: {0}", ex);
+        if (_retroEmulator != null)
+        {
+          _retroEmulator.Dispose();
+          _retroEmulator = null;
+        }
       }
-      finally
-      {
-        _retroEmulator.Dispose();
-        _retroEmulator = null;
-      }
+    }
+
+    private void _retroThread_Started(object sender, EventArgs e)
+    {
+      _controllerWrapper.Start();
+      lock (_audioLock)
+        if (_soundOutput != null)
+          _soundOutput.Play();
+    }
+
+    private void _retroThread_Running(object sender, EventArgs e)
+    {
+      RunEmulator();
+      RenderFrame();
     }
 
     protected void RunEmulator()
@@ -350,42 +327,31 @@ namespace Emulators.LibRetro
         dlgt();
     }
 
-    protected void CheckPauseState()
+    private void _retroThread_Finishing(object sender, EventArgs e)
     {
-      if (!_pauseWaitHandle.IsSet)
-      {
-        OnRenderThreadPaused();
-        _pauseWaitHandle.Wait();
-        OnRenderThreadUnPaused();
-      }
+      _saveHandler.SaveSaveRam();
+      _retroEmulator.UnloadGame();
+      _retroEmulator.DeInit();
     }
 
-    protected void OnRenderThreadStarted()
+    private void _retroThread_Finished(object sender, EventArgs e)
     {
-      lock (_audioLock)
-        if (_soundOutput != null)
-          _soundOutput.Play();
+      _retroEmulator.Dispose();
+      _retroEmulator = null;
     }
 
-    protected void OnRenderThreadPaused()
+    private void _retroThread_Paused(object sender, EventArgs e)
     {
       lock (_audioLock)
         if (_soundOutput != null)
           _soundOutput.Pause();
     }
 
-    protected void OnRenderThreadUnPaused()
+    private void _retroThread_UnPaused(object sender, EventArgs e)
     {
       lock (_audioLock)
         if (_soundOutput != null)
           _soundOutput.UnPause();
-    }
-
-    protected void OnRenderThreadFinished()
-    {
-      _saveHandler.SaveSaveRam();
-      _retroEmulator.UnloadGame();
-      _retroEmulator.DeInit();
     }
     #endregion
 
@@ -449,25 +415,16 @@ namespace Emulators.LibRetro
     #region IDisposable
     public void Dispose()
     {
-      _doRender = false;
-      if (_pauseWaitHandle != null && !_pauseWaitHandle.IsSet)
-        _pauseWaitHandle.Set();
-
-      if (_renderThread != null)
+      if (_retroThread != null)
       {
-        _renderThread.Join();
-        _renderThread = null;
+        _retroThread.Dispose();
+        _retroThread = null;
       }
       _glContext = null;
       if (_controllerWrapper != null)
       {
         _controllerWrapper.Dispose();
         _controllerWrapper = null;
-      }
-      if (_pauseWaitHandle != null)
-      {
-        _pauseWaitHandle.Dispose();
-        _pauseWaitHandle = null;
       }
       if (_textureProvider != null)
       {

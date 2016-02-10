@@ -125,6 +125,7 @@
     <Compile Include="LibRetro\Cores\LocalCore.cs" />
     <Compile Include="LibRetro\Cores\OnlineCore.cs" />
     <Compile Include="LibRetro\GLContexts\FBORenderContextProvider.cs" />
+    <Compile Include="LibRetro\LibRetroThread.cs" />
     <Compile Include="LibRetro\Render\RefreshRateHelper.cs" />
     <Compile Include="LibRetro\Render\SynchronisationStrategy.cs" />
     <Compile Include="LibRetro\Settings\LibRetroCoreSettings.cs" />
