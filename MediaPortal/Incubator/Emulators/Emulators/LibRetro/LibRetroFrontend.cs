@@ -93,13 +93,13 @@ namespace Emulators.LibRetro
     public bool Init()
     {
       _retroThread = new LibRetroThread();
-      _retroThread.Initializing += _retroThread_Initializing;
-      _retroThread.Started += _retroThread_Started;
-      _retroThread.Running += _retroThread_Running;
-      _retroThread.Finishing += _retroThread_Finishing;
-      _retroThread.Finished += _retroThread_Finished;
-      _retroThread.Paused += _retroThread_Paused;
-      _retroThread.UnPaused += _retroThread_UnPaused;
+      _retroThread.Initializing += RetroThreadInitializing;
+      _retroThread.Started += RetroThreadStarted;
+      _retroThread.Running += RetroThreadRunning;
+      _retroThread.Finishing += RetroThreadFinishing;
+      _retroThread.Finished += RetroThreadFinished;
+      _retroThread.Paused += RetroThreadPaused;
+      _retroThread.UnPaused += RetroThreadUnPaused;
       return _retroThread.Init();
     }
 
@@ -261,7 +261,7 @@ namespace Emulators.LibRetro
     #endregion
 
     #region Retro Thread
-    private void _retroThread_Initializing(object sender, EventArgs e)
+    private void RetroThreadInitializing(object sender, EventArgs e)
     {
       _settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
       try
@@ -288,7 +288,7 @@ namespace Emulators.LibRetro
       }
     }
 
-    private void _retroThread_Started(object sender, EventArgs e)
+    private void RetroThreadStarted(object sender, EventArgs e)
     {
       _controllerWrapper.Start();
       lock (_audioLock)
@@ -296,7 +296,7 @@ namespace Emulators.LibRetro
           _soundOutput.Play();
     }
 
-    private void _retroThread_Running(object sender, EventArgs e)
+    private void RetroThreadRunning(object sender, EventArgs e)
     {
       RunEmulator();
       RenderFrame();
@@ -318,27 +318,27 @@ namespace Emulators.LibRetro
         dlgt();
     }
 
-    private void _retroThread_Finishing(object sender, EventArgs e)
+    private void RetroThreadFinishing(object sender, EventArgs e)
     {
       _saveHandler.SaveSaveRam();
       _retroEmulator.UnloadGame();
       _retroEmulator.DeInit();
     }
 
-    private void _retroThread_Finished(object sender, EventArgs e)
+    private void RetroThreadFinished(object sender, EventArgs e)
     {
       _retroEmulator.Dispose();
       _retroEmulator = null;
     }
 
-    private void _retroThread_Paused(object sender, EventArgs e)
+    private void RetroThreadPaused(object sender, EventArgs e)
     {
       lock (_audioLock)
         if (_soundOutput != null)
           _soundOutput.Pause();
     }
 
-    private void _retroThread_UnPaused(object sender, EventArgs e)
+    private void RetroThreadUnPaused(object sender, EventArgs e)
     {
       lock (_audioLock)
         if (_soundOutput != null)
