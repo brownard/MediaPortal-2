@@ -52,13 +52,13 @@ namespace Emulators.LibRetro
     {
       try
       {
-        _controllerThread = new Thread(ThreadProc) { Name = "LibRetroControllerThread" };
+        _controllerThread = new Thread(ThreadProc) { Name = "LibRetroThread" };
         _controllerThread.Start();
         _initWaitHandle.Wait();
       }
       catch (Exception ex)
       {
-        Logger.Error("LibRetroController: Error starting thread", ex);
+        Logger.Error("LibRetroThread: Error starting thread", ex);
         return false;
       }
       return _isInit;
@@ -115,7 +115,7 @@ namespace Emulators.LibRetro
       }
       catch (Exception ex)
       {
-        Logger.Error("LibRetroController: Error in DoInit", ex);
+        Logger.Error("LibRetroThread: Error in DoInit", ex);
       }
       finally
       {
@@ -137,7 +137,7 @@ namespace Emulators.LibRetro
       }
       catch (Exception ex)
       {
-        Logger.Error("LibRetroController: Error in DoRun", ex);
+        Logger.Error("LibRetroThread: Error in DoRun", ex);
       }
       finally
       {
