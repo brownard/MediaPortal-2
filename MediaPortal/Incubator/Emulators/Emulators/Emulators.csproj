@@ -118,6 +118,7 @@
     <Compile Include="LibRetro\Controllers\XInput\XInputAxis.cs" />
     <Compile Include="LibRetro\Controllers\XInput\XInputControllerCache.cs" />
     <Compile Include="LibRetro\Controllers\XInput\XInputMapper.cs" />
+    <Compile Include="LibRetro\Cores\CoreHandler.cs" />
     <Compile Include="LibRetro\Cores\CoreInfoHandler.cs" />
     <Compile Include="LibRetro\Cores\CoreInfoList.cs" />
     <Compile Include="LibRetro\Cores\CoreList.cs" />
@@ -152,6 +153,7 @@
     <Compile Include="Models\EmulatorConfigurationModel.cs" />
     <Compile Include="Models\EmulatorProxy.cs" />
     <Compile Include="Models\GoodMergeSelectModel.cs" />
+    <Compile Include="Models\LibRetroCoreUpdaterModel.cs" />
     <Compile Include="Models\LibRetroMappingModel.cs" />
     <Compile Include="Models\LibRetroProxy.cs" />
     <Compile Include="Models\Navigation\GameFilterItem.cs" />
@@ -165,6 +167,7 @@
     <Compile Include="Settings\Configuration\EmulatorsConfigSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\AutoSaveIntervalSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\AutoSaveSetting.cs" />
+    <Compile Include="Settings\Configuration\LibRetro\CoreUpdaterSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\EnableVSyncSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\MappingSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\MaxPlayersSetting.cs" />
@@ -422,6 +425,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Skin\BlueVision\themes\Titanium Extended\styles\ConfigControls.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Skin\default\screens\libretro_core_updater.xaml">
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>

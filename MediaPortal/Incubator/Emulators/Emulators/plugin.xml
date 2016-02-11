@@ -36,6 +36,7 @@
     <Model Id="940A868F-8360-42DA-B652-F3924B747CB5" Name="ClearGoodMergeCacheModel" ClassName="Emulators.Models.ClearGoodMergeCacheModel"/>
     <Model Id="FD908F54-B37E-408F-9D53-EB72A2912617" Name="LibRetroMappingModel" ClassName="Emulators.Models.LibRetroMappingModel"/>
     <Model Id="ED801805-42FC-47A2-B978-64B61BD48FE9" Name="QueryCreateConfigurationModel" ClassName="Emulators.Models.QueryCreateConfigurationModel"/>
+    <Model Id="656E3AC1-0363-4DA9-A23F-F1422A9ADD74" Name="LibRetroCoreUpdaterModel" ClassName="Emulators.Models.LibRetroCoreUpdaterModel"/>
   </Register>
 
   <Register Location="/Services">
@@ -154,6 +155,13 @@
         MainScreen="libretro_mapping_device"
         WorkflowModel="FD908F54-B37E-408F-9D53-EB72A2912617"/>    <!-- LibRetro mapping model -->
 
+    <!-- Core updater -->
+    <WorkflowState Id="BC9FAFDE-315E-4DBD-A99D-060D3225DCAA"
+        Name="CoreUpdater"
+        DisplayLabel="[Emulators.LibRetro.UpdateCores]"
+        MainScreen="libretro_core_updater"
+        WorkflowModel="656E3AC1-0363-4DA9-A23F-F1422A9ADD74"/>    <!-- LibRetro core updater model -->
+
     <!-- Dialog States -->
 
     <!-- Clear GoodMerge cache dialog -->
@@ -228,7 +236,14 @@
     
   </Register>
 
-  <Register Location="/Configuration/Settings/Plugins/Emulators/LibRetro">    
+  <Register Location="/Configuration/Settings/Plugins/Emulators/LibRetro">        
+    <CustomConfigSetting
+        Id="CoreUpdater"
+        Text="[Emulators.LibRetro.UpdateCores]"
+        HelpText="[Emulators.LibRetro.UpdateCores.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.CoreUpdaterSetting"
+        AdditionalData="WorkflowState=BC9FAFDE-315E-4DBD-A99D-060D3225DCAA,ConfAppPanel=..."/>
+          
     <ConfigSetting
         Id="MaxPlayers"
         Text="[Emulators.Config.LibRetro.MaximumPlayers]"

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include
+    xmlns="www.team-mediaportal.com/2008/mpf/directx"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Source="screens\emulator_config_master.xaml"
+    >
+  <Include.Resources>
+
+    <!--Mapping model -->
+    <Model x:Key="Model" Id="656E3AC1-0363-4DA9-A23F-F1422A9ADD74"/>
+
+    <!-- Header -->
+    <ResourceWrapper x:Key="Header_Text" Resource="[Emulators.LibRetro.UpdateCores]"/>
+
+    <!-- Contents -->
+    <ControlTemplate x:Key="Contents_Template">
+      <Grid DataContext="{Binding Source={StaticResource Model}}">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+
+      </Grid>
+    </ControlTemplate>
+
+  </Include.Resources>
+</Include>
