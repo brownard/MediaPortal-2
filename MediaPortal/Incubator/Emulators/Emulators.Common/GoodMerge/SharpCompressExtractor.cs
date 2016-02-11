@@ -63,7 +63,7 @@ namespace Emulators.Common.GoodMerge
       }
       catch (Exception ex)
       {
-        Logger.Error("Extractor: Failed to open archive '{0}': {1}", _archivePath, ex);
+        Logger.Error("Extractor: Failed to open archive '{0}'", ex, _archivePath);
       }
       Dispose();
       return false;
@@ -95,8 +95,24 @@ namespace Emulators.Common.GoodMerge
         }
         catch (Exception ex)
         {
-          Logger.Error("Extractor: Failed to extract '{0}' to '{1}': {2}", entry.Key, extractionPath, ex);
+          Logger.Error("Extractor: Failed to extract '{0}' to '{1}'", ex, entry.Key, extractionPath);
         }
+      }
+      return false;
+    }
+
+    public bool ExtractAll(string extractionPath)
+    {
+      if (!Init() || _extractor.Entries == null)
+        return false;
+      try
+      {
+        _extractor.WriteToDirectory(extractionPath);
+        return true;
+      }
+      catch (Exception ex)
+      {
+        Logger.Error("Extractor: Failed to extract all files from '{0}' to '{1}'", ex, _archivePath, extractionPath);
       }
       return false;
     }
