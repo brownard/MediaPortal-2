@@ -30,6 +30,7 @@ namespace SharpRetro.Info
 
     protected Dictionary<string, string> _coreInfos;
     protected List<Firmware> _firmwares;
+    protected string _coreName;
     protected string _displayName;
     protected string _supportedExtensions;
     protected string _manufacturer;
@@ -42,12 +43,18 @@ namespace SharpRetro.Info
     protected string _supportsNoGame;
     protected string _notes;
 
-    public CoreInfo(string infoText)
+    public CoreInfo(string coreName, string infoText)
     {
       _coreInfos = new Dictionary<string, string>();
+      _coreName = coreName;
       Parse(infoText);
       InitProperties();
       InitFirmare();
+    }
+
+    public string CoreName
+    {
+      get { return _coreName; }
     }
 
     public string DisplayName

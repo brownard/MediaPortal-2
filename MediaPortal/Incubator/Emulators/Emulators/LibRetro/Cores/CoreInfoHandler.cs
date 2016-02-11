@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Emulators.LibRetro.Cores
 {
-  class CoreInfoHandler
+  public class CoreInfoHandler
   {
     protected const string BASE_URL = "http://buildbot.libretro.com";
     protected const string INFO_URL = "/assets/frontend/info/";
@@ -25,6 +25,11 @@ namespace Emulators.LibRetro.Cores
       _infoDirectory = infoDirectory;
       _downloader = new HtmlDownloader();
       _coreInfos = new List<CoreInfo>();
+    }
+
+    public List<CoreInfo> CoreInfos
+    {
+      get { return _coreInfos; }
     }
 
     public void Update()
@@ -83,9 +88,10 @@ namespace Emulators.LibRetro.Cores
     {
       try
       {
+        string filename = Path.GetFileNameWithoutExtension(path);
         string text = File.ReadAllText(path);
-        coreInfo = new CoreInfo(text);
-        return coreInfo.DisplayName != null;
+        coreInfo = new CoreInfo(filename, text);
+        return true;
       }
       catch (Exception ex)
       {
