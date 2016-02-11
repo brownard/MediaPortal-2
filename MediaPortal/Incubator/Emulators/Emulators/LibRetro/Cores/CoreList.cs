@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Emulators.LibRetro.Cores
 {
-  class CoreUrl
+  public class CoreUrl
   {
     public string Name { get; set; }
     public string Url { get; set; }
