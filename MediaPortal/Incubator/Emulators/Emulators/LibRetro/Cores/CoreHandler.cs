@@ -47,19 +47,21 @@ namespace Emulators.LibRetro.Cores
       Uri uri;
       if (!Uri.TryCreate(coreUrl.Url, UriKind.RelativeOrAbsolute, out uri))
         return;
-      
+
       string url = uri.IsAbsoluteUri ? coreUrl.Url : BASE_URL + coreUrl.Url;
-      string path = Path.Combine(_coresDirectory, Path.GetFileName(coreUrl.Name));
+      string path = Path.Combine(_coresDirectory, coreUrl.Name);
       _downloader.DownloadFile(url, path, true);
       ExtractCore(path);
     }
 
     protected void ExtractCore(string path)
     {
-      IExtractor extractor = ExtractorFactory.Create(path);
-      if (!extractor.IsArchive())
-        return;
-      extractor.ExtractAll(_coresDirectory);
+      using (IExtractor extractor = ExtractorFactory.Create(path))
+      {
+        if (!extractor.IsArchive() || !extractor.ExtractAll(_coresDirectory))
+          return;
+      }
+      TryDeleteFile(path);
     }
 
     protected bool TryCreateCoresDirectory()
@@ -72,6 +74,20 @@ namespace Emulators.LibRetro.Cores
       catch (Exception ex)
       {
         ServiceRegistration.Get<ILogger>().Error("CoreHandler: Exception creating cores directory '{0}'", ex, _coresDirectory);
+      }
+      return false;
+    }
+
+    protected bool TryDeleteFile(string path)
+    {
+      try
+      {
+        File.Delete(path);
+        return true;
+      }
+      catch (Exception ex)
+      {
+        ServiceRegistration.Get<ILogger>().Error("CoreHandler: Exception deleting file '{0}'", ex, path);
       }
       return false;
     }
