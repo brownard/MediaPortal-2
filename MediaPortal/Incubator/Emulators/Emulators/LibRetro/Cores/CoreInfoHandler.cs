@@ -18,16 +18,16 @@ namespace Emulators.LibRetro.Cores
 
     protected string _infoDirectory;
     protected HtmlDownloader _downloader;
-    protected List<CoreInfo> _coreInfos;
+    protected Dictionary<string, CoreInfo> _coreInfos;
 
     public CoreInfoHandler(string infoDirectory)
     {
       _infoDirectory = infoDirectory;
       _downloader = new HtmlDownloader();
-      _coreInfos = new List<CoreInfo>();
+      _coreInfos = new Dictionary<string, CoreInfo>();
     }
 
-    public List<CoreInfo> CoreInfos
+    public Dictionary<string, CoreInfo> CoreInfos
     {
       get { return _coreInfos; }
     }
@@ -57,15 +57,16 @@ namespace Emulators.LibRetro.Cores
         Uri uri;
         if (!Uri.TryCreate(infoUrl, UriKind.RelativeOrAbsolute, out uri))
           continue;
-        string url = uri.IsAbsoluteUri ? infoUrl : BASE_URL + infoUrl;
+        if (!uri.IsAbsoluteUri)
+          uri = new Uri(new Uri(BASE_URL), uri);
         string path = Path.Combine(_infoDirectory, Path.GetFileName(uri.LocalPath));
-        _downloader.DownloadFile(url, path, true);
+        _downloader.DownloadFile(uri.AbsoluteUri, path);
       }
     }
 
     protected void LoadCoreInfos()
     {
-      _coreInfos = new List<CoreInfo>();
+      _coreInfos.Clear();
       if (!Directory.Exists(_infoDirectory))
         return;
 
@@ -75,7 +76,7 @@ namespace Emulators.LibRetro.Cores
         {
           CoreInfo coreInfo;
           if (TryLoadCoreInfo(file, out coreInfo))
-            _coreInfos.Add(coreInfo);
+            _coreInfos[coreInfo.CoreName] = coreInfo;
         }
       }
       catch (Exception ex)
