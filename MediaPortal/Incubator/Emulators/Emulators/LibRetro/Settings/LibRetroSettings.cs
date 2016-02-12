@@ -1,4 +1,6 @@
 ﻿using Emulators.LibRetro.SoundProviders;
+using MediaPortal.Common;
+using MediaPortal.Common.PathManager;
 using MediaPortal.Common.Settings;
 using System;
 using System.Collections.Generic;
@@ -10,6 +12,35 @@ namespace Emulators.LibRetro.Settings
 {
   public class LibRetroSettings
   {
+    protected static readonly string DEFAULT_CORES_DIRECTORY = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\LibRetro\cores");
+    protected static readonly string DEFAULT_INFO_DIRECTORY = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\LibRetro\info");
+    protected static readonly string DEFAULT_SAVES_DIRECTORY = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\LibRetro\saves");
+
+    protected string _coresDirectory;
+    protected string _infoDirectory;
+    protected string _savesDirectory;
+
+    [Setting(SettingScope.Global)]
+    public string CoresDirectory
+    {
+      get { return string.IsNullOrEmpty(_coresDirectory) ? DEFAULT_CORES_DIRECTORY : _coresDirectory; }
+      set { _coresDirectory = value; }
+    }
+
+    [Setting(SettingScope.Global)]
+    public string InfoDirectory
+    {
+      get { return string.IsNullOrEmpty(_infoDirectory) ? DEFAULT_INFO_DIRECTORY : _infoDirectory; }
+      set { _infoDirectory = value; }
+    }
+
+    [Setting(SettingScope.Global)]
+    public string SavesDirectory
+    {
+      get { return string.IsNullOrEmpty(_savesDirectory) ? DEFAULT_SAVES_DIRECTORY : _savesDirectory; }
+      set { _savesDirectory = value; }
+    }
+
     [Setting(SettingScope.User, 4)]
     public int MaxPlayers { get; set; }
 

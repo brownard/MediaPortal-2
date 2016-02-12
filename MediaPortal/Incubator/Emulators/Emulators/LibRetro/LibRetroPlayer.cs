@@ -24,7 +24,6 @@ namespace Emulators.LibRetro
     #region Protected Members
     protected const string AUDIO_STREAM_NAME = "Audio1";
     protected static string[] DEFAULT_AUDIO_STREAM_NAMES = new[] { AUDIO_STREAM_NAME };
-    protected static readonly string SAVE_DIRECTORY = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\LibRetro\");
 
     protected readonly object _syncObj = new object();
     protected LibRetroFrontend _retro;
@@ -72,8 +71,8 @@ namespace Emulators.LibRetro
         return;
 
       string saveName = DosPathHelper.GetFileNameWithoutExtension(locator.NativeResourcePath.FileName);
-      ServiceRegistration.Get<ILogger>().Debug("LibRetroPlayer: Creating LibRetroFrontend: Core Path '{0}', Game Path '{1}', Save Directory '{2}', Save Name '{3}'", mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY, saveName);
-      _retro = new LibRetroFrontend(mediaItem.LibRetroPath, gamePath, SAVE_DIRECTORY, saveName);
+      ServiceRegistration.Get<ILogger>().Debug("LibRetroPlayer: Creating LibRetroFrontend: Core Path '{0}', Game Path '{1}', Save Name '{2}'", mediaItem.LibRetroPath, gamePath, saveName);
+      _retro = new LibRetroFrontend(mediaItem.LibRetroPath, gamePath, saveName);
       _isLibretroInit = true; //_retro.Init();
       //if (_isLibretroInit)
       //{

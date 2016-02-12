@@ -57,7 +57,6 @@ namespace Emulators.LibRetro
 
     protected string _corePath;
     protected string _gamePath;
-    protected string _saveDirectory;
     protected string _saveName;
 
     protected bool _syncToAudio;
@@ -65,11 +64,10 @@ namespace Emulators.LibRetro
     #endregion
 
     #region Ctor
-    public LibRetroFrontend(string corePath, string gamePath, string saveDirectory, string saveName)
+    public LibRetroFrontend(string corePath, string gamePath, string saveName)
     {
       _corePath = corePath;
       _gamePath = gamePath;
-      _saveDirectory = saveDirectory;
       _saveName = saveName;
       _pauseWaitHandle = new ManualResetEventSlim(true);
       _guiInitialized = true;
@@ -215,7 +213,7 @@ namespace Emulators.LibRetro
       _glContext = new RetroGLContextProvider();
       _retroEmulator = new LibRetroEmulator(_corePath)
       {
-        SaveDirectory = _saveDirectory,
+        SaveDirectory = _settings.SavesDirectory,
         LogDelegate = RetroLogDlgt,
         Controller = _controllerWrapper,
         GLContext = _glContext
@@ -257,7 +255,7 @@ namespace Emulators.LibRetro
     protected void InitializeSaveStateHandler()
     {
       _autoSave = _settings.AutoSave;
-      _saveHandler = new LibRetroSaveStateHandler(_retroEmulator, _saveName, _saveDirectory, _settings.AutoSaveInterval);
+      _saveHandler = new LibRetroSaveStateHandler(_retroEmulator, _saveName, _settings.SavesDirectory, _settings.AutoSaveInterval);
       _saveHandler.LoadSaveRam();
     }
 

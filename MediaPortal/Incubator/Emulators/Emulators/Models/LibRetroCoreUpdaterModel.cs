@@ -14,6 +14,8 @@ using MediaPortal.UiComponents.SkinBase.General;
 using MediaPortal.Common.Threading;
 using MediaPortal.Common.Commands;
 using System.IO;
+using MediaPortal.Common.Settings;
+using Emulators.LibRetro.Settings;
 
 namespace Emulators.Models
 {
@@ -24,10 +26,7 @@ namespace Emulators.Models
     public const string LABEL_CORE_SYSTEM = "CoreSystem";
     public const string KEY_CORE = "LibRetro: Core";
 
-    protected static readonly string CORE_DIRECTORY = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\LibRetro\Cores\");
-    protected static readonly string CORE_INFO_DIRECTORY = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\LibRetro\Info\");
     protected readonly object _updateSync = new object();
-
     protected CoreHandler _coreHandler;
     protected CoreInfoHandler _infoHandler;
     protected ItemsList _coreItems;
@@ -36,10 +35,12 @@ namespace Emulators.Models
 
     public LibRetroCoreUpdaterModel()
     {
-      _coreHandler = new CoreHandler(CORE_DIRECTORY);
-      _infoHandler = new CoreInfoHandler(CORE_INFO_DIRECTORY);
       _coreItems = new ItemsList();
       _downloadingUrls = new SynchronizedCollection<string>();
+
+      LibRetroSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
+      _coreHandler = new CoreHandler(settings.CoresDirectory);
+      _infoHandler = new CoreInfoHandler(settings.InfoDirectory);
     }
 
     public ItemsList Items
