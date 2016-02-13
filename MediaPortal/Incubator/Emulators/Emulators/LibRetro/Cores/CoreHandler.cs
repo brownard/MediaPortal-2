@@ -16,50 +16,69 @@ namespace Emulators.LibRetro.Cores
     protected const string BASE_URL = "http://buildbot.libretro.com";
     protected const string LATEST_URL = "/nightly/windows/x86/latest/";
     
-    protected List<CoreUrl> _onlineCores;
+    protected List<LocalCore> _cores;
     protected HtmlDownloader _downloader;
 
     public CoreHandler()
     {
       _downloader = new HtmlDownloader();
-      _onlineCores = new List<CoreUrl>();
+      _cores = new List<LocalCore>();
     }
 
-    public List<CoreUrl> OnlineCores
+    public List<LocalCore> Cores
     {
-      get { return _onlineCores; }
+      get { return _cores; }
     }
 
     public void Update()
     {
       CoreList coreList = _downloader.Download<CoreList>(BASE_URL + LATEST_URL);
       if (coreList != null)
-        _onlineCores = coreList.CoreUrls;
+        CreateCoresList(coreList.CoreUrls);
     }
 
-    public void DownloadCore(CoreUrl coreUrl, string coresDirectory)
+    public bool DownloadCore(LocalCore core, string coresDirectory)
     {
       if (!TryCreateCoresDirectory(coresDirectory))
-        return;
+        return false;
 
-      Uri uri;
-      if (!Uri.TryCreate(coreUrl.Url, UriKind.RelativeOrAbsolute, out uri))
-        return;
-
-      string url = uri.IsAbsoluteUri ? coreUrl.Url : BASE_URL + coreUrl.Url;
-      string path = Path.Combine(coresDirectory, coreUrl.Name);
-      _downloader.DownloadFile(url, path, true);
-      ExtractCore(path, coresDirectory);
+      string path = Path.Combine(coresDirectory, core.ArchiveName);
+      return _downloader.DownloadFile(core.Url, path, true) && ExtractCore(path, coresDirectory);
     }
 
-    protected void ExtractCore(string path, string coresDirectory)
+    protected bool ExtractCore(string path, string coresDirectory)
     {
+      bool extracted;
       using (IExtractor extractor = ExtractorFactory.Create(path))
       {
-        if (!extractor.IsArchive() || !extractor.ExtractAll(coresDirectory))
-          return;
+        if (!extractor.IsArchive())
+          return true;
+        extracted = extractor.ExtractAll(coresDirectory);
       }
-      TryDeleteFile(path);
+      if (extracted)
+        TryDeleteFile(path);
+      return extracted;
+    }
+
+    protected void CreateCoresList(IEnumerable<OnlineCore> onlineCores)
+    {
+      _cores = new List<LocalCore>();
+      foreach (OnlineCore onlineCore in onlineCores)
+      {
+        Uri uri;
+        if (!Uri.TryCreate(onlineCore.Url, UriKind.RelativeOrAbsolute, out uri))
+          continue;
+        if (!uri.IsAbsoluteUri)
+          uri = new Uri(new Uri(BASE_URL), uri);
+
+        LocalCore core = new LocalCore()
+        {
+          Url = uri.AbsoluteUri,
+          ArchiveName = onlineCore.Name,
+          CoreName = Path.GetFileNameWithoutExtension(onlineCore.Name)
+        };
+        _cores.Add(core);
+      }
     }
 
     protected bool TryCreateCoresDirectory(string coresDirectory)

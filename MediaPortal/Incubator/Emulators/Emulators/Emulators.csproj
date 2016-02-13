@@ -122,6 +122,8 @@
     <Compile Include="LibRetro\Cores\CoreInfoHandler.cs" />
     <Compile Include="LibRetro\Cores\CoreInfoList.cs" />
     <Compile Include="LibRetro\Cores\CoreList.cs" />
+    <Compile Include="LibRetro\Cores\LocalCore.cs" />
+    <Compile Include="LibRetro\Cores\OnlineCore.cs" />
     <Compile Include="LibRetro\GLContexts\FBORenderContextProvider.cs" />
     <Compile Include="LibRetro\Render\RefreshRateHelper.cs" />
     <Compile Include="LibRetro\Render\SynchronisationStrategy.cs" />
@@ -158,6 +160,7 @@
     <Compile Include="Models\LibRetroProxy.cs" />
     <Compile Include="Models\Navigation\GameFilterItem.cs" />
     <Compile Include="Models\Navigation\GameItem.cs" />
+    <Compile Include="Models\Navigation\LibRetroCoreItem.cs" />
     <Compile Include="Models\Navigation\MappingItems.cs" />
     <Compile Include="Models\PathBrowser.cs" />
     <Compile Include="Models\QueryCreateConfigurationModel.cs" />

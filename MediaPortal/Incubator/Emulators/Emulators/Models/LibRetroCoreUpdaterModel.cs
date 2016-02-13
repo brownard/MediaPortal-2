@@ -19,6 +19,7 @@ using Emulators.LibRetro.Settings;
 using MediaPortal.Common.General;
 using MediaPortal.UI.Presentation.Screens;
 using MediaPortal.Common.Localization;
+using Emulators.Models.Navigation;
 
 namespace Emulators.Models
 {
@@ -33,6 +34,8 @@ namespace Emulators.Models
     protected AbstractProperty _progressLabelProperty = new WProperty(typeof(string), null);
 
     protected readonly object _updateSync = new object();
+    protected string _coresDirectory;
+    protected string _infoDirectory;
     protected CoreHandler _coreHandler;
     protected CoreInfoHandler _infoHandler;
     protected ItemsList _coreItems;
@@ -63,24 +66,23 @@ namespace Emulators.Models
       set { _progressLabelProperty.SetValue(value); }
     }
 
-    protected void DownloadCoreAsync(CoreUrl core)
+    protected void DownloadCoreAsync(LibRetroCoreItem item, LocalCore core)
     {
-      ServiceRegistration.Get<IThreadPool>().Add(() => DownloadCore(core));
+      ServiceRegistration.Get<IThreadPool>().Add(() => DownloadCore(item, core));
     }
 
-    protected void DownloadCore(CoreUrl core)
-    {
+    protected void DownloadCore(LibRetroCoreItem item, LocalCore core)
+    {      
       if (_downloadingUrls.Contains(core.Url))
         return;
 
       try
       {
-        ProgressLabel = LocalizationHelper.Translate("[Emulators.CoreUpdater.Downloading]", core.Name);
+        ProgressLabel = LocalizationHelper.Translate("[Emulators.CoreUpdater.Downloading]", core.CoreName);
         var sm = ServiceRegistration.Get<IScreenManager>();
         Guid? dialogId = sm.ShowDialog(DIALOG_CORE_UPDATE_PROGRESS);
-
-        LibRetroSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
-        _coreHandler.DownloadCore(core, settings.CoresDirectory);
+        if (_coreHandler.DownloadCore(core, _coresDirectory))
+          item.Downloaded = true;
 
         if (dialogId.HasValue)
           sm.CloseDialog(dialogId.Value);
@@ -93,7 +95,10 @@ namespace Emulators.Models
 
     protected void UpdateAsync()
     {
-      var w = ServiceRegistration.Get<IThreadPool>().Add(Update);
+      LibRetroSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
+      _coresDirectory = settings.CoresDirectory;
+      _infoDirectory = settings.InfoDirectory;
+      ServiceRegistration.Get<IThreadPool>().Add(Update);
     }
 
     protected void Update()
@@ -111,8 +116,7 @@ namespace Emulators.Models
         var sm = ServiceRegistration.Get<IScreenManager>();
         Guid? dialogId = sm.ShowDialog(DIALOG_CORE_UPDATE_PROGRESS);
 
-        LibRetroSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
-        _infoHandler.Update(settings.InfoDirectory);
+        _infoHandler.Update(_infoDirectory);
         ProgressLabel = "[Emulators.CoreUpdater.UpdatingCores]";
         _coreHandler.Update();
         RebuildItemsList();
@@ -129,29 +133,31 @@ namespace Emulators.Models
 
     protected void RebuildItemsList()
     {
+      string coresDirectory = _coresDirectory; 
       _coreItems.Clear();
-      foreach (CoreUrl core in _coreHandler.OnlineCores)
-        _coreItems.Add(CreateListItem(core));
+      foreach (LocalCore core in _coreHandler.Cores)
+        _coreItems.Add(CreateListItem(core, coresDirectory));
       _coreItems.FireChange();
     }
 
-    protected ListItem CreateListItem(CoreUrl core)
+    protected ListItem CreateListItem(LocalCore core, string coresDirectory)
     {
-      ListItem item = new ListItem();
-      item.SetLabel(LABEL_CORE_NAME, core.Name);
+      LibRetroCoreItem item = new LibRetroCoreItem();
+      item.SetLabel(LABEL_CORE_NAME, core.CoreName);
       item.AdditionalProperties[KEY_CORE] = core;
-      item.Command = new MethodDelegateCommand(() => DownloadCore(core));
+      item.Downloaded = File.Exists(Path.Combine(coresDirectory, core.CoreName));
+      item.Command = new MethodDelegateCommand(() => DownloadCoreAsync(item, core));
 
-      string coreName = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(core.Name));
+      string infoName = Path.GetFileNameWithoutExtension(core.CoreName);
       CoreInfo info;
-      if (_infoHandler.CoreInfos.TryGetValue(coreName, out info))
+      if (_infoHandler.CoreInfos.TryGetValue(infoName, out info))
       {
         item.SetLabel(Consts.KEY_NAME, info.DisplayName);
         item.AdditionalProperties[KEY_CORE_INFO] = info;
       }
       else
       {
-        item.SetLabel(Consts.KEY_NAME, coreName);
+        item.SetLabel(Consts.KEY_NAME, infoName);
       }
       return item;
     }
