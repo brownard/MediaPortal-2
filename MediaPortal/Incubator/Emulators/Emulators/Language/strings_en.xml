@@ -84,10 +84,8 @@
   <string name="Emulators.ExtractGoodmerge.Header">Extracting GoodMerge file</string>
 
   <string name="Emulators.CoreUpdater.ProgressHeader">Updating</string>
-  <string name="Emulators.CoreUpdater.UpdatingInfo">Updating info</string>
   <string name="Emulators.CoreUpdater.UpdatingCores">Updating cores</string>
   <string name="Emulators.CoreUpdater.Downloading">Downloading {0}</string>
-  <string name="Emulators.CoreUpdater.Extracting">Extracting {0}</string>
   <string name="Emulators.Config.LibRetro.UpdateCores">Update cores</string>
   <string name="Emulators.Config.LibRetro.UpdateCores.Help">Add or update cores</string>
   <string name="Emulators.Config.LibRetro.SavesDirectory">Saves directory</string>
