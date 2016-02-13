@@ -42,11 +42,9 @@ namespace Emulators.Models
     public LibRetroCoreUpdaterModel()
     {
       _coreItems = new ItemsList();
-      _downloadingUrls = new SynchronizedCollection<string>();
-
-      LibRetroSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
-      _coreHandler = new CoreHandler(settings.CoresDirectory);
-      _infoHandler = new CoreInfoHandler(settings.InfoDirectory);
+      _downloadingUrls = new SynchronizedCollection<string>();      
+      _coreHandler = new CoreHandler();
+      _infoHandler = new CoreInfoHandler();
     }
 
     public ItemsList Items
@@ -80,7 +78,10 @@ namespace Emulators.Models
         ProgressLabel = LocalizationHelper.Translate("[Emulators.CoreUpdater.Downloading]", core.Name);
         var sm = ServiceRegistration.Get<IScreenManager>();
         Guid? dialogId = sm.ShowDialog(DIALOG_CORE_UPDATE_PROGRESS);
-        _coreHandler.DownloadCore(core);
+
+        LibRetroSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
+        _coreHandler.DownloadCore(core, settings.CoresDirectory);
+
         if (dialogId.HasValue)
           sm.CloseDialog(dialogId.Value);
       }
@@ -92,7 +93,7 @@ namespace Emulators.Models
 
     protected void UpdateAsync()
     {
-      ServiceRegistration.Get<IThreadPool>().Add(Update);
+      var w = ServiceRegistration.Get<IThreadPool>().Add(Update);
     }
 
     protected void Update()
@@ -110,7 +111,8 @@ namespace Emulators.Models
         var sm = ServiceRegistration.Get<IScreenManager>();
         Guid? dialogId = sm.ShowDialog(DIALOG_CORE_UPDATE_PROGRESS);
 
-        _infoHandler.Update();
+        LibRetroSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
+        _infoHandler.Update(settings.InfoDirectory);
         ProgressLabel = "[Emulators.CoreUpdater.UpdatingCores]";
         _coreHandler.Update();
         RebuildItemsList();

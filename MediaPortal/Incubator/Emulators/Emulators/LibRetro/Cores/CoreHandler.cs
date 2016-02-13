@@ -15,14 +15,12 @@ namespace Emulators.LibRetro.Cores
   {
     protected const string BASE_URL = "http://buildbot.libretro.com";
     protected const string LATEST_URL = "/nightly/windows/x86/latest/";
-
-    protected string _coresDirectory;
+    
     protected List<CoreUrl> _onlineCores;
     protected HtmlDownloader _downloader;
 
-    public CoreHandler(string coresDirectory)
+    public CoreHandler()
     {
-      _coresDirectory = coresDirectory;
       _downloader = new HtmlDownloader();
       _onlineCores = new List<CoreUrl>();
     }
@@ -39,9 +37,9 @@ namespace Emulators.LibRetro.Cores
         _onlineCores = coreList.CoreUrls;
     }
 
-    public void DownloadCore(CoreUrl coreUrl)
+    public void DownloadCore(CoreUrl coreUrl, string coresDirectory)
     {
-      if (!TryCreateCoresDirectory())
+      if (!TryCreateCoresDirectory(coresDirectory))
         return;
 
       Uri uri;
@@ -49,31 +47,31 @@ namespace Emulators.LibRetro.Cores
         return;
 
       string url = uri.IsAbsoluteUri ? coreUrl.Url : BASE_URL + coreUrl.Url;
-      string path = Path.Combine(_coresDirectory, coreUrl.Name);
+      string path = Path.Combine(coresDirectory, coreUrl.Name);
       _downloader.DownloadFile(url, path, true);
-      ExtractCore(path);
+      ExtractCore(path, coresDirectory);
     }
 
-    protected void ExtractCore(string path)
+    protected void ExtractCore(string path, string coresDirectory)
     {
       using (IExtractor extractor = ExtractorFactory.Create(path))
       {
-        if (!extractor.IsArchive() || !extractor.ExtractAll(_coresDirectory))
+        if (!extractor.IsArchive() || !extractor.ExtractAll(coresDirectory))
           return;
       }
       TryDeleteFile(path);
     }
 
-    protected bool TryCreateCoresDirectory()
+    protected bool TryCreateCoresDirectory(string coresDirectory)
     {
       try
       {
-        Directory.CreateDirectory(_coresDirectory);
+        Directory.CreateDirectory(coresDirectory);
         return true;
       }
       catch (Exception ex)
       {
-        ServiceRegistration.Get<ILogger>().Error("CoreHandler: Exception creating cores directory '{0}'", ex, _coresDirectory);
+        ServiceRegistration.Get<ILogger>().Error("CoreHandler: Exception creating cores directory '{0}'", ex, coresDirectory);
       }
       return false;
     }

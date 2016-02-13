@@ -15,14 +15,12 @@ namespace Emulators.LibRetro.Cores
   {
     protected const string BASE_URL = "http://buildbot.libretro.com";
     protected const string INFO_URL = "/assets/frontend/info/";
-
-    protected string _infoDirectory;
+    
     protected HtmlDownloader _downloader;
     protected Dictionary<string, CoreInfo> _coreInfos;
 
-    public CoreInfoHandler(string infoDirectory)
+    public CoreInfoHandler()
     {
-      _infoDirectory = infoDirectory;
       _downloader = new HtmlDownloader();
       _coreInfos = new Dictionary<string, CoreInfo>();
     }
@@ -32,20 +30,20 @@ namespace Emulators.LibRetro.Cores
       get { return _coreInfos; }
     }
 
-    public void Update()
+    public void Update(string infoDirectory)
     {
-      DownloadCoreInfos();
-      LoadCoreInfos();
+      DownloadCoreInfos(infoDirectory);
+      LoadCoreInfos(infoDirectory);
     }
 
-    public void Load()
+    public void Load(string infoDirectory)
     {
-      LoadCoreInfos();
+      LoadCoreInfos(infoDirectory);
     }
 
-    protected void DownloadCoreInfos()
+    protected void DownloadCoreInfos(string infoDirectory)
     {
-      if (!TryCreateInfoDirectory())
+      if (!TryCreateInfoDirectory(infoDirectory))
         return;
 
       CoreInfoList infoList = _downloader.Download<CoreInfoList>(BASE_URL + INFO_URL);
@@ -59,20 +57,20 @@ namespace Emulators.LibRetro.Cores
           continue;
         if (!uri.IsAbsoluteUri)
           uri = new Uri(new Uri(BASE_URL), uri);
-        string path = Path.Combine(_infoDirectory, Path.GetFileName(uri.LocalPath));
+        string path = Path.Combine(infoDirectory, Path.GetFileName(uri.LocalPath));
         _downloader.DownloadFile(uri.AbsoluteUri, path);
       }
     }
 
-    protected void LoadCoreInfos()
+    protected void LoadCoreInfos(string infoDirectory)
     {
       _coreInfos.Clear();
-      if (!Directory.Exists(_infoDirectory))
+      if (!Directory.Exists(infoDirectory))
         return;
 
       try
       {
-        foreach (string file in Directory.EnumerateFiles(_infoDirectory, "*.info"))
+        foreach (string file in Directory.EnumerateFiles(infoDirectory, "*.info"))
         {
           CoreInfo coreInfo;
           if (TryLoadCoreInfo(file, out coreInfo))
@@ -81,7 +79,7 @@ namespace Emulators.LibRetro.Cores
       }
       catch (Exception ex)
       {
-        ServiceRegistration.Get<ILogger>().Error("CoreInfoHandler: Exception reading directory '{0}'", ex, _infoDirectory);
+        ServiceRegistration.Get<ILogger>().Error("CoreInfoHandler: Exception reading directory '{0}'", ex, infoDirectory);
       }
     }
 
@@ -102,16 +100,16 @@ namespace Emulators.LibRetro.Cores
       return false;
     }
 
-    protected bool TryCreateInfoDirectory()
+    protected bool TryCreateInfoDirectory(string infoDirectory)
     {
       try
       {
-        Directory.CreateDirectory(_infoDirectory);
+        Directory.CreateDirectory(infoDirectory);
         return true;
       }
       catch (Exception ex)
       {
-        ServiceRegistration.Get<ILogger>().Error("CoreInfoHandler: Exception creating info directory '{0}'", ex, _infoDirectory);
+        ServiceRegistration.Get<ILogger>().Error("CoreInfoHandler: Exception creating info directory '{0}'", ex, infoDirectory);
       }
       return false;
     }
