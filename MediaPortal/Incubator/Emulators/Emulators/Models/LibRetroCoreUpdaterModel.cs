@@ -75,14 +75,19 @@ namespace Emulators.Models
       if (_downloadingUrls.Contains(core.Url))
         return;
 
-      ProgressLabel = LocalizationHelper.Translate("[Emulators.CoreUpdater.Downloading]", core.Name);
-      var sm = ServiceRegistration.Get<IScreenManager>();
-      Guid? dialogId = sm.ShowDialog(DIALOG_CORE_UPDATE_PROGRESS);
-      _coreHandler.DownloadCore(core);
-      if (dialogId.HasValue)
-        sm.CloseDialog(dialogId.Value);
-
-      _downloadingUrls.Remove(core.Url);
+      try
+      {
+        ProgressLabel = LocalizationHelper.Translate("[Emulators.CoreUpdater.Downloading]", core.Name);
+        var sm = ServiceRegistration.Get<IScreenManager>();
+        Guid? dialogId = sm.ShowDialog(DIALOG_CORE_UPDATE_PROGRESS);
+        _coreHandler.DownloadCore(core);
+        if (dialogId.HasValue)
+          sm.CloseDialog(dialogId.Value);
+      }
+      finally
+      {
+        _downloadingUrls.Remove(core.Url);
+      }
     }
 
     protected void UpdateAsync()
@@ -98,21 +103,26 @@ namespace Emulators.Models
           return;
         _isUpdating = true;
       }
-      
-      ProgressLabel = "[Emulators.CoreUpdater.UpdatingInfo]";
-      var sm = ServiceRegistration.Get<IScreenManager>();
-      Guid? dialogId = sm.ShowDialog(DIALOG_CORE_UPDATE_PROGRESS);
 
-      _infoHandler.Update();
-      ProgressLabel = "[Emulators.CoreUpdater.UpdatingCores]";
-      _coreHandler.Update();
-      RebuildItemsList();
+      try
+      {
+        ProgressLabel = "[Emulators.CoreUpdater.UpdatingInfo]";
+        var sm = ServiceRegistration.Get<IScreenManager>();
+        Guid? dialogId = sm.ShowDialog(DIALOG_CORE_UPDATE_PROGRESS);
 
-      if (dialogId.HasValue)
-        sm.CloseDialog(dialogId.Value);
+        _infoHandler.Update();
+        ProgressLabel = "[Emulators.CoreUpdater.UpdatingCores]";
+        _coreHandler.Update();
+        RebuildItemsList();
 
-      lock (_updateSync)
-        _isUpdating = false;
+        if (dialogId.HasValue)
+          sm.CloseDialog(dialogId.Value);
+      }
+      finally
+      {
+        lock (_updateSync)
+          _isUpdating = false;
+      }
     }
 
     protected void RebuildItemsList()
