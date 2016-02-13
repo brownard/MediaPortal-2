@@ -25,7 +25,7 @@ namespace Emulators.Models
   public class LibRetroCoreUpdaterModel : IWorkflowModel
   {
     public static readonly Guid MODEL_ID = new Guid("656E3AC1-0363-4DA9-A23F-F1422A9ADD74");
-    public const string lABEL_CORE_NAME = "CoreName";
+    public const string LABEL_CORE_NAME = "CoreName";
     public const string LABEL_CORE_SYSTEM = "CoreSystem";
     public const string KEY_CORE = "LibRetro: Core";
     public const string DIALOG_CORE_UPDATE_PROGRESS = "dialog_core_update_progress";
@@ -138,7 +138,7 @@ namespace Emulators.Models
     protected ListItem CreateListItem(CoreUrl core)
     {
       ListItem item = new ListItem();
-      item.SetLabel(lABEL_CORE_NAME, core.Name);
+      item.SetLabel(LABEL_CORE_NAME, core.Name);
       item.AdditionalProperties[KEY_CORE] = core;
       item.Command = new MethodDelegateCommand(() => DownloadCore(core));
 
