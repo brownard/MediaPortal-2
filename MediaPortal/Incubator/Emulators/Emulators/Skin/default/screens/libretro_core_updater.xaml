@@ -10,20 +10,18 @@
     <Model x:Key="Model" Id="656E3AC1-0363-4DA9-A23F-F1422A9ADD74"/>
 
     <!-- Header -->
-    <ResourceWrapper x:Key="Header_Text" Resource="[Emulators.LibRetro.UpdateCores]"/>
+    <ResourceWrapper x:Key="Header_Text" Resource="[Emulators.Config.LibRetro.UpdateCores]"/>
 
     <!-- Contents -->
     <ControlTemplate x:Key="Contents_Template">
       <Grid DataContext="{Binding Source={StaticResource Model}}">
         <Grid.RowDefinitions>
-          <RowDefinition Height="Auto"/>
           <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Label Grid.Row="0" Margin="10" Content="[Emulators.Config.EmulatorConfigurations.Label]" Color="{ThemeResource TextColor}"/>
-        <ListView Name="EmulatorList" Margin="10" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+        <ListView Name="CoresList" Margin="10" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
               Style="{ThemeResource ContentsMenuListViewStyle}"
               ItemsSource="{Binding Path=Items,Mode=OneTime}">
           <ListView.Resources>

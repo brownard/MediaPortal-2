@@ -17,6 +17,10 @@
   <string name="Emulators.Config.PluginSettingsLabel">Emulators</string>
   <string name="Emulators.Config.Setting.Advanced">Advanced</string>
   <string name="Emulators.Config.Setting.LibRetro">Libretro</string>
+  <string name="Emulators.Config.Setting.LibRetro.Cores">Cores</string>
+  <string name="Emulators.Config.Setting.LibRetro.Saves">Saves</string>
+  <string name="Emulators.Config.Setting.LibRetro.Input">Input</string>
+  <string name="Emulators.Config.Setting.LibRetro.Playback">Playback</string>
   <string name="Emulators.Config.Setting.ConfigureEmulators">Configure emulators</string>
   <string name="Emulators.Config.Setting.ConfigureEmulators.Help">Add, edit and remove emulators</string>
 
@@ -79,6 +83,14 @@
   <string name="Emulators.SelectGoodmerge.Header">Choose GoodMerge file</string>
   <string name="Emulators.ExtractGoodmerge.Header">Extracting GoodMerge file</string>
 
+  <string name="Emulators.Config.LibRetro.UpdateCores">Update cores</string>
+  <string name="Emulators.Config.LibRetro.UpdateCores.Help">Add or update cores</string>
+  <string name="Emulators.Config.LibRetro.SavesDirectory">Saves directory</string>
+  <string name="Emulators.Config.LibRetro.SavesDirectory.Help">The path to use for game saves</string>
+  <string name="Emulators.Config.LibRetro.CoresDirectory">Cores directory</string>
+  <string name="Emulators.Config.LibRetro.CoresDirectory.Help">The path to use for downloaded cores</string>
+  <string name="Emulators.Config.LibRetro.CoreInfoDirectory">Core info directory</string>
+  <string name="Emulators.Config.LibRetro.CoreInfoDirectory.Help">The path to use for downloaded core information</string>
   <string name="Emulators.Config.LibRetro.MaximumPlayers">Maximum players</string>
   <string name="Emulators.Config.LibRetro.MaximumPlayers.Help">Set the maximum number of players available when configuring input devices</string>
   <string name="Emulators.Config.LibRetro.MapInputDevices">Map input devices</string>

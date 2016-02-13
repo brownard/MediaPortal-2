@@ -158,7 +158,7 @@
     <!-- Core updater -->
     <WorkflowState Id="BC9FAFDE-315E-4DBD-A99D-060D3225DCAA"
         Name="CoreUpdater"
-        DisplayLabel="[Emulators.LibRetro.UpdateCores]"
+        DisplayLabel="[Emulators.Config.LibRetro.UpdateCores]"
         MainScreen="libretro_core_updater"
         WorkflowModel="656E3AC1-0363-4DA9-A23F-F1422A9ADD74"/>    <!-- LibRetro core updater model -->
 
@@ -236,27 +236,51 @@
     
   </Register>
 
-  <Register Location="/Configuration/Settings/Plugins/Emulators/LibRetro">        
+  <Register Location="/Configuration/Settings/Plugins/Emulators/LibRetro">
+    <ConfigSection
+        Id="Cores"
+        Redundant="true"
+        Text="[Emulators.Config.Setting.LibRetro.Cores]"
+        Sort="a"/>
+    <ConfigSection
+        Id="Saves"
+        Redundant="true"
+        Text="[Emulators.Config.Setting.LibRetro.Saves]"
+        Sort="b"/>
+    <ConfigSection
+        Id="Input"
+        Redundant="true"
+        Text="[Emulators.Config.Setting.LibRetro.Input]"
+        Sort="c"/>
+    <ConfigSection
+        Id="Playback"
+        Redundant="true"
+        Text="[Emulators.Config.Setting.LibRetro.Playback]"
+        Sort="d"/>
+  </Register>
+
+  <Register Location="/Configuration/Settings/Plugins/Emulators/LibRetro/Cores">        
     <CustomConfigSetting
         Id="CoreUpdater"
-        Text="[Emulators.LibRetro.UpdateCores]"
-        HelpText="[Emulators.LibRetro.UpdateCores.Help]"
+        Text="[Emulators.Config.LibRetro.UpdateCores]"
+        HelpText="[Emulators.Config.LibRetro.UpdateCores.Help]"
         ClassName="Emulators.Settings.Configuration.LibRetro.CoreUpdaterSetting"
         AdditionalData="WorkflowState=BC9FAFDE-315E-4DBD-A99D-060D3225DCAA,ConfAppPanel=..."/>
-          
+    
     <ConfigSetting
-        Id="MaxPlayers"
-        Text="[Emulators.Config.LibRetro.MaximumPlayers]"
-        HelpText="[Emulators.Config.LibRetro.MaximumPlayers.Help]"
-        ClassName="Emulators.Settings.Configuration.LibRetro.MaxPlayersSetting"/>
+        Id="CoresDirectory"
+        Text="[Emulators.Config.LibRetro.CoresDirectory]"
+        HelpText="[Emulators.Config.LibRetro.CoresDirectory.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.CoresDirectorySetting"/>
     
-    <CustomConfigSetting
-        Id="LibRetroMapping"
-        Text="[Emulators.Config.LibRetro.MapInputDevices]"
-        HelpText="[Emulators.Config.LibRetro.MapInputDevices.Help]"
-        ClassName="Emulators.Settings.Configuration.LibRetro.MappingSetting"
-        AdditionalData="WorkflowState=02FEF896-7C0E-444D-9657-44660E0ED90A,ConfAppPanel=..."/> 
-    
+    <ConfigSetting
+        Id="CoreInfoDirectory"
+        Text="[Emulators.Config.LibRetro.CoreInfoDirectory]"
+        HelpText="[Emulators.Config.LibRetro.CoreInfoDirectory.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.CoreInfoDirectorySetting"/>
+  </Register>
+
+  <Register Location="/Configuration/Settings/Plugins/Emulators/LibRetro/Saves">
     <ConfigSetting
         Id="AutoSave"
         Text="[Emulators.Config.LibRetro.AutoSave]"
@@ -268,7 +292,32 @@
         Text="[Emulators.Config.LibRetro.AutoSaveInterval]"
         HelpText="[Emulators.Config.LibRetro.AutoSaveInterval.Help]"
         ClassName="Emulators.Settings.Configuration.LibRetro.AutoSaveIntervalSetting"/>
+    
+    <ConfigSetting
+        Id="SavesDirectory"
+        Text="[Emulators.Config.LibRetro.SavesDirectory]"
+        HelpText="[Emulators.Config.LibRetro.SavesDirectory.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.SavesDirectorySetting"/>
+    
+  </Register>
 
+  <Register Location="/Configuration/Settings/Plugins/Emulators/LibRetro/Input">
+    <ConfigSetting
+        Id="MaxPlayers"
+        Text="[Emulators.Config.LibRetro.MaximumPlayers]"
+        HelpText="[Emulators.Config.LibRetro.MaximumPlayers.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.MaxPlayersSetting"/>
+
+    <CustomConfigSetting
+        Id="LibRetroMapping"
+        Text="[Emulators.Config.LibRetro.MapInputDevices]"
+        HelpText="[Emulators.Config.LibRetro.MapInputDevices.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.MappingSetting"
+        AdditionalData="WorkflowState=02FEF896-7C0E-444D-9657-44660E0ED90A,ConfAppPanel=..."/>
+
+  </Register>
+
+  <Register Location="/Configuration/Settings/Plugins/Emulators/LibRetro/Playback">
     <ConfigSetting
         Id="EnableVSync"
         Text="[Emulators.Config.LibRetro.EnableVSync]"
@@ -286,6 +335,7 @@
         Text="[Emulators.Config.LibRetro.AudioBufferSize]"
         HelpText="[Emulators.Config.LibRetro.AudioBufferSize.Help]"
         ClassName="Emulators.Settings.Configuration.LibRetro.AudioBufferSizeSetting"/>
+
   </Register>
 
   <Register Location="/Configuration/Settings/Plugins/Emulators/Advanced">
