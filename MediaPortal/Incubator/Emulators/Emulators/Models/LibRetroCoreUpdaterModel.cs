@@ -26,7 +26,7 @@ namespace Emulators.Models
   {
     public static readonly Guid MODEL_ID = new Guid("656E3AC1-0363-4DA9-A23F-F1422A9ADD74");
     public const string LABEL_CORE_NAME = "CoreName";
-    public const string LABEL_CORE_SYSTEM = "CoreSystem";
+    public const string KEY_CORE_INFO = "LibRetro: CoreInfo";
     public const string KEY_CORE = "LibRetro: Core";
     public const string DIALOG_CORE_UPDATE_PROGRESS = "dialog_core_update_progress";
     
@@ -147,7 +147,7 @@ namespace Emulators.Models
       if (_infoHandler.CoreInfos.TryGetValue(coreName, out info))
       {
         item.SetLabel(Consts.KEY_NAME, info.DisplayName);
-        item.SetLabel(LABEL_CORE_SYSTEM, info.SystemName);
+        item.AdditionalProperties[KEY_CORE_INFO] = info;
       }
       else
       {
