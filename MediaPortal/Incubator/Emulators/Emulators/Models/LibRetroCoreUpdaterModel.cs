@@ -16,6 +16,9 @@ using MediaPortal.Common.Commands;
 using System.IO;
 using MediaPortal.Common.Settings;
 using Emulators.LibRetro.Settings;
+using MediaPortal.Common.General;
+using MediaPortal.UI.Presentation.Screens;
+using MediaPortal.Common.Localization;
 
 namespace Emulators.Models
 {
@@ -25,6 +28,9 @@ namespace Emulators.Models
     public const string lABEL_CORE_NAME = "CoreName";
     public const string LABEL_CORE_SYSTEM = "CoreSystem";
     public const string KEY_CORE = "LibRetro: Core";
+    public const string DIALOG_CORE_UPDATE_PROGRESS = "dialog_core_update_progress";
+    
+    protected AbstractProperty _progressLabelProperty = new WProperty(typeof(string), null);
 
     protected readonly object _updateSync = new object();
     protected CoreHandler _coreHandler;
@@ -48,6 +54,17 @@ namespace Emulators.Models
       get { return _coreItems; }
     }
 
+    public AbstractProperty ProgressLabelProperty
+    {
+      get { return _progressLabelProperty; }
+    }
+
+    public string ProgressLabel
+    {
+      get { return (string)_progressLabelProperty.GetValue(); }
+      set { _progressLabelProperty.SetValue(value); }
+    }
+
     protected void DownloadCoreAsync(CoreUrl core)
     {
       ServiceRegistration.Get<IThreadPool>().Add(() => DownloadCore(core));
@@ -57,7 +74,14 @@ namespace Emulators.Models
     {
       if (_downloadingUrls.Contains(core.Url))
         return;
+
+      ProgressLabel = LocalizationHelper.Translate("[Emulators.CoreUpdater.Downloading]", core.Name);
+      var sm = ServiceRegistration.Get<IScreenManager>();
+      Guid? dialogId = sm.ShowDialog(DIALOG_CORE_UPDATE_PROGRESS);
       _coreHandler.DownloadCore(core);
+      if (dialogId.HasValue)
+        sm.CloseDialog(dialogId.Value);
+
       _downloadingUrls.Remove(core.Url);
     }
 
@@ -74,10 +98,18 @@ namespace Emulators.Models
           return;
         _isUpdating = true;
       }
+      
+      ProgressLabel = "[Emulators.CoreUpdater.UpdatingInfo]";
+      var sm = ServiceRegistration.Get<IScreenManager>();
+      Guid? dialogId = sm.ShowDialog(DIALOG_CORE_UPDATE_PROGRESS);
 
-      _coreHandler.Update();
       _infoHandler.Update();
+      ProgressLabel = "[Emulators.CoreUpdater.UpdatingCores]";
+      _coreHandler.Update();
       RebuildItemsList();
+
+      if (dialogId.HasValue)
+        sm.CloseDialog(dialogId.Value);
 
       lock (_updateSync)
         _isUpdating = false;
