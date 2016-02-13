@@ -15,7 +15,7 @@
   <string name="Emulators.Developer">Developer</string>
 
   <string name="Emulators.Config.PluginSettingsLabel">Emulators</string>
-  <string name="Emulators.Config.Setting.Advanced">Advanced</string>
+  <string name="Emulators.Config.Setting.Goodmerge">Goodmerge</string>
   <string name="Emulators.Config.Setting.LibRetro">Libretro</string>
   <string name="Emulators.Config.Setting.LibRetro.Cores">Cores</string>
   <string name="Emulators.Config.Setting.LibRetro.Saves">Saves</string>

@@ -216,9 +216,9 @@
         Sort="a"/>
     
     <ConfigSection
-        Id="Advanced"
+        Id="Goodmerge"
         Redundant="true"
-        Text="[Emulators.Config.Setting.Advanced]"
+        Text="[Emulators.Config.Setting.Goodmerge]"
         Sort="b"/>
     
     <CustomConfigSetting
@@ -338,7 +338,7 @@
 
   </Register>
 
-  <Register Location="/Configuration/Settings/Plugins/Emulators/Advanced">
+  <Register Location="/Configuration/Settings/Plugins/Emulators/Goodmerge">
     <CustomConfigSetting
         Id="ClearGoodMergeCache"
         Text="[Emulators.Config.Setting.ClearGoodMergeCache]"
