@@ -92,6 +92,8 @@ namespace Emulators.LibRetro
     #region Public Methods
     public bool Init()
     {
+      _settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
+      InitializeControllerWrapper(); 
       _retroThread = new LibRetroThread();
       _retroThread.Initializing += RetroThreadInitializing;
       _retroThread.Started += RetroThreadStarted;
@@ -167,6 +169,31 @@ namespace Emulators.LibRetro
     #endregion
 
     #region Init
+    protected void InitializeAll()
+    {
+      try
+      {
+        InitializeLibRetro();
+        if (!LoadGame())
+          return;
+        InitializeVideo();
+        InitializeAudio();
+        InitializeSaveStateHandler();
+        if (!_syncToAudio)
+          _synchronisationStrategy = new SynchronisationStrategy(_retroEmulator.TimingInfo.FPS, _settings.EnableVSync);
+        _retroThread.IsInit = true;
+      }
+      catch (Exception ex)
+      {
+        Logger.Error("LibRetroFrontend: Error initialising Libretro core", ex);
+        if (_retroEmulator != null)
+        {
+          _retroEmulator.Dispose();
+          _retroEmulator = null;
+        }
+      }
+    }
+
     protected void InitializeLibRetro()
     {
       _glContext = new RetroGLContextProvider();
@@ -183,12 +210,14 @@ namespace Emulators.LibRetro
       _retroEmulator.FrameBufferReady += OnFrameBufferReady;
       _retroEmulator.AudioReady += OnAudioReady;
       _retroEmulator.Init();
+      Logger.Debug("LibRetroFrontend: Libretro initialized");
     }
 
     protected void InitializeVideo()
     {
       lock (_surfaceLock)
         _textureProvider = new LibRetroTextureWrapper();
+      Logger.Debug("LibRetroFrontend: Video initialized");
     }
 
     protected void InitializeAudio()
@@ -197,7 +226,7 @@ namespace Emulators.LibRetro
       Guid audioRenderer;
       if (videoSettings == null || videoSettings.AudioRenderer == null || !Guid.TryParse(videoSettings.AudioRenderer.CLSID, out audioRenderer))
         audioRenderer = Guid.Empty;
-
+      
       lock (_audioLock)
       {
         _syncToAudio = _settings.SyncToAudio;
@@ -207,8 +236,10 @@ namespace Emulators.LibRetro
           _soundOutput.Dispose();
           _soundOutput = null;
           _syncToAudio = false;
+          return;
         }
       }
+      Logger.Debug("LibRetroFrontend: Audio initialized");
     }
 
     protected void InitializeSaveStateHandler()
@@ -216,6 +247,7 @@ namespace Emulators.LibRetro
       _autoSave = _settings.AutoSave;
       _saveHandler = new LibRetroSaveStateHandler(_retroEmulator, _saveName, _settings.SavesDirectory, _settings.AutoSaveInterval);
       _saveHandler.LoadSaveRam();
+      Logger.Debug("LibRetroFrontend: Save handler Initialized");
     }
 
     protected void SetCoreVariables()
@@ -228,7 +260,7 @@ namespace Emulators.LibRetro
         _retroEmulator.Variables.AddOrUpdate(variable);
     }
 
-    protected void CreateControllerWrapper()
+    protected void InitializeControllerWrapper()
     {
       _controllerWrapper = new ControllerWrapper(_settings.MaxPlayers);
       DeviceProxy deviceProxy = new DeviceProxy();
@@ -243,49 +275,38 @@ namespace Emulators.LibRetro
           RetroPadMapping mapping = mappingProxy.GetDeviceMapping(device);
           device.Map(mapping);
           _controllerWrapper.AddController(device, port.Port);
+          Logger.Debug("LibRetroFrontend: Mapped controller {0} to port {1}", device.DeviceName, port.Port);
         }
       }
     }
 
     protected bool LoadGame()
     {
+      bool result;
       //A core can support running without a game as well as with a game.
       //There is currently no way to check which case is needed as we currently use a dummy game
       //to import/load standalone cores.
       //Checking ValidExtensions is currently a hack which works better than nothing
       if (_retroEmulator.SupportsNoGame && _retroEmulator.SystemInfo.ValidExtensions == null)
-        return _retroEmulator.LoadGame(new LibRetroCore.retro_game_info());
-      byte[] gameData = _retroEmulator.SystemInfo.NeedsFullPath ? null : File.ReadAllBytes(_gamePath);
-      return _retroEmulator.LoadGame(_gamePath, gameData);
+      {
+        Logger.Debug("LibRetroFrontend: Loading no game");
+        result = _retroEmulator.LoadGame(new LibRetroCore.retro_game_info());
+      }
+      else
+      {
+        Logger.Debug("LibRetroFrontend: Loading game '{0}', NeedsFullPath: {1}", _gamePath, _retroEmulator.SystemInfo.NeedsFullPath);
+        byte[] gameData = _retroEmulator.SystemInfo.NeedsFullPath ? null : File.ReadAllBytes(_gamePath);
+        result = _retroEmulator.LoadGame(_gamePath, gameData);
+      }
+      Logger.Debug("LibRetroFrontend: Load game {0}", result ? "succeeded" : "failed");
+      return result;
     }
     #endregion
 
     #region Retro Thread
     private void RetroThreadInitializing(object sender, EventArgs e)
     {
-      _settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
-      try
-      {
-        CreateControllerWrapper();
-        InitializeLibRetro();
-        if (!LoadGame())
-          return;
-        InitializeVideo();
-        InitializeAudio();
-        InitializeSaveStateHandler();
-        if (!_syncToAudio)
-          _synchronisationStrategy = new SynchronisationStrategy(_retroEmulator.TimingInfo.FPS, _settings.EnableVSync);
-        _retroThread.IsInit = true;
-      }
-      catch (Exception ex)
-      {
-        Logger.Error("LibRetroFrontend: Error initialising Libretro core: {0}", ex);
-        if (_retroEmulator != null)
-        {
-          _retroEmulator.Dispose();
-          _retroEmulator = null;
-        }
-      }
+      InitializeAll();
     }
 
     private void RetroThreadStarted(object sender, EventArgs e)
@@ -294,6 +315,7 @@ namespace Emulators.LibRetro
       lock (_audioLock)
         if (_soundOutput != null)
           _soundOutput.Play();
+      Logger.Debug("LibRetroFrontend: Libretro thread running");
     }
 
     private void RetroThreadRunning(object sender, EventArgs e)
@@ -320,6 +342,7 @@ namespace Emulators.LibRetro
 
     private void RetroThreadFinishing(object sender, EventArgs e)
     {
+      Logger.Debug("LibRetroFrontend: Libretro thread finishing");
       _saveHandler.SaveSaveRam();
       _retroEmulator.UnloadGame();
       _retroEmulator.DeInit();
@@ -329,6 +352,7 @@ namespace Emulators.LibRetro
     {
       _retroEmulator.Dispose();
       _retroEmulator = null;
+      Logger.Debug("LibRetroFrontend: Libretro thread finished");
     }
 
     private void RetroThreadPaused(object sender, EventArgs e)
