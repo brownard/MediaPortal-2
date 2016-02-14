@@ -212,6 +212,7 @@ namespace Emulators.LibRetro
       _retroEmulator.VideoReady += OnVideoReady;
       _retroEmulator.FrameBufferReady += OnFrameBufferReady;
       _retroEmulator.AudioReady += OnAudioReady;
+      _retroEmulator.AVInfoUpdated += OnAVInfoUpdated;
       _retroEmulator.Init();
       Logger.Debug("LibRetroFrontend: Libretro initialized");
     }
@@ -401,6 +402,19 @@ namespace Emulators.LibRetro
       {
         if (_soundOutput != null)
           _soundOutput.WriteSamples(_retroEmulator.AudioBuffer.Data, _retroEmulator.AudioBuffer.Length, _syncToAudio);
+      }
+    }
+
+    protected void OnAVInfoUpdated(object sender, EventArgs e)
+    {
+      Logger.Debug("LibRetroFrontend: AV info updated, reinitializing");
+      lock(_audioLock)
+      {
+        if (_soundOutput != null)
+          _soundOutput.Dispose();
+        InitializeAudio();
+        if (_soundOutput != null)
+          _soundOutput.Play();
       }
     }
     #endregion

@@ -228,6 +228,17 @@ namespace SharpRetro.LibRetro
       if (handler != null)
         handler(this, EventArgs.Empty);
     }
+
+    /// <summary>
+    /// Fired when the AVInfo has been updated
+    /// </summary>
+    public event EventHandler AVInfoUpdated;
+    protected virtual void OnAVInfoUpdated()
+    {
+      var handler = AVInfoUpdated;
+      if (handler != null)
+        handler(this, EventArgs.Empty);
+    }
     #endregion
 
     #region Ctor
@@ -380,7 +391,7 @@ namespace SharpRetro.LibRetro
         Log(LibRetroCore.RETRO_LOG_LEVEL.WARN, "retro_load_game() failed");
         return false;
       }
-      SetAVInfo();
+      GetAVInfo();
       return true;
     }
 
@@ -400,7 +411,7 @@ namespace SharpRetro.LibRetro
       _retro.retro_unload_game();
     }
 
-    protected void SetAVInfo()
+    protected void GetAVInfo()
     {
       LibRetroCore.retro_system_av_info av = new LibRetroCore.retro_system_av_info();
       _retro.retro_get_system_av_info(ref av);
@@ -617,6 +628,8 @@ namespace SharpRetro.LibRetro
         case LibRetroCore.RETRO_ENVIRONMENT.GET_SAVE_DIRECTORY:
           Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "returning save directory: " + _saveDirectory);
           return SetDirectory(data, _saveDirectory);
+        case LibRetroCore.RETRO_ENVIRONMENT.SET_SYSTEM_AV_INFO:
+          return SetAVInfo(data);
         case LibRetroCore.RETRO_ENVIRONMENT.SET_CONTROLLER_INFO:
           return true;
         case LibRetroCore.RETRO_ENVIRONMENT.SET_MEMORY_MAPS:
@@ -731,6 +744,18 @@ namespace SharpRetro.LibRetro
       LibRetroCore.retro_hw_context_reset_t contextDestroy = info->context_destroy != IntPtr.Zero ?
         Marshal.GetDelegateForFunctionPointer<LibRetroCore.retro_hw_context_reset_t>(info->context_destroy) : null;
       _glContext.Init(info->depth, info->stencil, info->bottom_left_origin, contextReset, contextDestroy);
+      return true;
+    }
+
+    protected bool SetAVInfo(IntPtr data)
+    {
+      LibRetroCore.retro_system_av_info* av = (LibRetroCore.retro_system_av_info*)data.ToPointer();
+      _maxVideoWidth = (int)av->geometry.max_width;
+      _maxVideoHeight = (int)av->geometry.max_height;
+      _videoBuffer = new int[_maxVideoWidth * _maxVideoHeight];
+      _videoInfo = new VideoInfo((int)av->geometry.base_width, (int)av->geometry.base_height, av->geometry.aspect_ratio);
+      _timingInfo = new TimingInfo(av->timing.fps, av->timing.sample_rate);
+      OnAVInfoUpdated();
       return true;
     }
 
