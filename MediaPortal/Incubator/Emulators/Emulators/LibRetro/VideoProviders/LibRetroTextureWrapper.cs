@@ -1,4 +1,6 @@
-﻿using SharpDX;
+﻿using MediaPortal.Common;
+using MediaPortal.Common.Logging;
+using SharpDX;
 using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
@@ -10,11 +12,41 @@ namespace Emulators.LibRetro.VideoProviders
 {
   public class LibRetroTextureWrapper : ITextureProvider
   {
+    #region SynchronizedTexture
+    protected class SynchronizedTexture : Texture
+    {
+      protected readonly object _syncRoot = new object();
+      protected bool _isDisposing;
+
+      public SynchronizedTexture(Device device, int width, int height, int levelCount, Usage usage, Format format, Pool pool)
+        : base(device, width, height, levelCount, usage, format, pool)
+      {
+        Disposing += OnDisposing;
+      }
+
+      public object SyncRoot
+      {
+        get { return _syncRoot; }
+      }
+
+      public bool IsDisposing
+      {
+        get { return _isDisposing; }
+      }
+
+      protected void OnDisposing(object sender, EventArgs e)
+      {
+        lock (_syncRoot)
+          _isDisposing = true;
+      }
+    }
+    #endregion
+
     const int INT_COUNT_PER_PIXEL = 1;
     const int BYTE_COUNT_PER_PIXEL = 4;
     const int TEXTURE_BUFFER_LENGTH = 2;
 
-    protected Texture[] _textures = new Texture[TEXTURE_BUFFER_LENGTH];
+    protected SynchronizedTexture[] _textures = new SynchronizedTexture[TEXTURE_BUFFER_LENGTH];
     protected int _currentTextureIndex;
 
     public Texture Texture
@@ -37,39 +69,66 @@ namespace Emulators.LibRetro.VideoProviders
       if (pixels == null)
         return;
 
-      Texture texture = GetOrCreateTexture(device, width, height);
-      DataStream dataStream;
-      DataRectangle rectangle = texture.LockRectangle(0, LockFlags.None, out dataStream);
-      int padding = rectangle.Pitch - (width * sizeof(int));
-      int countPerLine = width * countPerPixel;
-
-      using (dataStream)
+      SynchronizedTexture texture = null;
+      try
       {
-        if (bottomLeftOrigin)
-          WritePixelsBottomLeft(pixels, height, countPerLine, padding, dataStream);
-        else
-          WritePixels(pixels, height, countPerLine, padding, dataStream);
-        texture.UnlockRectangle(0);
+        texture = GetOrCreateTexture(device, width, height);
+        lock (texture.SyncRoot)
+        {
+          if (texture.IsDisposing)
+            return;
+          DataStream dataStream;
+          DataRectangle rectangle = texture.LockRectangle(0, LockFlags.None, out dataStream);
+          int padding = rectangle.Pitch - (width * sizeof(int));
+          int countPerLine = width * countPerPixel;
+
+          using (dataStream)
+          {
+            if (bottomLeftOrigin)
+              WritePixelsBottomLeft(pixels, height, countPerLine, padding, dataStream);
+            else
+              WritePixels(pixels, height, countPerLine, padding, dataStream);
+            texture.UnlockRectangle(0);
+          }
+        }
+      }
+      catch (Exception ex)
+      {
+        if (texture != null)
+        {
+          texture.Dispose();
+          _textures[_currentTextureIndex] = null;
+        }
+        ServiceRegistration.Get<ILogger>().Error("LibRetroTextureWrapper: Texture update failed", ex);
       }
     }
 
-    protected Texture GetOrCreateTexture(Device device, int width, int height)
+    protected SynchronizedTexture GetOrCreateTexture(Device device, int width, int height)
     {
       _currentTextureIndex = (_currentTextureIndex + 1) % _textures.Length;
-      Texture texture = _textures[_currentTextureIndex];
-      bool needsCreation = texture == null || texture.IsDisposed;
-      if (!needsCreation)
+      SynchronizedTexture texture = _textures[_currentTextureIndex];
+
+      if (texture != null)
       {
-        SurfaceDescription surface = texture.GetLevelDescription(0);
-        if (surface.Width != width || surface.Height != height)
+        lock (texture.SyncRoot)
         {
-          texture.Dispose();
-          needsCreation = true;
+          if (texture.IsDisposing)
+            texture = null;
+          else
+          {
+            SurfaceDescription surface = texture.GetLevelDescription(0);
+            if (surface.Width != width || surface.Height != height)
+            {
+              texture.Dispose();
+              texture = null;
+            }
+          }
         }
       }
-      if (needsCreation)
+
+      if (texture == null)
       {
-        texture = new Texture(device, width, height, 1, Usage.Dynamic, Format.X8R8G8B8, Pool.Default);
+        texture = new SynchronizedTexture(device, width, height, 1, Usage.Dynamic, Format.X8R8G8B8, Pool.Default);
         _textures[_currentTextureIndex] = texture;
       }
       return texture;
@@ -105,6 +164,7 @@ namespace Emulators.LibRetro.VideoProviders
           _textures[i] = null;
         }
       }
+      ServiceRegistration.Get<ILogger>().Debug("LibRetroTextureWrapper: Released");
     }
 
     public void Dispose()
