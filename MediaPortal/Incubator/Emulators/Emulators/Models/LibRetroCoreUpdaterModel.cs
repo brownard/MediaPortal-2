@@ -29,6 +29,7 @@ namespace Emulators.Models
     public const string KEY_CORE_INFO = "LibRetro: CoreInfo";
     public const string KEY_CORE = "LibRetro: Core";
     public const string DIALOG_CORE_UPDATE_PROGRESS = "dialog_core_update_progress";
+    public const string DIALOG_CONTEXT_MENU = "dialog_core_context_menu";
 
     protected AbstractProperty _progressLabelProperty = new WProperty(typeof(string), null);
 
@@ -39,12 +40,14 @@ namespace Emulators.Models
     protected CoreHandler _coreHandler;
     protected CoreInfoHandler _infoHandler;
     protected ItemsList _coreItems;
+    protected ItemsList _contextMenuItems;
     protected HashSet<string> _downloadingUrls;
     protected bool _isUpdating;
 
     public LibRetroCoreUpdaterModel()
     {
       _coreItems = new ItemsList();
+      _contextMenuItems = new ItemsList();
       _downloadingUrls = new HashSet<string>();
       _coreHandler = new CoreHandler();
       _infoHandler = new CoreInfoHandler();
@@ -53,6 +56,11 @@ namespace Emulators.Models
     public ItemsList Items
     {
       get { return _coreItems; }
+    }
+
+    public ItemsList ContextMenuItems
+    {
+      get { return _contextMenuItems; }
     }
 
     public AbstractProperty ProgressLabelProperty
@@ -64,6 +72,20 @@ namespace Emulators.Models
     {
       get { return (string)_progressLabelProperty.GetValue(); }
       set { _progressLabelProperty.SetValue(value); }
+    }
+
+    protected void CoreItemSelected(LibRetroCoreItem item, LocalCore core)
+    {
+      if (item.Downloaded)
+        ShowContextMenu(item, core);
+      else
+        DownloadCoreAsync(item, core);
+    }
+
+    protected void ShowContextMenu(LibRetroCoreItem item, LocalCore core)
+    {
+      RebuildContextMenuItems(item, core);
+      ServiceRegistration.Get<IScreenManager>().ShowDialog(DIALOG_CONTEXT_MENU);
     }
 
     protected void DownloadCoreAsync(LibRetroCoreItem item, LocalCore core)
@@ -162,7 +184,7 @@ namespace Emulators.Models
       item.SetLabel(LABEL_CORE_NAME, core.CoreName);
       item.AdditionalProperties[KEY_CORE] = core;
       item.Downloaded = File.Exists(Path.Combine(coresDirectory, core.CoreName));
-      item.Command = new MethodDelegateCommand(() => DownloadCoreAsync(item, core));
+      item.Command = new MethodDelegateCommand(() => CoreItemSelected(item, core));
 
       string infoName = Path.GetFileNameWithoutExtension(core.CoreName);
       CoreInfo info;
@@ -176,6 +198,23 @@ namespace Emulators.Models
         item.SetLabel(Consts.KEY_NAME, infoName);
       }
       return item;
+    }
+
+    protected void RebuildContextMenuItems(LibRetroCoreItem item, LocalCore core)
+    {
+      _contextMenuItems.Clear();
+      ListItem contextItem = new ListItem(Consts.KEY_NAME, "[Emulators.CoreUpdater.Update]");
+      contextItem.Command = new MethodDelegateCommand(() => DownloadCoreAsync(item, core));
+      _contextMenuItems.Add(contextItem);
+      contextItem = new ListItem(Consts.KEY_NAME, "[Emulators.CoreUpdater.Configure]");
+      contextItem.Command = new MethodDelegateCommand(() =>
+      {
+        string path = Path.Combine(_coresDirectory, core.CoreName);
+        if (File.Exists(path))
+          EmulatorConfigurationModel.Instance().AddOrEditLibRetroCore(path);
+      });
+      _contextMenuItems.Add(contextItem);
+      _contextMenuItems.FireChange();
     }
 
     #region IWorkflow

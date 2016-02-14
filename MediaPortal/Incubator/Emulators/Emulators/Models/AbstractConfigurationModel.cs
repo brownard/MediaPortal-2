@@ -108,43 +108,43 @@ namespace Emulators.Models
       get;
     }
 
-    public bool CanEnterState(NavigationContext oldContext, NavigationContext newContext)
+    public virtual bool CanEnterState(NavigationContext oldContext, NavigationContext newContext)
     {
       return true;
     }
 
-    public void EnterModelContext(NavigationContext oldContext, NavigationContext newContext)
+    public virtual void EnterModelContext(NavigationContext oldContext, NavigationContext newContext)
     {
       UpdateConfigurations();
       UpdateState(newContext, true);
     }
 
-    public void ExitModelContext(NavigationContext oldContext, NavigationContext newContext)
+    public virtual void ExitModelContext(NavigationContext oldContext, NavigationContext newContext)
     {
 
     }
 
-    public void ChangeModelContext(NavigationContext oldContext, NavigationContext newContext, bool push)
+    public virtual void ChangeModelContext(NavigationContext oldContext, NavigationContext newContext, bool push)
     {
       UpdateState(newContext, push);
     }
 
-    public void Deactivate(NavigationContext oldContext, NavigationContext newContext)
+    public virtual void Deactivate(NavigationContext oldContext, NavigationContext newContext)
     {
 
     }
 
-    public void Reactivate(NavigationContext oldContext, NavigationContext newContext)
+    public virtual void Reactivate(NavigationContext oldContext, NavigationContext newContext)
     {
 
     }
 
-    public void UpdateMenuActions(NavigationContext context, IDictionary<Guid, WorkflowAction> actions)
+    public virtual void UpdateMenuActions(NavigationContext context, IDictionary<Guid, WorkflowAction> actions)
     {
 
     }
 
-    public ScreenUpdateMode UpdateScreen(NavigationContext context, ref string screen)
+    public virtual ScreenUpdateMode UpdateScreen(NavigationContext context, ref string screen)
     {
       return ScreenUpdateMode.AutoWorkflowManager;
     }

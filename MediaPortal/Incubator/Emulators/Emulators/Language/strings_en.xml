@@ -86,6 +86,8 @@
   <string name="Emulators.CoreUpdater.ProgressHeader">Updating</string>
   <string name="Emulators.CoreUpdater.UpdatingCores">Updating cores</string>
   <string name="Emulators.CoreUpdater.Downloading">Downloading {0}</string>
+  <string name="Emulators.CoreUpdater.Update">Update</string>
+  <string name="Emulators.CoreUpdater.Configure">Configure</string>
   <string name="Emulators.Config.LibRetro.UpdateCores">Update cores</string>
   <string name="Emulators.Config.LibRetro.UpdateCores.Help">Add or update cores</string>
   <string name="Emulators.Config.LibRetro.SavesDirectory">Saves directory</string>

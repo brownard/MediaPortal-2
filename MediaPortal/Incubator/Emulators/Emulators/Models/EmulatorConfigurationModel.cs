@@ -42,6 +42,7 @@ namespace Emulators.Models
     public static readonly Guid STATE_LIBRETRO_OPTIONS = new Guid("97E490B5-DF74-4894-9704-81B214C47EF8");
     public static readonly Guid STATE_REMOVE_EMULATOR = new Guid("A07A0648-878E-4762-9540-3939E308DD94");
 
+    protected Guid _enteredState = Guid.Empty;
     protected EmulatorProxy _emulatorProxy;
     protected ItemsList _emulatorTypes = new ItemsList();
     protected ItemsList _wildcardItems = new ItemsList();
@@ -76,6 +77,24 @@ namespace Emulators.Models
       NavigatePush(STATE_CHOOSE_TYPE);
     }
 
+    public void AddOrEditLibRetroCore(string corePath)
+    {
+      List<EmulatorConfiguration> configurations = ServiceRegistration.Get<IEmulatorManager>().Load();
+      EmulatorConfiguration configuration = configurations.FirstOrDefault(c => c.IsLibRetro && c.Path == corePath);
+      if (configuration == null)
+      {
+        configuration = new EmulatorConfiguration()
+        {
+          IsLibRetro = true,
+          Id = Guid.NewGuid(),
+          LocalSystemId = ServiceRegistration.Get<ISystemResolver>().LocalSystemId,
+          Path = corePath
+        };
+      }
+      _emulatorProxy = new EmulatorProxy(configuration);
+      NavigatePush(STATE_EDIT_NAME);
+    }
+
     public void BeginNewEmulatorConfiguration()
     {
       ListItem selectedTypeItem = _emulatorTypes.FirstOrDefault(i => i.Selected);
@@ -107,11 +126,13 @@ namespace Emulators.Models
       }
       else
       {
-        configuration = new EmulatorConfiguration();
-        configuration.IsNative = _emulatorProxy.EmulatorType == EmulatorType.Native;
-        configuration.IsLibRetro = _emulatorProxy.EmulatorType == EmulatorType.LibRetro;
-        configuration.Id = Guid.NewGuid();
-        configuration.LocalSystemId = ServiceRegistration.Get<ISystemResolver>().LocalSystemId;
+        configuration = new EmulatorConfiguration()
+        {
+          IsNative = _emulatorProxy.EmulatorType == EmulatorType.Native,
+          IsLibRetro = _emulatorProxy.EmulatorType == EmulatorType.LibRetro,
+          Id = Guid.NewGuid(),
+          LocalSystemId = ServiceRegistration.Get<ISystemResolver>().LocalSystemId
+        };
       }
 
       if (!configuration.IsNative)
@@ -201,6 +222,12 @@ namespace Emulators.Models
       return items;
     }
 
+    public override void EnterModelContext(NavigationContext oldContext, NavigationContext newContext)
+    {
+      _enteredState = newContext.WorkflowState.StateId;
+      base.EnterModelContext(oldContext, newContext);
+    }
+
     protected override void UpdateState(NavigationContext newContext, bool push)
     {
       if (!push)
@@ -241,7 +268,7 @@ namespace Emulators.Models
     {
       _emulatorProxy = null;
       IWorkflowManager workflowManager = ServiceRegistration.Get<IWorkflowManager>();
-      workflowManager.NavigatePopToState(STATE_OVERVIEW, false);
+      workflowManager.NavigatePopToState(_enteredState, _enteredState != STATE_OVERVIEW);
     }
 
     protected void UpdateLibRetroCoreSetting(string corePath, List<VariableDescription> variables)
