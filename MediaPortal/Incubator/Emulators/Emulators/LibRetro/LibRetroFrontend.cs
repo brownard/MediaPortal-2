@@ -87,6 +87,15 @@ namespace Emulators.LibRetro
           return _textureProvider != null ? _textureProvider.Texture : null;
       }
     }
+
+    public VideoInfo VideoInfo
+    {
+      get
+      {
+        LibRetroEmulator emulator = _retroEmulator;
+        return emulator != null ? emulator.VideoInfo : null;
+      }
+    }
     #endregion
 
     #region Public Methods
@@ -159,12 +168,6 @@ namespace Emulators.LibRetro
         if (_textureProvider != null)
           _textureProvider.Release();
       }
-    }
-
-    public VideoInfo GetVideoInfo()
-    {
-      LibRetroEmulator emulator = _retroEmulator;
-      return emulator != null ? emulator.VideoInfo : null;
     }
     #endregion
 

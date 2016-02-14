@@ -247,7 +247,7 @@ namespace Emulators.LibRetro
       {
         if (_retro != null)
         {
-          VideoInfo videoInfo = _retro.GetVideoInfo();
+          VideoInfo videoInfo = _retro.VideoInfo;
           if (videoInfo != null)
             return new SizeF(videoInfo.VirtualWidth, videoInfo.VirtualHeight);
         }
@@ -261,7 +261,7 @@ namespace Emulators.LibRetro
       {
         if (_retro != null)
         {
-          VideoInfo videoInfo = _retro.GetVideoInfo();
+          VideoInfo videoInfo = _retro.VideoInfo;
           if (videoInfo != null)
             return new Size(videoInfo.Width, videoInfo.Height);
         }
