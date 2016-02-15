@@ -45,7 +45,7 @@ namespace Emulators.LibRetro
     protected ITextureProvider _textureProvider;
     protected ISoundOutput _soundOutput;
     protected ControllerWrapper _controllerWrapper;
-    protected SynchronisationStrategy _synchronisationStrategy;    
+    protected SynchronizationStrategy _synchronizationStrategy;    
     protected RenderDlgt _renderDlgt;    
     protected bool _guiInitialized;
     protected bool _isPaused;
@@ -53,8 +53,6 @@ namespace Emulators.LibRetro
     protected string _corePath;
     protected string _gamePath;
     protected string _saveName;
-
-    protected bool _syncToAudio;
     protected bool _autoSave;
     #endregion
 
@@ -154,10 +152,9 @@ namespace Emulators.LibRetro
 
     public void ReallocGUIResources()
     {
-      if (_synchronisationStrategy != null)
-        _synchronisationStrategy.Update();
       lock (_surfaceLock)
         _guiInitialized = true;
+      _synchronizationStrategy.Update();
     }
 
     public void ReleaseGUIResources()
@@ -182,8 +179,7 @@ namespace Emulators.LibRetro
         InitializeVideo();
         InitializeAudio();
         InitializeSaveStateHandler();
-        if (!_syncToAudio)
-          _synchronisationStrategy = new SynchronisationStrategy(_retroEmulator.TimingInfo.FPS, _settings.EnableVSync);
+        _synchronizationStrategy = new SynchronizationStrategy(_retroEmulator.TimingInfo.FPS, _settings.SynchronizationType);
         _retroThread.IsInit = true;
       }
       catch (Exception ex)
@@ -233,13 +229,11 @@ namespace Emulators.LibRetro
       
       lock (_audioLock)
       {
-        _syncToAudio = _settings.SyncToAudio;
         _soundOutput = new LibRetroDirectSound();
         if (!_soundOutput.Init(SkinContext.Form.Handle, audioRenderer, (int)_retroEmulator.TimingInfo.SampleRate, _settings.AudioBufferSize))
         {
           _soundOutput.Dispose();
           _soundOutput = null;
-          _syncToAudio = false;
           return;
         }
       }
@@ -338,8 +332,8 @@ namespace Emulators.LibRetro
     protected void RenderFrame()
     {
       RenderDlgt dlgt = _renderDlgt;
-      if (_synchronisationStrategy != null)
-        _synchronisationStrategy.Synchronise(dlgt == null);
+      bool wait = _synchronizationStrategy.SyncToAudio ? _soundOutput == null : dlgt == null;
+      _synchronizationStrategy.Synchronize(wait);
       if (dlgt != null)
         dlgt();
     }
@@ -401,7 +395,7 @@ namespace Emulators.LibRetro
       lock (_audioLock)
       {
         if (_soundOutput != null)
-          _soundOutput.WriteSamples(_retroEmulator.AudioBuffer.Data, _retroEmulator.AudioBuffer.Length, _syncToAudio);
+          _soundOutput.WriteSamples(_retroEmulator.AudioBuffer.Data, _retroEmulator.AudioBuffer.Length, _synchronizationStrategy.SyncToAudio);
       }
     }
 
@@ -468,10 +462,10 @@ namespace Emulators.LibRetro
         _soundOutput.Dispose();
         _soundOutput = null;
       }
-      if (_synchronisationStrategy != null)
+      if (_synchronizationStrategy != null)
       {
-        _synchronisationStrategy.Stop();
-        _synchronisationStrategy = null;
+        _synchronizationStrategy.Stop();
+        _synchronizationStrategy = null;
       }
     }
     #endregion

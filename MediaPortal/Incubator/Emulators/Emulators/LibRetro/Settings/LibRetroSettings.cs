@@ -1,4 +1,5 @@
-﻿using Emulators.LibRetro.SoundProviders;
+﻿using Emulators.LibRetro.Render;
+using Emulators.LibRetro.SoundProviders;
 using MediaPortal.Common;
 using MediaPortal.Common.PathManager;
 using MediaPortal.Common.Settings;
@@ -50,11 +51,8 @@ namespace Emulators.LibRetro.Settings
     [Setting(SettingScope.User, 30)]
     public int AutoSaveInterval { get; set; }
 
-    [Setting(SettingScope.User, false)]
-    public bool EnableVSync { get; set; }
-
-    [Setting(SettingScope.User, false)]
-    public bool SyncToAudio { get; set; }
+    [Setting(SettingScope.User, SynchronizationType.Audio)]
+    public SynchronizationType SynchronizationType { get; set; }
 
     [Setting(SettingScope.User, LibRetroDirectSound.DEFAULT_BUFFER_SIZE_SECONDS)]
     public double AudioBufferSize { get; set; }

@@ -319,16 +319,10 @@
 
   <Register Location="/Configuration/Settings/Plugins/Emulators/LibRetro/Playback">
     <ConfigSetting
-        Id="EnableVSync"
-        Text="[Emulators.Config.LibRetro.EnableVSync]"
-        HelpText="[Emulators.Config.LibRetro.EnableVSync.Help]"
-        ClassName="Emulators.Settings.Configuration.LibRetro.EnableVSyncSetting"/>
-
-    <ConfigSetting
-        Id="SyncToAudio"
-        Text="[Emulators.Config.LibRetro.SyncToAudio]"
-        HelpText="[Emulators.Config.LibRetro.SyncToAudio.Help]"
-        ClassName="Emulators.Settings.Configuration.LibRetro.SyncToAudioSetting"/>
+        Id="SyncStrategy"
+        Text="[Emulators.Config.LibRetro.SyncStrategy]"
+        HelpText="[Emulators.Config.LibRetro.SyncStrategy.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.SyncSetting"/>
 
     <ConfigSetting
         Id="AudioBufferSize"

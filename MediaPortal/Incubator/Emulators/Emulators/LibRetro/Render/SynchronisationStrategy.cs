@@ -10,12 +10,19 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Emulators.LibRetro.Render
 {
-  public class SynchronisationStrategy
+  public enum SynchronizationType
   {
-    protected bool _allowVSync;
+    Audio,
+    VSync
+  }
+
+  public class SynchronizationStrategy
+  {
+    protected SynchronizationType _synchronizationType;
     protected volatile bool _doVSync;
     protected string _renderMode;
     protected double _targetFps;
@@ -23,22 +30,29 @@ namespace Emulators.LibRetro.Render
     protected double _secondsPerFrame;
     protected long _lastRenderTimestamp;
 
-    public SynchronisationStrategy(double targetFps, bool allowVSync)
+    public SynchronizationStrategy(double targetFps, SynchronizationType synchronizationType)
     {
       _targetFps = targetFps;
       _secondsPerFrame = 1d / targetFps;
-      _allowVSync = allowVSync;
-      if (_allowVSync)
+      _synchronizationType = synchronizationType;
+      if (_synchronizationType == SynchronizationType.VSync)
       {
         IScreenControl screenControl = ServiceRegistration.Get<IScreenControl>();
         screenControl.VideoPlayerSynchronizationStrategy.SynchronizeToVideoPlayerFramerate += SyncToPlayer;
       }
     }
 
-    public void Synchronise(bool force)
+    public bool SyncToAudio
     {
-      if (force || !_doVSync || System.Windows.Forms.Form.ActiveForm != SkinContext.Form)
+      get { return _synchronizationType == SynchronizationType.Audio || !_doVSync || Form.ActiveForm != SkinContext.Form; }
+    }
+
+    public void Synchronize(bool wait)
+    {
+      if (wait)
         WaitForRenderTime();
+      else
+        _lastRenderTimestamp = Stopwatch.GetTimestamp();
     }
 
     public void Update()
@@ -52,7 +66,7 @@ namespace Emulators.LibRetro.Render
 
     public void Stop()
     {
-      if (!_allowVSync)
+      if (_synchronizationType != SynchronizationType.VSync)
         return;
 
       IScreenControl screenControl = ServiceRegistration.Get<IScreenControl>();
