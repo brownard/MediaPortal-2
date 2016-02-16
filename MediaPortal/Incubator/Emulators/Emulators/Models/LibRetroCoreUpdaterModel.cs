@@ -1,6 +1,5 @@
 ﻿using Emulators.LibRetro.Cores;
 using MediaPortal.Common;
-using MediaPortal.Common.PathManager;
 using MediaPortal.UI.Presentation.Models;
 using System;
 using System.Collections.Generic;
