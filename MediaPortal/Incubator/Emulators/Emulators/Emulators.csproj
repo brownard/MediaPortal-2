@@ -119,11 +119,12 @@
     <Compile Include="LibRetro\Controllers\XInput\XInputControllerCache.cs" />
     <Compile Include="LibRetro\Controllers\XInput\XInputMapper.cs" />
     <Compile Include="LibRetro\Cores\CoreHandler.cs" />
-    <Compile Include="LibRetro\Cores\CoreInfoHandler.cs" />
     <Compile Include="LibRetro\Cores\CoreInfoList.cs" />
     <Compile Include="LibRetro\Cores\CoreList.cs" />
+    <Compile Include="LibRetro\Cores\CustomCore.cs" />
     <Compile Include="LibRetro\Cores\LocalCore.cs" />
     <Compile Include="LibRetro\Cores\OnlineCore.cs" />
+    <Compile Include="LibRetro\Cores\CoreUpdaterSettings.cs" />
     <Compile Include="LibRetro\GLContexts\FBORenderContextProvider.cs" />
     <Compile Include="LibRetro\LibRetroThread.cs" />
     <Compile Include="LibRetro\Render\RefreshRateHelper.cs" />

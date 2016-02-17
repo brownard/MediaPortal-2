@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using MediaPortal.UI.Presentation.Workflow;
 using MediaPortal.UI.Presentation.DataObjects;
-using SharpRetro.Info;
 using MediaPortal.UiComponents.SkinBase.General;
 using MediaPortal.Common.Threading;
 using MediaPortal.Common.Commands;
@@ -19,6 +18,8 @@ using MediaPortal.Common.General;
 using MediaPortal.UI.Presentation.Screens;
 using MediaPortal.Common.Localization;
 using Emulators.Models.Navigation;
+using Emulators.Emulator;
+using Emulators.Common.Emulators;
 
 namespace Emulators.Models
 {
@@ -37,8 +38,8 @@ namespace Emulators.Models
     protected readonly object _downloadSync = new object();
     protected string _coresDirectory;
     protected string _infoDirectory;
+    protected bool _onlyShowSupportedCores;
     protected CoreHandler _coreHandler;
-    protected CoreInfoHandler _infoHandler;
     protected ItemsList _coreItems;
     protected ItemsList _contextMenuItems;
     protected HashSet<string> _downloadingUrls;
@@ -49,8 +50,6 @@ namespace Emulators.Models
       _coreItems = new ItemsList();
       _contextMenuItems = new ItemsList();
       _downloadingUrls = new HashSet<string>();
-      _coreHandler = new CoreHandler();
-      _infoHandler = new CoreInfoHandler();
     }
 
     public ItemsList Items
@@ -116,7 +115,7 @@ namespace Emulators.Models
 
       try
       {
-        if (_coreHandler.DownloadCore(core, _coresDirectory))
+        if (_coreHandler.DownloadCore(core))
           item.Downloaded = true;
       }
       finally
@@ -131,6 +130,8 @@ namespace Emulators.Models
       LibRetroSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<LibRetroSettings>();
       _coresDirectory = settings.CoresDirectory;
       _infoDirectory = settings.InfoDirectory;
+      _onlyShowSupportedCores = settings.OnlyShowSupportedCores;
+      _coreHandler = new CoreHandler(_coresDirectory, _infoDirectory);
 
       var sm = ServiceRegistration.Get<IScreenManager>();
       Guid? dialogId = null;
@@ -158,7 +159,6 @@ namespace Emulators.Models
 
       try
       {
-        _infoHandler.Update(_infoDirectory);
         _coreHandler.Update();
         RebuildItemsList();
       }
@@ -172,30 +172,38 @@ namespace Emulators.Models
     protected void RebuildItemsList()
     {
       string coresDirectory = _coresDirectory;
+      List<EmulatorConfiguration> configurations = ServiceRegistration.Get<IEmulatorManager>().Load();
+
       _coreItems.Clear();
       foreach (LocalCore core in _coreHandler.Cores)
-        _coreItems.Add(CreateListItem(core, coresDirectory));
+      {
+        if (_onlyShowSupportedCores && !core.Supported)
+          continue;
+        string localPath = Path.Combine(coresDirectory, core.CoreName);
+        bool downloaded = File.Exists(localPath);
+        bool configured = configurations.Any(c => c.Path == localPath);
+        _coreItems.Add(CreateListItem(core, downloaded, configured));
+      }
       _coreItems.FireChange();
     }
 
-    protected ListItem CreateListItem(LocalCore core, string coresDirectory)
+    protected ListItem CreateListItem(LocalCore core, bool downloaded, bool configured)
     {
       LibRetroCoreItem item = new LibRetroCoreItem();
       item.SetLabel(LABEL_CORE_NAME, core.CoreName);
       item.AdditionalProperties[KEY_CORE] = core;
-      item.Downloaded = File.Exists(Path.Combine(coresDirectory, core.CoreName));
+      item.Downloaded = downloaded;
+      item.Configured = configured;
       item.Command = new MethodDelegateCommand(() => CoreItemSelected(item, core));
-
-      string infoName = Path.GetFileNameWithoutExtension(core.CoreName);
-      CoreInfo info;
-      if (_infoHandler.CoreInfos.TryGetValue(infoName, out info))
+      
+      if (core.Info != null)
       {
-        item.SetLabel(Consts.KEY_NAME, info.DisplayName);
-        item.AdditionalProperties[KEY_CORE_INFO] = info;
+        item.SetLabel(Consts.KEY_NAME, core.Info.DisplayName);
+        item.AdditionalProperties[KEY_CORE_INFO] = core.Info;
       }
       else
       {
-        item.SetLabel(Consts.KEY_NAME, infoName);
+        item.SetLabel(Consts.KEY_NAME, Path.GetFileNameWithoutExtension(core.CoreName));
       }
       return item;
     }

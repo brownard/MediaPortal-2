@@ -42,6 +42,9 @@ namespace Emulators.LibRetro.Settings
       set { _savesDirectory = value; }
     }
 
+    [Setting(SettingScope.User, true)]
+    public bool OnlyShowSupportedCores { get; set; }
+
     [Setting(SettingScope.User, 4)]
     public int MaxPlayers { get; set; }
 
