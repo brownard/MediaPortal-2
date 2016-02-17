@@ -26,6 +26,7 @@ namespace Emulators.Models
   public class LibRetroCoreUpdaterModel : IWorkflowModel
   {
     public static readonly Guid MODEL_ID = new Guid("656E3AC1-0363-4DA9-A23F-F1422A9ADD74");
+    public static readonly Guid STATE_ID = new Guid("BC9FAFDE-315E-4DBD-A99D-060D3225DCAA"); 
     public const string LABEL_CORE_NAME = "CoreName";
     public const string KEY_CORE_INFO = "LibRetro: CoreInfo";
     public const string KEY_CORE = "LibRetro: Core";
@@ -73,14 +74,6 @@ namespace Emulators.Models
       set { _progressLabelProperty.SetValue(value); }
     }
 
-    protected void CoreItemSelected(LibRetroCoreItem item, LocalCore core)
-    {
-      if (item.Downloaded)
-        ShowContextMenu(item, core);
-      else
-        DownloadCoreAsync(item, core);
-    }
-
     protected void ShowContextMenu(LibRetroCoreItem item, LocalCore core)
     {
       RebuildContextMenuItems(item, core);
@@ -101,7 +94,6 @@ namespace Emulators.Models
       {
         if (dialogId.HasValue)
           sm.CloseDialog(dialogId.Value);
-        ShowContextMenu(item, core);
       });
     }
 
@@ -195,7 +187,7 @@ namespace Emulators.Models
       item.AdditionalProperties[KEY_CORE] = core;
       item.Downloaded = downloaded;
       item.Configured = configured;
-      item.Command = new MethodDelegateCommand(() => CoreItemSelected(item, core));
+      item.Command = new MethodDelegateCommand(() => ShowContextMenu(item, core));
       
       if (core.Info != null)
       {
@@ -212,16 +204,9 @@ namespace Emulators.Models
     protected void RebuildContextMenuItems(LibRetroCoreItem item, LocalCore core)
     {
       _contextMenuItems.Clear();
-      ListItem contextItem = new ListItem(Consts.KEY_NAME, "[Emulators.CoreUpdater.Update]");
+      string name = item.Downloaded ? "[Emulators.CoreUpdater.Update]" : "[Emulators.CoreUpdater.Download]";
+      ListItem contextItem = new ListItem(Consts.KEY_NAME, name);
       contextItem.Command = new MethodDelegateCommand(() => DownloadCoreAsync(item, core));
-      _contextMenuItems.Add(contextItem);
-      contextItem = new ListItem(Consts.KEY_NAME, "[Emulators.CoreUpdater.Configure]");
-      contextItem.Command = new MethodDelegateCommand(() =>
-      {
-        string path = Path.Combine(_coresDirectory, core.CoreName);
-        if (File.Exists(path))
-          EmulatorConfigurationModel.Instance().AddOrEditLibRetroCore(path);
-      });
       _contextMenuItems.Add(contextItem);
       _contextMenuItems.FireChange();
     }
