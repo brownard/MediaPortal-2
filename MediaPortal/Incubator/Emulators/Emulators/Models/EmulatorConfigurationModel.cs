@@ -278,8 +278,15 @@ namespace Emulators.Models
 
     public override void EnterModelContext(NavigationContext oldContext, NavigationContext newContext)
     {
-      _enteredState = newContext.WorkflowState.StateId;
       base.EnterModelContext(oldContext, newContext);
+      _enteredState = newContext.WorkflowState.StateId;
+    }
+
+    public override void Reactivate(NavigationContext oldContext, NavigationContext newContext)
+    {
+      base.Reactivate(oldContext, newContext);
+      if (newContext.WorkflowState.StateId == STATE_CHOOSE_CORE)
+        UpdateLocalCoreItems();
     }
 
     protected override void UpdateState(NavigationContext newContext, bool push)
