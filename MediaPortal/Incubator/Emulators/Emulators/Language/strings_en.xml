@@ -47,6 +47,11 @@
   <string name="Emulators.Config.EmulatorType.Native">Native</string>
   <string name="Emulators.Config.EmulatorType.LibRetro">LibRetro</string>
 
+  <string name="Emulators.Config.ChooseCore.Title">Choose core</string>
+  <string name="Emulators.Config.ChooseCore.Label">Choose the libretro core</string>
+  <string name="Emulators.Config.DownloadCores">Download Cores</string>
+  <string name="Emulators.Config.ManualPathInput">Manual Input</string>
+  
   <string name="Emulators.Config.ChooseEmulatorPath.Title">Choose path</string>
   <string name="Emulators.Config.ChooseEmulatorPath.Label">Choose the path to the emulator</string>
 

@@ -101,6 +101,7 @@ namespace Emulators.Models
       {
         if (dialogId.HasValue)
           sm.CloseDialog(dialogId.Value);
+        ShowContextMenu(item, core);
       });
     }
 

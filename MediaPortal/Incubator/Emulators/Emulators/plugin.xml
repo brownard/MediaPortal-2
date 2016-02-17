@@ -98,6 +98,13 @@
         DisplayLabel="[Emulators.Config.ChooseEmulatorType.Title]"
         MainScreen="emulator_config_choose_type"
         WorkflowModel="6C96C335-7A79-45DA-90B7-541B3C7235EF"/>    <!-- Emulator config model -->
+
+    <!-- Choose libretro core -->
+    <WorkflowState Id="13145964-27DA-4F29-A3FD-E75755DFB603"
+        Name="ChooseLibRetroCore"
+        DisplayLabel="[Emulators.Config.ChooseCore.Title]"
+        MainScreen="emulator_config_choose_core"
+        WorkflowModel="6C96C335-7A79-45DA-90B7-541B3C7235EF"/>    <!-- Emulator config model -->
     
     <!-- Choose emulator path -->
     <WorkflowState Id="B3B74541-3779-46EB-8EED-DF00CBEEC91A"

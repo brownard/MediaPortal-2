@@ -63,6 +63,21 @@ namespace Emulators.LibRetro.Cores
       return _downloader.DownloadFile(core.Url, path, true) && ExtractCore(path);
     }
 
+    public static CoreInfo LoadCoreInfo(string coreName, string infoDirectory)
+    {
+      try
+      {
+        string path = Path.Combine(infoDirectory, Path.GetFileNameWithoutExtension(coreName) + ".info");
+        if (File.Exists(path))
+          return new CoreInfo(coreName, File.ReadAllText(path));
+      }
+      catch (Exception ex)
+      {
+        ServiceRegistration.Get<ILogger>().Error("CoreInfoHandler: Exception loading core info for '{0}'", ex, coreName);
+      }
+      return null;
+    }
+
     protected void UpdateCores()
     {
       List<OnlineCore> onlineCores = new List<OnlineCore>();
@@ -82,7 +97,7 @@ namespace Emulators.LibRetro.Cores
           Url = customCore.CoreUrl,
           CoreName = customCore.CoreName,
           ArchiveName = customCore.CoreName,
-          Info = LoadCoreInfo(customCore.CoreName)
+          Info = LoadCoreInfo(customCore.CoreName, _infoDirectory)
         };
         _cores.Add(core);
       }
@@ -100,7 +115,7 @@ namespace Emulators.LibRetro.Cores
           ArchiveName = onlineCore.Name,
           CoreName = coreName,
           Supported = !_unsupportedCores.Contains(coreName),
-          Info = LoadCoreInfo(coreName)
+          Info = LoadCoreInfo(coreName, _infoDirectory)
         };
         _cores.Add(core);
       }
@@ -145,21 +160,6 @@ namespace Emulators.LibRetro.Cores
         string path = Path.Combine(_infoDirectory, Path.GetFileName(uri.LocalPath));
         _downloader.DownloadFile(uri.AbsoluteUri, path);
       }
-    }
-
-    protected CoreInfo LoadCoreInfo(string coreName)
-    {
-      try
-      {
-        string path = Path.Combine(_infoDirectory, Path.GetFileNameWithoutExtension(coreName) + ".info");
-        string text = File.ReadAllText(path);
-        return new CoreInfo(coreName, text);
-      }
-      catch (Exception ex)
-      {
-        ServiceRegistration.Get<ILogger>().Error("CoreInfoHandler: Exception loading core info for '{0}'", ex, coreName);
-      }
-      return null;
     }
 
     protected static bool TryCreateAbsoluteUrl(string baseUrl, string url, out Uri uri)

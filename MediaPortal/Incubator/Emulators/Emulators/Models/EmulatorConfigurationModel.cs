@@ -19,12 +19,16 @@ using SharpRetro.LibRetro;
 using MediaPortal.Common.Settings;
 using Emulators.LibRetro;
 using Emulators.LibRetro.Settings;
+using SharpRetro.Info;
+using Emulators.LibRetro.Cores;
+using System.IO;
+using MediaPortal.Common.Logging;
+using MediaPortal.Common.General;
 
 namespace Emulators.Models
 {
   public class EmulatorConfigurationModel : AbstractConfigurationModel
   {
-    protected const string KEY_PATH = "Path";
     protected const string KEY_CONFIGURATION = "Emulator_Configuration";
     protected const string KEY_EMULATOR_TYPE = "Emulator_Type";
     protected const string KEY_WILDCARD = "Emulator_Wildcard";
@@ -35,6 +39,7 @@ namespace Emulators.Models
     public static readonly Guid STATE_OVERVIEW = new Guid("903DD5EB-56B2-42B5-B1D8-64106651296A");
     public static readonly Guid STATE_CHOOSE_TYPE = new Guid("CFD8DD6F-6C80-49E1-9F79-A87AE259828D");
     public static readonly Guid STATE_CHOOSE_PATH = new Guid("B3B74541-3779-46EB-8EED-DF00CBEEC91A");
+    public static readonly Guid STATE_CHOOSE_CORE = new Guid("13145964-27DA-4F29-A3FD-E75755DFB603");
     public static readonly Guid STATE_EDIT_NAME = new Guid("A533006C-D895-41AE-86A3-DF9193707120");
     public static readonly Guid STATE_CHOOSE_CATEGORIES = new Guid("E30DCBAE-BB1D-4701-84B0-FA3624481648");
     public static readonly Guid STATE_EDIT_EXTENSIONS = new Guid("3017CAD9-3EFD-48F4-BC8D-06295389D21D");
@@ -45,6 +50,7 @@ namespace Emulators.Models
     protected Guid _enteredState = Guid.Empty;
     protected EmulatorProxy _emulatorProxy;
     protected ItemsList _emulatorTypes = new ItemsList();
+    protected ItemsList _localCoreItems = new ItemsList();
     protected ItemsList _wildcardItems = new ItemsList();
 
     public static EmulatorConfigurationModel Instance()
@@ -67,6 +73,11 @@ namespace Emulators.Models
       get { return _emulatorTypes; }
     }
 
+    public ItemsList LocalCoreItems
+    {
+      get { return _localCoreItems; }
+    }
+
     public ItemsList WildcardItems
     {
       get { return _wildcardItems; }
@@ -81,8 +92,10 @@ namespace Emulators.Models
     {
       List<EmulatorConfiguration> configurations = ServiceRegistration.Get<IEmulatorManager>().Load();
       EmulatorConfiguration configuration = configurations.FirstOrDefault(c => c.IsLibRetro && c.Path == corePath);
+      bool add = false;
       if (configuration == null)
       {
+        add = true;
         configuration = new EmulatorConfiguration()
         {
           IsLibRetro = true,
@@ -92,6 +105,8 @@ namespace Emulators.Models
         };
       }
       _emulatorProxy = new EmulatorProxy(configuration);
+      if (add)
+        _emulatorProxy.SetSuggestedSettings(true);
       NavigatePush(STATE_EDIT_NAME);
     }
 
@@ -102,8 +117,11 @@ namespace Emulators.Models
         return;
       EmulatorType emulatorType = (EmulatorType)selectedTypeItem.AdditionalProperties[KEY_EMULATOR_TYPE];
       _emulatorProxy = new EmulatorProxy(emulatorType);
-      if (emulatorType == EmulatorType.Emulator || emulatorType == EmulatorType.LibRetro)
+
+      if (emulatorType == EmulatorType.Emulator)
         NavigatePush(STATE_CHOOSE_PATH);
+      else if (emulatorType == EmulatorType.LibRetro)
+        NavigatePush(STATE_CHOOSE_CORE);
       else
         NavigatePush(STATE_EDIT_NAME);
     }
@@ -173,6 +191,42 @@ namespace Emulators.Models
       _emulatorTypes.FireChange();
     }
 
+    protected void UpdateLocalCoreItems()
+    {
+      var sm = ServiceRegistration.Get<ISettingsManager>();
+      var settings = sm.Load<LibRetroSettings>();
+
+      _localCoreItems.Clear();
+      try
+      {
+        foreach (string path in Directory.EnumerateFiles(settings.CoresDirectory, "*.dll"))
+        {
+          string coreName = Path.GetFileName(path);
+          CoreInfo coreInfo = CoreHandler.LoadCoreInfo(coreName, settings.InfoDirectory);
+          if (coreInfo != null)
+            coreName = coreInfo.DisplayName;
+          ListItem item = new ListItem(Consts.KEY_NAME, coreName);
+          item.SetLabel(Consts.KEY_PATH, path);
+          item.SelectedProperty.Attach(OnCoreItemSelectionChanged);
+          _localCoreItems.Add(item);
+        }
+      }
+      catch (Exception ex)
+      {
+        ServiceRegistration.Get<ILogger>().Error("EmulatorConfigurationModel: Exception loading cores from '{0}'", ex, settings.CoresDirectory);
+      }
+      _localCoreItems.FireChange();
+    }
+
+    protected void OnCoreItemSelectionChanged(AbstractProperty property, object oldValue)
+    {
+      ListItem selected = _localCoreItems.FirstOrDefault(i => i.Selected);
+      if (selected == null)
+        return;
+      ResourcePath path = LocalFsResourceProviderBase.ToResourcePath(selected.Label(Consts.KEY_PATH, null).Evaluate());
+      _emulatorProxy.PathBrowser.ChoosenResourcePath = path;
+    }
+
     public void ShowWildcardDialog()
     {
       if (_wildcardItems.Count == 0)
@@ -212,7 +266,7 @@ namespace Emulators.Models
       foreach (EmulatorConfiguration configuration in configurations)
       {
         ListItem item = new ListItem(Consts.KEY_NAME, configuration.Name);
-        item.SetLabel(KEY_PATH, configuration.Path);
+        item.SetLabel(Consts.KEY_PATH, configuration.Path);
         item.SetLabel(KEY_PLATFORMS, GetPlatformLabel(configuration.Platforms));
         item.AdditionalProperties[KEY_CONFIGURATION] = configuration;
         if (!removing)
@@ -238,13 +292,17 @@ namespace Emulators.Models
       {
         UpdateEmulatorTypeItems();
       }
-      if (stateId == STATE_CHOOSE_PATH)
+      else if (stateId == STATE_CHOOSE_CORE)
+      {
+        UpdateLocalCoreItems();
+      }
+      else if (stateId == STATE_CHOOSE_PATH)
       {
         _emulatorProxy.PathBrowser.UpdatePathTree();
       }
       else if (stateId == STATE_EDIT_NAME)
       {
-        _emulatorProxy.SetSuggestedSettings();
+        _emulatorProxy.SetSuggestedSettings(false);
       }
       else if (stateId == STATE_CHOOSE_CATEGORIES)
       {

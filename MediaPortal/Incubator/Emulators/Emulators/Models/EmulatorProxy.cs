@@ -174,9 +174,9 @@ namespace Emulators.Models
     #endregion
 
     #region Public Methods
-    public void SetSuggestedSettings()
+    public void SetSuggestedSettings(bool force)
     {
-      if (_configuration != null)
+      if (!force && _configuration != null)
         return;
       if (EmulatorType == EmulatorType.Native)
         SetDefaultNativeSettings();
