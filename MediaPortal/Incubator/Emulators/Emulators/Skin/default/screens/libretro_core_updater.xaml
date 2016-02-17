@@ -23,7 +23,7 @@
           <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <ListView Name="CoresList" Margin="10" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-              Style="{ThemeResource ContentsMenuListViewStyle}"
+              Style="{ThemeResource LibRetroCoresMenuListViewStyle}"
               ItemsSource="{Binding Path=Items,Mode=OneTime}">
           <ListView.Resources>
             <CommandBridge x:Key="Menu_Command" Command="{Binding Path=Command,Mode=OneTime}"/>
