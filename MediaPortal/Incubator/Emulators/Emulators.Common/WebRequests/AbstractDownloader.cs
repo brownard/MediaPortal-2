@@ -22,14 +22,25 @@ namespace Emulators.Common.WebRequests
 
     public virtual T Download<T>(string url, string cachePath = null)
     {
-      string responseString;
-      if (TryGetCache(cachePath, out responseString))
-        return Deserialize<T>(responseString);
+      try
+      {
+        string responseString;
+        if (TryGetCache(cachePath, out responseString))
+          return Deserialize<T>(responseString);
 
-      responseString = GetResponseString(url);
-      T response = Deserialize<T>(responseString);
-      WriteCache(cachePath, responseString);
-      return response;
+        responseString = GetResponseString(url);
+        if (responseString == null)
+          return default(T);
+
+        T response = Deserialize<T>(responseString);
+        WriteCache(cachePath, responseString);
+        return response;
+      }
+      catch (Exception ex)
+      {
+        ServiceRegistration.Get<ILogger>().Error("Exception downloading from '{0}'", ex, url);
+      }
+      return default(T);
     }
 
     public virtual bool DownloadFile(string url, string downloadFile)
@@ -50,7 +61,7 @@ namespace Emulators.Common.WebRequests
       }
       catch (Exception ex)
       {
-        ServiceRegistration.Get<ILogger>().Error("Exception downloading file from '{0}' to '{1}' - {2}", url, downloadFile, ex);
+        ServiceRegistration.Get<ILogger>().Error("Exception downloading file from '{0}' to '{1}'", ex, url, downloadFile);
         return false;
       }
     }
@@ -59,17 +70,9 @@ namespace Emulators.Common.WebRequests
 
     protected virtual string GetResponseString(string url)
     {
-      try
-      {
-        WebClient webClient = new CompressionWebClient();
-        webClient.Encoding = _encoding;
-        return webClient.DownloadString(url);
-      }
-      catch (Exception ex)
-      {
-        ServiceRegistration.Get<ILogger>().Error("Exception getting response from '{0}' - {1}", url, ex);
-      }
-      return null;
+      WebClient webClient = new CompressionWebClient();
+      webClient.Encoding = _encoding;
+      return webClient.DownloadString(url);
     }
 
     protected virtual bool TryGetCache(string cachePath, out string cacheString)
