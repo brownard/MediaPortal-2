@@ -5,6 +5,7 @@ using MediaPortal.Common.Commands;
 using MediaPortal.Common.General;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.Settings;
+using MediaPortal.Common.Threading;
 using MediaPortal.UI.Presentation.DataObjects;
 using MediaPortal.UI.Presentation.Screens;
 using MediaPortal.UiComponents.Media.General;
@@ -76,9 +77,16 @@ namespace Emulators.Models
 
     public bool Init()
     {
-      _retro = new LibRetroEmulator(_corePath);
+      bool canLoad = ServiceRegistration.Get<ILibRetroCoreInstanceManager>().TrySetCoreLoading(_corePath);
+      if (!canLoad)
+      {
+        ShowLoadErrorDialog();
+        return false;
+      }
+
       try
       {
+        _retro = new LibRetroEmulator(_corePath);
         _retro.Init();
         InitializeProperties();
         return true;
@@ -91,6 +99,7 @@ namespace Emulators.Models
       {
         _retro.Dispose();
         _retro = null;
+        ServiceRegistration.Get<ILibRetroCoreInstanceManager>().SetCoreUnloaded(_corePath);
       }
       return false;
     }
@@ -185,6 +194,14 @@ namespace Emulators.Models
           variable = _variables.FirstOrDefault(v => v.Name == name);
       }
       return variable != null;
+    }
+
+    protected void ShowLoadErrorDialog()
+    {
+      ServiceRegistration.Get<IThreadPool>().Add(() =>
+      {
+        ServiceRegistration.Get<IDialogManager>().ShowDialog("[Emulators.Dialog.Error.Header]", "[Emulators.LibRetro.CoreAlreadyLoaded]", DialogType.OkDialog, false, DialogButtonType.Ok);
+      });
     }
   }
 }

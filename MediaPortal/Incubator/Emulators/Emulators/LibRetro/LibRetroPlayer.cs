@@ -16,6 +16,8 @@ using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
+using MediaPortal.UI.Presentation.Screens;
+using MediaPortal.Common.Threading;
 
 namespace Emulators.LibRetro
 {
@@ -26,6 +28,8 @@ namespace Emulators.LibRetro
     protected static string[] DEFAULT_AUDIO_STREAM_NAMES = new[] { AUDIO_STREAM_NAME };
 
     protected readonly object _syncObj = new object();
+    protected string _corePath;
+    protected bool _isCoreLoaded;
     protected LibRetroFrontend _retro;
     protected bool _isLibretroInit;
     protected bool _isLibRetroRunning;
@@ -72,6 +76,15 @@ namespace Emulators.LibRetro
 
       string saveName = DosPathHelper.GetFileNameWithoutExtension(locator.NativeResourcePath.FileName);
       ServiceRegistration.Get<ILogger>().Debug("LibRetroPlayer: Creating LibRetroFrontend: Core Path '{0}', Game Path '{1}', Save Name '{2}'", mediaItem.LibRetroPath, gamePath, saveName);
+
+      _corePath = mediaItem.LibRetroPath;
+      _isCoreLoaded = ServiceRegistration.Get<ILibRetroCoreInstanceManager>().TrySetCoreLoading(_corePath);
+      if (!_isCoreLoaded)
+      {
+        ShowLoadErrorDialog();
+        return;
+      }
+
       _retro = new LibRetroFrontend(mediaItem.LibRetroPath, gamePath, saveName);
       _isLibretroInit = _retro.Init();
       //if (_isLibretroInit)
@@ -80,6 +93,14 @@ namespace Emulators.LibRetro
       //  if (timingInfo != null)
       //    MediaItemAspect.SetAttribute(mediaItem.Aspects, VideoAspect.ATTR_FPS, (int)timingInfo.FPS);
       //}
+    }
+
+    protected void ShowLoadErrorDialog()
+    {
+      ServiceRegistration.Get<IThreadPool>().Add(() => 
+      {
+        ServiceRegistration.Get<IDialogManager>().ShowDialog("[Emulators.Dialog.Error.Header]", "[Emulators.LibRetro.CoreAlreadyLoaded]", DialogType.OkDialog, false, DialogButtonType.Ok);
+      });
     }
 
     protected void RunLibRetro()
@@ -141,7 +162,10 @@ namespace Emulators.LibRetro
     public void Resume()
     {
       if (_retro == null)
+      {
+        FireError();
         return;
+      }
 
       if (!_isLibRetroRunning)
       {
@@ -415,6 +439,11 @@ namespace Emulators.LibRetro
       {
         _accessor.Dispose();
         _accessor = null;
+      }
+      if (_isCoreLoaded)
+      {
+        ServiceRegistration.Get<ILibRetroCoreInstanceManager>().SetCoreUnloaded(_corePath);
+        _isCoreLoaded = false;
       }
     }
     #endregion

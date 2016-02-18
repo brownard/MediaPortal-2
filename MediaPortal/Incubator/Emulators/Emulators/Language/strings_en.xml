@@ -18,6 +18,7 @@
   <string name="Emulators.Dialog.Error.Header">Error</string>
   <string name="Emulators.LaunchError.Label">Unable to start the game. Check the log for details.</string>
   <string name="Emulators.ExtractionError.Label">Unable to extract the archive. Check the log for details.</string>
+  <string name="Emulators.LibRetro.CoreAlreadyLoaded">Unable to load the libretro core, the core is already loaded</string>
 
   <string name="Emulators.Config.PluginSettingsLabel">Emulators</string>
   <string name="Emulators.Config.Setting.Goodmerge">Goodmerge</string>

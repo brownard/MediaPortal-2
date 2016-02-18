@@ -48,6 +48,8 @@
         ServiceClassName="Emulators.Emulator.EmulatorConfigurationManager"/>
     <Service Id="GamesDbMatcher" RegistrationClassName="Emulators.Common.Matchers.GameMatcher"
         ServiceClassName="Emulators.Common.Matchers.GameMatcher"/>
+    <Service Id="CoreInstanceManager" RegistrationClassName="Emulators.LibRetro.ILibRetroCoreInstanceManager"
+        ServiceClassName="Emulators.LibRetro.LibRetroCoreInstanceManager"/>
   </Register>
 
   <Register Location="/Players/Builders">

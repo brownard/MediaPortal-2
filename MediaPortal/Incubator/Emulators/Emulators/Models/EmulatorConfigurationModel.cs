@@ -182,12 +182,12 @@ namespace Emulators.Models
       emulatorItem.AdditionalProperties[KEY_EMULATOR_TYPE] = EmulatorType.Emulator;
       emulatorItem.Selected = true;
       _emulatorTypes.Add(emulatorItem);
-      ListItem nativeItem = new ListItem(Consts.KEY_NAME, "[Emulators.Config.EmulatorType.Native]");
-      nativeItem.AdditionalProperties[KEY_EMULATOR_TYPE] = EmulatorType.Native;
-      _emulatorTypes.Add(nativeItem);
       ListItem libRetroItem = new ListItem(Consts.KEY_NAME, "[Emulators.Config.EmulatorType.LibRetro]");
       libRetroItem.AdditionalProperties[KEY_EMULATOR_TYPE] = EmulatorType.LibRetro;
       _emulatorTypes.Add(libRetroItem);
+      ListItem nativeItem = new ListItem(Consts.KEY_NAME, "[Emulators.Config.EmulatorType.Native]");
+      nativeItem.AdditionalProperties[KEY_EMULATOR_TYPE] = EmulatorType.Native;
+      _emulatorTypes.Add(nativeItem);
       _emulatorTypes.FireChange();
     }
 
@@ -338,6 +338,8 @@ namespace Emulators.Models
 
     protected void UpdateLibRetroCoreSetting(string corePath, List<VariableDescription> variables)
     {
+      if (variables == null)
+        return;
       var sm = ServiceRegistration.Get<ISettingsManager>();
       var coreSettings = sm.Load<LibRetroCoreSettings>();
       coreSettings.AddOrUpdateCoreSetting(corePath, variables);
