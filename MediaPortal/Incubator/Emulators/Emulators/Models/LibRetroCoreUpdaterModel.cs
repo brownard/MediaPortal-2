@@ -46,6 +46,7 @@ namespace Emulators.Models
     protected ItemsList _contextMenuItems;
     protected HashSet<string> _downloadingUrls;
     protected bool _isUpdating;
+    protected DateTime _lastUpdateTime = DateTime.MinValue;
 
     public LibRetroCoreUpdaterModel()
     {
@@ -138,6 +139,10 @@ namespace Emulators.Models
       _infoDirectory = settings.InfoDirectory;
       _onlyShowSupportedCores = settings.OnlyShowSupportedCores;
       _coreHandler = new CoreHandler(_coresDirectory, _infoDirectory);
+
+      if ((DateTime.Now - _lastUpdateTime).TotalMinutes < settings.CoreUpdateIntervalMinutes)
+        return;
+      _lastUpdateTime = DateTime.Now;
 
       var sm = ServiceRegistration.Get<IScreenManager>();
       Guid? dialogId = null;

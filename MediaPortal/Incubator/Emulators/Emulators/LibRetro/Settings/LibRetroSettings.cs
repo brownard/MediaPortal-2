@@ -42,6 +42,9 @@ namespace Emulators.LibRetro.Settings
       set { _savesDirectory = value; }
     }
 
+    [Setting(SettingScope.User, 60d)]
+    public double CoreUpdateIntervalMinutes { get; set; }
+
     [Setting(SettingScope.User, true)]
     public bool OnlyShowSupportedCores { get; set; }
 
