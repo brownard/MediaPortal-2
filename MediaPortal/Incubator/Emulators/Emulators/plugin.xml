@@ -196,10 +196,6 @@
     <Resource Id="EmulatorsSkin" Directory="Skin" Type="Skin"/>
   </Register>
 
-  <!--<Register Location="/Fanart/FanartImageSourceProviders">
-    <FanartImageSourceProviderBuilder Id="{E89579C8-AADE-4788-8E33-ECE5115A4FD6}" ClassName="Emulators.Fanart.FanartImageSourceProvider"/>
-  </Register>-->
-
   <!-- Root Sections -->
   <Register Location="/Configuration/Settings">
     <ConfigSection
@@ -261,6 +257,12 @@
         HelpText="[Emulators.Config.LibRetro.MapInputDevices.Help]"
         ClassName="Emulators.Settings.Configuration.LibRetro.MappingSetting"
         AdditionalData="WorkflowState=02FEF896-7C0E-444D-9657-44660E0ED90A,ConfAppPanel=..."/>
+    <CustomConfigSetting
+        Id="DownloadCores"
+        Text="[Emulators.Config.DownloadCores]"
+        HelpText="[Emulators.Config.DownloadCores.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.CoreUpdaterSetting"
+        AdditionalData="WorkflowState=BC9FAFDE-315E-4DBD-A99D-060D3225DCAA,ConfAppPanel=..."/>
     <ConfigSetting
         Id="VSync"
         Text="[Emulators.Config.LibRetro.EnableVSync]"

@@ -50,6 +50,7 @@
   <string name="Emulators.Config.ChooseCore.Title">Choose core</string>
   <string name="Emulators.Config.ChooseCore.Label">Choose a libretro core</string>
   <string name="Emulators.Config.DownloadCores">Download Cores</string>
+  <string name="Emulators.Config.DownloadCores.Help">Download and update libretro cores</string>
   <string name="Emulators.Config.ManualPathInput">Manual Input</string>
   <string name="Emulators.Config.NoCoresInThisView">No cores have been downloaded</string>
   
@@ -98,7 +99,7 @@
   <string name="Emulators.Config.LibRetro.AutoSaveInterval">Auto save interval</string>
   <string name="Emulators.Config.LibRetro.AutoSaveInterval.Help">The number of seconds between auto saves</string>
   <string name="Emulators.Config.LibRetro.EnableVSync">Enable VSync</string>
-  <string name="Emulators.Config.LibRetro.EnableVSync.Help">Whether to synchronise playback rate to the monitor refresh rate</string>
+  <string name="Emulators.Config.LibRetro.EnableVSync.Help">Whether to synchronize playback rate to the monitor refresh rate</string>
   <string name="Emulators.Config.LibRetro.AudioBufferSize">Audio buffer size</string>
   <string name="Emulators.Config.LibRetro.AudioBufferSize.Help">The size in seconds of the audio buffer. A larger buffer reduces the chance of audio artifacts at the cost of increased latency</string>
 
