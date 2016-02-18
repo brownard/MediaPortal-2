@@ -26,13 +26,14 @@ namespace Emulators.Models
   public class LibRetroCoreUpdaterModel : IWorkflowModel
   {
     public static readonly Guid MODEL_ID = new Guid("656E3AC1-0363-4DA9-A23F-F1422A9ADD74");
-    public static readonly Guid STATE_ID = new Guid("BC9FAFDE-315E-4DBD-A99D-060D3225DCAA"); 
+    public static readonly Guid STATE_ID = new Guid("BC9FAFDE-315E-4DBD-A99D-060D3225DCAA");
     public const string LABEL_CORE_NAME = "CoreName";
     public const string KEY_CORE_INFO = "LibRetro: CoreInfo";
     public const string KEY_CORE = "LibRetro: Core";
     public const string DIALOG_CORE_UPDATE_PROGRESS = "dialog_core_update_progress";
     public const string DIALOG_CONTEXT_MENU = "dialog_core_context_menu";
 
+    protected AbstractProperty _dialogHeaderProperty = new WProperty(typeof(string), null);
     protected AbstractProperty _progressLabelProperty = new WProperty(typeof(string), null);
 
     protected readonly object _updateSync = new object();
@@ -63,6 +64,17 @@ namespace Emulators.Models
       get { return _contextMenuItems; }
     }
 
+    public AbstractProperty DialogHeaderProperty
+    {
+      get { return _dialogHeaderProperty; }
+    }
+
+    public string DialogHeader
+    {
+      get { return (string)_dialogHeaderProperty.GetValue(); }
+      set { _dialogHeaderProperty.SetValue(value); }
+    }
+
     public AbstractProperty ProgressLabelProperty
     {
       get { return _progressLabelProperty; }
@@ -77,6 +89,7 @@ namespace Emulators.Models
     protected void ShowContextMenu(LibRetroCoreItem item, LocalCore core)
     {
       RebuildContextMenuItems(item, core);
+      DialogHeader = item.Label(Consts.KEY_NAME, core.CoreName).Evaluate();
       ServiceRegistration.Get<IScreenManager>().ShowDialog(DIALOG_CONTEXT_MENU);
     }
 
@@ -188,7 +201,7 @@ namespace Emulators.Models
       item.Downloaded = downloaded;
       item.Configured = configured;
       item.Command = new MethodDelegateCommand(() => ShowContextMenu(item, core));
-      
+
       if (core.Info != null)
       {
         item.SetLabel(Consts.KEY_NAME, core.Info.DisplayName);
