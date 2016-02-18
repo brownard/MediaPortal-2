@@ -18,6 +18,7 @@ namespace Emulators.LibRetro.Cores
     protected string _baseUrl;
     protected string _latestUrl;
     protected string _infoUrl;
+    protected string _customCoresUrl;
     protected string _coresDirectory;
     protected string _infoDirectory;
     protected List<CustomCore> _customCores;
@@ -37,7 +38,7 @@ namespace Emulators.LibRetro.Cores
       _baseUrl = settings.BaseUrl;
       _latestUrl = settings.CoresUrl;
       _infoUrl = settings.CoreInfoUrl;
-      _customCores = settings.CustomCores;
+      _customCoresUrl = settings.CustomCoresUrl;
       _unsupportedCores = new HashSet<string>(settings.UnsupportedCores);
     }
 
@@ -48,6 +49,7 @@ namespace Emulators.LibRetro.Cores
 
     public void Update()
     {
+      UpdateCustomCores();
       DownloadCoreInfos();
       UpdateCores();
     }
@@ -85,6 +87,11 @@ namespace Emulators.LibRetro.Cores
       if (coreList != null)
         onlineCores.AddRange(coreList.CoreUrls);
       CreateLocalCores(onlineCores);
+    }
+
+    protected void UpdateCustomCores()
+    {
+      _customCores = CustomCoreHandler.GetCustomCores(_customCoresUrl);
     }
 
     protected void CreateLocalCores(IEnumerable<OnlineCore> onlineCores)

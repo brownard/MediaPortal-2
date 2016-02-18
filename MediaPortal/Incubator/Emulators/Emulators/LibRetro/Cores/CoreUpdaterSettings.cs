@@ -36,9 +36,9 @@ namespace Emulators.LibRetro.Cores
       //Custom build of mupen64plus without libco
       new CustomCore
       {
-        CoreName = "mupen64plus_libretro_singlethread.dll",
-        CoreUrl = "https://github.com/brownard/mupen64plus-libretro/releases/download/v0.1-single_thread/mupen64plus_libretro_singlethread.dll",
-        InfoUrl = ""
+        CoreName = "mupen64plus_singlethread_libretro.dll",
+        CoreUrl = "https://github.com/brownard/mupen64plus-libretro/releases/download/v0.1-single_thread/mupen64plus_singlethread_libretro.dll",
+        InfoUrl = "https://github.com/brownard/mupen64plus-libretro/releases/download/v0.1-single_thread/mupen64plus_singlethread_libretro.info"
       }
     };
 
@@ -53,6 +53,9 @@ namespace Emulators.LibRetro.Cores
 
     [Setting(SettingScope.Global, "/assets/frontend/info/")]
     public string CoreInfoUrl { get; set; }
+
+    [Setting(SettingScope.Global, "http://brownard.github.io/Libretro/CustomCoresList.xml")]
+    public string CustomCoresUrl { get; set; }
 
     [Setting(SettingScope.Global)]
     public List<CustomCore> CustomCores

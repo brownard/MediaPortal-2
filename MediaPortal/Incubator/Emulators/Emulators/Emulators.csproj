@@ -122,6 +122,7 @@
     <Compile Include="LibRetro\Cores\CoreInfoList.cs" />
     <Compile Include="LibRetro\Cores\CoreList.cs" />
     <Compile Include="LibRetro\Cores\CustomCore.cs" />
+    <Compile Include="LibRetro\Cores\CustomCoreHandler.cs" />
     <Compile Include="LibRetro\Cores\LocalCore.cs" />
     <Compile Include="LibRetro\Cores\OnlineCore.cs" />
     <Compile Include="LibRetro\Cores\CoreUpdaterSettings.cs" />
@@ -242,6 +243,7 @@
     <Content Include="Language\strings_en.xml">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="LibRetro\Cores\CustomCoresList.xml" />
     <Content Include="plugin.xml">
       <SubType>Designer</SubType>
     </Content>
