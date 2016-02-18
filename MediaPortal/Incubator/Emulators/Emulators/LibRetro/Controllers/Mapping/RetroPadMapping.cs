@@ -1,4 +1,5 @@
 ﻿using Emulators.Settings;
+using MediaPortal.Utilities.Xml;
 using SharpRetro.LibRetro;
 using System;
 using System.Collections.Generic;
@@ -32,36 +33,36 @@ namespace Emulators.LibRetro.Controllers.Mapping
   public class RetroPadMapping
   {
     protected List<MappedInput> _availableInputs;
-    protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput> _buttonMappings;
-    protected Dictionary<RetroAnalogDevice, DeviceInput> _analogMappings;
+    protected SerializableDictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput> _buttonMappings;
+    protected SerializableDictionary<RetroAnalogDevice, DeviceInput> _analogMappings;
 
     public RetroPadMapping()
     {
       _availableInputs = GetAvailableInputs();
-      _buttonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput>();
-      _analogMappings = new Dictionary<RetroAnalogDevice, DeviceInput>();
+      _buttonMappings = new SerializableDictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput>();
+      _analogMappings = new SerializableDictionary<RetroAnalogDevice, DeviceInput>();
     }
     
     public Guid DeviceId { get; set; }
     public string SubDeviceId { get; set; }
     public string DeviceName { get; set; }
-
+    
     [XmlIgnore]
     public List<MappedInput> AvailableInputs
     {
       get { return _availableInputs; }
     }
-
-    [XmlIgnore]
-    public Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput> ButtonMappings
+    
+    public SerializableDictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput> ButtonMappings
     {
       get { return _buttonMappings; }
+      set { _buttonMappings = value; }
     }
-
-    [XmlIgnore]
-    public Dictionary<RetroAnalogDevice, DeviceInput> AnalogMappings
+        
+    public SerializableDictionary<RetroAnalogDevice, DeviceInput> AnalogMappings
     {
       get { return _analogMappings; }
+      set { _analogMappings = value; }
     }
 
     public void Map(MappedInput mappedInput)
@@ -145,44 +146,5 @@ namespace Emulators.LibRetro.Controllers.Mapping
         }
       }
     }
-
-    /// <summary>
-    /// Used for serialization
-    /// </summary>
-    public SerializeableKeyValue<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput>[] ButtonMappingsSerializable
-    {
-      get
-      {
-        var list = new List<SerializeableKeyValue<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput>>();
-        foreach (var kvp in _buttonMappings)
-          list.Add(new SerializeableKeyValue<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput>(kvp.Key, kvp.Value));
-        return list.ToArray();
-      }
-      set
-      {
-        foreach (var item in value)
-          _buttonMappings[item.Key] = item.Value;
-      }
-    }
-
-    /// <summary>
-    /// Used for serialization
-    /// </summary>
-    public SerializeableKeyValue<RetroAnalogDevice, DeviceInput>[] AnalogMappingsSerializable
-    {
-      get
-      {
-        var list = new List<SerializeableKeyValue<RetroAnalogDevice, DeviceInput>>();
-        foreach (var kvp in _analogMappings)
-          list.Add(new SerializeableKeyValue<RetroAnalogDevice, DeviceInput>(kvp.Key, kvp.Value));
-        return list.ToArray();
-      }
-      set
-      {
-        foreach (var item in value)
-          _analogMappings[item.Key] = item.Value;
-      }
-    }
-
   }
 }

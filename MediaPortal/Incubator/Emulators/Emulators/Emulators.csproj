@@ -183,7 +183,6 @@
     <Compile Include="Settings\Configuration\LibRetro\EnableVSyncSetting.cs" />
     <Compile Include="Settings\Configuration\MinimiseOnStart.cs" />
     <Compile Include="Settings\EmulatorsSettings.cs" />
-    <Compile Include="Settings\SerializeableKeyValue.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Source\Core\MediaPortal.Common\MediaPortal.Common.csproj">
