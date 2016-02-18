@@ -39,7 +39,7 @@ namespace Emulators.LibRetro.Cores
       _latestUrl = settings.CoresUrl;
       _infoUrl = settings.CoreInfoUrl;
       _customCoresUrl = settings.CustomCoresUrl;
-      _unsupportedCores = new HashSet<string>(settings.UnsupportedCores);
+      _unsupportedCores = new HashSet<string>(CoreUpdaterSettings.DEFAULT_UNSUPPORTED);
     }
 
     public List<LocalCore> Cores

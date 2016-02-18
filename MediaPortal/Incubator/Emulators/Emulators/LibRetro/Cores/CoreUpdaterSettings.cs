@@ -22,6 +22,7 @@ namespace Emulators.LibRetro.Cores
       "bsnes_mercury_balanced_libretro.dll",
       "bsnes_mercury_performance_libretro.dll",
       "bsnes_performance_libretro.dll",
+      "mednafen_snes_libretro.dll",
       "dosbox_libretro.dll",
       "mame2000_libretro.dll",
       "mame2010_libretro.dll",
@@ -31,7 +32,7 @@ namespace Emulators.LibRetro.Cores
       "gpsp_libretro.dll"
     };
 
-    protected static readonly CustomCore[] DEFAULT_CUSTOM_CORES =
+    public static readonly CustomCore[] DEFAULT_CUSTOM_CORES =
     {
       //Custom build of mupen64plus without libco
       new CustomCore
@@ -56,19 +57,5 @@ namespace Emulators.LibRetro.Cores
 
     [Setting(SettingScope.Global, "http://brownard.github.io/Libretro/CustomCoresList.xml")]
     public string CustomCoresUrl { get; set; }
-
-    [Setting(SettingScope.Global)]
-    public List<CustomCore> CustomCores
-    {
-      get { return _customCores; }
-      set { _customCores = value; }
-    }
-
-    [Setting(SettingScope.Global)]
-    public List<string> UnsupportedCores
-    {
-      get { return _unsupportedCores; }
-      set { _unsupportedCores = value; }
-    }
   }
 }

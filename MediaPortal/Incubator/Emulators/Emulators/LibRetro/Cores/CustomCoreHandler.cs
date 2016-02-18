@@ -27,7 +27,7 @@ namespace Emulators.LibRetro.Cores
         return new List<CustomCore>(customCores.Cores);
 
       var settings = ServiceRegistration.Get<ISettingsManager>().Load<CoreUpdaterSettings>();
-      return new List<CustomCore>(settings.CustomCores);
+      return new List<CustomCore>(CoreUpdaterSettings.DEFAULT_CUSTOM_CORES);
     }
   }
 }
