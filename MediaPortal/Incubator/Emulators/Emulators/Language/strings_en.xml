@@ -51,6 +51,7 @@
   <string name="Emulators.Config.ChooseCore.Label">Choose the libretro core</string>
   <string name="Emulators.Config.DownloadCores">Download Cores</string>
   <string name="Emulators.Config.ManualPathInput">Manual Input</string>
+  <string name="Emulators.Config.NoCoresInThisView">No cores have been downloaded</string>
   
   <string name="Emulators.Config.ChooseEmulatorPath.Title">Choose path</string>
   <string name="Emulators.Config.ChooseEmulatorPath.Label">Choose the path to the emulator</string>

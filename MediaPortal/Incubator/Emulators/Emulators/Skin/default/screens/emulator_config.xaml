@@ -24,7 +24,7 @@
         </Grid.ColumnDefinitions>
         <Label Grid.Row="0" Margin="10" Content="[Emulators.Config.EmulatorConfigurations.Label]" Color="{ThemeResource TextColor}"/>
         <ListView Name="EmulatorList" Margin="10" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-              Style="{ThemeResource EmulatorsConfigListViewStyle}"
+              Style="{ThemeResource emuEmulatorsConfigListViewStyle}"
               ItemsSource="{Binding Path=Configurations,Mode=OneTime}"/>
       </Grid>
     </ControlTemplate>

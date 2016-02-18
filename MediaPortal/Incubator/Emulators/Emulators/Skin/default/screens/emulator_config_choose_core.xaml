@@ -31,7 +31,7 @@
         </Grid.ColumnDefinitions>
         <Label Grid.Row="0" Content="[Emulators.Config.ChooseCore.Label]" Color="{ThemeResource TextColor}" Wrap="True"/>
         <ListView Grid.Row="1" Margin="0,10,0,0"
-            Style="{ThemeResource SingleMarkableListViewStyle}"
+            Style="{ThemeResource emuSingleMarkableListViewStyle}"
             ItemsSource="{Binding Path=LocalCoreItems,Mode=OneTime}"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
