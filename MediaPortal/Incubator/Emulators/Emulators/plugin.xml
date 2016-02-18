@@ -165,7 +165,7 @@
     <!-- Core updater -->
     <WorkflowState Id="BC9FAFDE-315E-4DBD-A99D-060D3225DCAA"
         Name="CoreUpdater"
-        DisplayLabel="[Emulators.Config.LibRetro.UpdateCores]"
+        DisplayLabel="[Emulators.Config.DownloadCores]"
         MainScreen="libretro_core_updater"
         WorkflowModel="656E3AC1-0363-4DA9-A23F-F1422A9ADD74"/>    <!-- LibRetro core updater model -->
 

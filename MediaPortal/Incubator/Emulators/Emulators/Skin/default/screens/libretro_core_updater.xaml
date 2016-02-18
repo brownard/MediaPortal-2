@@ -10,7 +10,7 @@
     <Model x:Key="Model" Id="656E3AC1-0363-4DA9-A23F-F1422A9ADD74"/>
 
     <!-- Header -->
-    <ResourceWrapper x:Key="Header_Text" Resource="[Emulators.Config.LibRetro.UpdateCores]"/>
+    <ResourceWrapper x:Key="Header_Text" Resource="[Emulators.Config.DownloadCores]"/>
 
     <!-- Contents -->
     <ControlTemplate x:Key="Contents_Template">
