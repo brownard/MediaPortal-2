@@ -14,7 +14,7 @@ namespace Emulators.LibRetro.SoundProviders
 {
   public class LibRetroDirectSound : ISoundOutput
   {
-    public const double DEFAULT_BUFFER_SIZE_SECONDS = 0.25;
+    public const double DEFAULT_BUFFER_SIZE_SECONDS = 0.4;
 
     protected DirectSound _directSound;
     protected SecondarySoundBuffer _secondaryBuffer;
