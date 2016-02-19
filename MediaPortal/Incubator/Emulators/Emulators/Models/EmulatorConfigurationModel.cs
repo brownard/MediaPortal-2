@@ -199,16 +199,19 @@ namespace Emulators.Models
       _localCoreItems.Clear();
       try
       {
-        foreach (string path in Directory.EnumerateFiles(settings.CoresDirectory, "*.dll"))
+        if (Directory.Exists(settings.CoresDirectory))
         {
-          string coreName = Path.GetFileName(path);
-          CoreInfo coreInfo = CoreHandler.LoadCoreInfo(coreName, settings.InfoDirectory);
-          if (coreInfo != null)
-            coreName = coreInfo.DisplayName;
-          ListItem item = new ListItem(Consts.KEY_NAME, coreName);
-          item.SetLabel(Consts.KEY_PATH, path);
-          item.SelectedProperty.Attach(OnCoreItemSelectionChanged);
-          _localCoreItems.Add(item);
+          foreach (string path in Directory.EnumerateFiles(settings.CoresDirectory, "*.dll"))
+          {
+            string coreName = Path.GetFileName(path);
+            CoreInfo coreInfo = CoreHandler.LoadCoreInfo(coreName, settings.InfoDirectory);
+            if (coreInfo != null)
+              coreName = coreInfo.DisplayName;
+            ListItem item = new ListItem(Consts.KEY_NAME, coreName);
+            item.SetLabel(Consts.KEY_PATH, path);
+            item.SelectedProperty.Attach(OnCoreItemSelectionChanged);
+            _localCoreItems.Add(item);
+          }
         }
       }
       catch (Exception ex)
