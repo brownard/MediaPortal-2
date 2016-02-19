@@ -199,6 +199,7 @@ namespace Emulators.LibRetro
       _retroEmulator = new LibRetroEmulator(_corePath)
       {
         SaveDirectory = _settings.SavesDirectory,
+        SystemDirectory = _settings.SystemDirectory,
         LogDelegate = RetroLogDlgt,
         Controller = _controllerWrapper,
         GLContext = _glContext
