@@ -113,10 +113,12 @@ namespace Emulators.LibRetro
       {
         Fire(Initializing);
       }
+#if !DEBUG
       catch (Exception ex)
       {
         Logger.Error("LibRetroThread: Error in DoInit", ex);
       }
+#endif
       finally
       {
         _initWaitHandle.Set();
@@ -135,10 +137,12 @@ namespace Emulators.LibRetro
         }
         Fire(Finishing);
       }
+#if !DEBUG
       catch (Exception ex)
       {
         Logger.Error("LibRetroThread: Error in DoRun", ex);
       }
+#endif
       finally
       {
         Fire(Finished);
