@@ -1,5 +1,4 @@
-﻿using SharpGL;
-using SharpGL.Version;
+﻿using SharpGL.Version;
 using SharpRetro.RetroGL;
 using System;
 using System.Collections.Generic;
@@ -8,10 +7,13 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using SharpRetro.LibRetro;
+using SharpDX.Direct3D9;
+using MediaPortal.Common;
+using MediaPortal.Common.Logging;
 
 namespace Emulators.LibRetro.GLContexts
 {
-  public class RetroGLContextProvider : FBORenderContextProvider, IRetroGLContext
+  public class RetroGLContextProvider : IRetroGLContext
   {
     [DllImport("opengl32", EntryPoint = "wglGetProcAddress", ExactSpelling = true)]
     private static extern IntPtr wglGetProcAddress(IntPtr function_name);
@@ -20,15 +22,47 @@ namespace Emulators.LibRetro.GLContexts
     protected LibRetroCore.retro_hw_get_proc_address_t _getProcAddressDlgt;
     protected LibRetroCore.retro_hw_context_reset_t _contextReset;
     protected LibRetroCore.retro_hw_context_reset_t _contextDestroy;
+
+    protected FBORenderContextProvider _fboContextProvider;
+    protected DXRenderContextProvider _dxContextProvider;
+
+    protected bool _hasDXContext;
     protected byte[] _pixels;
     protected bool _isCreated;
     protected bool _bottomLeftOrigin;
-    protected int _maxWidth;
-    protected int _maxHeight;
+    protected bool _isTextureDirty;
+    protected int _currentWidth;
+    protected int _currentHeight;
 
     public bool BottomLeftOrigin
     {
       get { return _bottomLeftOrigin; }
+    }
+
+    public Texture Texture
+    {
+      get { return _dxContextProvider != null ? _dxContextProvider.CurrentTexture : null; }
+    }
+
+    public bool IsTextureDirty
+    {
+      get { return _isTextureDirty; }
+      set { _isTextureDirty = value; }
+    }
+
+    public int CurrentWidth
+    {
+      get { return _currentWidth; }
+    }
+
+    public int CurrentHeight
+    {
+      get { return _currentHeight; }
+    }
+
+    public bool HasDXContext
+    {
+      get { return _hasDXContext; }
     }
 
     public LibRetroCore.retro_hw_get_current_framebuffer_t GetCurrentFramebufferDlgt
@@ -41,8 +75,9 @@ namespace Emulators.LibRetro.GLContexts
       get { return _getProcAddressDlgt; }
     }
 
-    public RetroGLContextProvider()
+    public RetroGLContextProvider(bool dxInteropContext)
     {
+      _hasDXContext = dxInteropContext;
       _getCurrentFramebufferDlgt = new LibRetroCore.retro_hw_get_current_framebuffer_t(GetCurrentFramebuffer);
       _getProcAddressDlgt = new LibRetroCore.retro_hw_get_proc_address_t(GetProcAddress);
     }
@@ -58,25 +93,49 @@ namespace Emulators.LibRetro.GLContexts
     {
       if (_isCreated)
         return;
-      _maxWidth = width;
-      _maxHeight = height;
-      _pixels = new byte[_maxWidth * _maxHeight * 4];
-      Create(OpenGLVersion.OpenGL2_1, new OpenGL(), _maxWidth, _maxHeight, 32, null);
+      
+      if (_hasDXContext)
+      {
+        _dxContextProvider = new DXRenderContextProvider();
+        _fboContextProvider = _dxContextProvider;
+        _dxContextProvider.Create(OpenGLVersion.OpenGL2_1, new OpenGLEx(), width, height, 32, null);
+        if (!_dxContextProvider.HasDXContext)
+        {
+          _dxContextProvider = null;
+          _hasDXContext = false;
+          ServiceRegistration.Get<ILogger>().Warn("RetroGLContextProvider: WGL_NV_DX_interop extensions are not supported by the graphics driver, falling back to read back. This will reduce performance");
+        }
+      }
+      else
+      {
+        _fboContextProvider = new FBORenderContextProvider();
+        _fboContextProvider.Create(OpenGLVersion.OpenGL2_1, new OpenGLEx(), width, height, 32, null);
+      }
+
+      if (!_hasDXContext)
+        _pixels = new byte[width * height * 4];
+
       _isCreated = true;
       if (_contextReset != null)
         _contextReset();
     }
 
-    public byte[] GetPixels(int width, int height)
+    public byte[] ReadPixels(int width, int height)
     {
-      if (deviceContextHandle == IntPtr.Zero)
+      if (!_isCreated || _hasDXContext)
         return null;
-      //  Set the read buffer.
-      gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, frameBufferID);
-      gl.ReadBuffer(OpenGL.GL_COLOR_ATTACHMENT0_EXT);
-      gl.ReadPixels(0, 0, width, height, OpenGL.GL_BGRA, OpenGL.GL_UNSIGNED_BYTE, _pixels);
-      gl.BindFramebufferEXT(OpenGL.GL_FRAMEBUFFER_EXT, 0);
+      _fboContextProvider.ReadPixels(_pixels, width, height);
       return _pixels;
+    }
+
+    public void UpdateCurrentTexture(int width, int height)
+    {
+      if (!_isCreated || !_hasDXContext)
+        return;
+      _dxContextProvider.UpdateCurrentTexture(_bottomLeftOrigin);
+      _currentWidth = width;
+      _currentHeight = height;
+      _isTextureDirty = true;
     }
 
     protected IntPtr GetProcAddress(IntPtr sym)
@@ -87,13 +146,13 @@ namespace Emulators.LibRetro.GLContexts
 
     protected uint GetCurrentFramebuffer()
     {
-      return frameBufferID;
+      return _fboContextProvider.FramebufferId;
     }
 
     public void Dispose()
     {
       if (_isCreated)
-        Destroy();
+        _fboContextProvider.Destroy();
     }
   }
 }

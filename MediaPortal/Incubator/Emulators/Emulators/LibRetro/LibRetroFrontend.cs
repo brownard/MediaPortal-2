@@ -82,7 +82,16 @@ namespace Emulators.LibRetro
       get
       {
         lock (_surfaceLock)
-          return _textureProvider != null ? _textureProvider.Texture : null;
+        {
+          if (_textureProvider == null)
+            return null;
+          if (_glContext != null && _glContext.IsTextureDirty)
+          {
+            _textureProvider.UpdateTexture(SkinContext.Device, _glContext.Texture, _glContext.CurrentWidth, _glContext.CurrentHeight, _glContext.BottomLeftOrigin);
+            _glContext.IsTextureDirty = false;
+          }
+          return _textureProvider.Texture;
+        }
       }
     }
 
@@ -195,7 +204,7 @@ namespace Emulators.LibRetro
 
     protected void InitializeLibRetro()
     {
-      _glContext = new RetroGLContextProvider();
+      _glContext = new RetroGLContextProvider(true);
       _retroEmulator = new LibRetroEmulator(_corePath)
       {
         SaveDirectory = _settings.SavesDirectory,
@@ -383,11 +392,22 @@ namespace Emulators.LibRetro
     {
       int width = _retroEmulator.VideoInfo.Width;
       int height = _retroEmulator.VideoInfo.Height;
-      byte[] pixels = _glContext.GetPixels(width, height);
-      lock (_surfaceLock)
+
+      if (_glContext.HasDXContext)
       {
-        if (_guiInitialized)
-          _textureProvider.UpdateTexture(SkinContext.Device, pixels, width, height, _glContext.BottomLeftOrigin);
+        lock (_surfaceLock)
+        {
+          _glContext.UpdateCurrentTexture(width, height);
+        }
+      }
+      else
+      {
+        byte[] pixels = _glContext.ReadPixels(width, height);
+        lock (_surfaceLock)
+        {
+          if (_guiInitialized)
+            _textureProvider.UpdateTexture(SkinContext.Device, pixels, width, height, _glContext.BottomLeftOrigin);
+        }
       }
     }
 

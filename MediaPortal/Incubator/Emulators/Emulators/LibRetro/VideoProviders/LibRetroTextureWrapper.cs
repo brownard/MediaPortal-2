@@ -72,7 +72,7 @@ namespace Emulators.LibRetro.VideoProviders
       SynchronizedTexture texture = null;
       try
       {
-        texture = GetOrCreateTexture(device, width, height);
+        texture = GetOrCreateTexture(device, width, height, Usage.Dynamic);
         lock (texture.SyncRoot)
         {
           if (texture.IsDisposing)
@@ -103,7 +103,31 @@ namespace Emulators.LibRetro.VideoProviders
       }
     }
 
-    protected SynchronizedTexture GetOrCreateTexture(Device device, int width, int height)
+    public void UpdateTexture(Device device, Texture source, int width, int height, bool bottomLeftOrigin)
+    {
+      SynchronizedTexture texture = null;
+      try
+      {
+        texture = GetOrCreateTexture(device, width, height, Usage.RenderTarget);
+        lock (texture.SyncRoot)
+        {
+          if (texture.IsDisposing)
+            return;
+          device.StretchRectangle(source.GetSurfaceLevel(0), new Rectangle(0, 0, width, height), texture.GetSurfaceLevel(0), null, TextureFilter.None);
+        }
+      }
+      catch (Exception ex)
+      {
+        if (texture != null)
+        {
+          texture.Dispose();
+          _textures[_currentTextureIndex] = null;
+        }
+        ServiceRegistration.Get<ILogger>().Error("LibRetroTextureWrapper: Texture update failed", ex);
+      }
+    }
+
+    protected SynchronizedTexture GetOrCreateTexture(Device device, int width, int height, Usage usage)
     {
       _currentTextureIndex = (_currentTextureIndex + 1) % _textures.Length;
       SynchronizedTexture texture = _textures[_currentTextureIndex];
@@ -117,7 +141,7 @@ namespace Emulators.LibRetro.VideoProviders
           else
           {
             SurfaceDescription surface = texture.GetLevelDescription(0);
-            if (surface.Width != width || surface.Height != height)
+            if (surface.Usage != usage || surface.Width != width || surface.Height != height)
             {
               texture.Dispose();
               texture = null;
@@ -128,7 +152,7 @@ namespace Emulators.LibRetro.VideoProviders
 
       if (texture == null)
       {
-        texture = new SynchronizedTexture(device, width, height, 1, Usage.Dynamic, Format.X8R8G8B8, Pool.Default);
+        texture = new SynchronizedTexture(device, width, height, 1, usage, Format.X8R8G8B8, Pool.Default);
         _textures[_currentTextureIndex] = texture;
       }
       return texture;
