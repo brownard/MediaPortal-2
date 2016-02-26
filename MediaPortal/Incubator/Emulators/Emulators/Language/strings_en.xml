@@ -91,6 +91,8 @@
   <string name="Emulators.Config.LibRetro.CoresDirectory.Help">The path to use for downloaded cores</string>
   <string name="Emulators.Config.LibRetro.CoreInfoDirectory">Core info directory</string>
   <string name="Emulators.Config.LibRetro.CoreInfoDirectory.Help">The path to use for downloaded core information</string>
+  <string name="Emulators.Config.LibRetro.SystemDirectory">System directory</string>
+  <string name="Emulators.Config.LibRetro.SystemDirectory.Help">The path to use for core system files (bios files, etc)</string>
   <string name="Emulators.Config.LibRetro.MaximumPlayers">Maximum players</string>
   <string name="Emulators.Config.LibRetro.MaximumPlayers.Help">Set the maximum number of players available when configuring input devices</string>
   <string name="Emulators.Config.LibRetro.MapInputDevices">Map input devices</string>

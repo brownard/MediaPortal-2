@@ -176,6 +176,7 @@
     <Compile Include="Settings\Configuration\EmulatorsConfigSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\CoreInfoDirectorySetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\CoresDirectorySetting.cs" />
+    <Compile Include="Settings\Configuration\LibRetro\SystemDirectorySetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\SavesDirectorySetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\AutoSaveIntervalSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\AutoSaveSetting.cs" />

@@ -297,6 +297,12 @@
         HelpText="[Emulators.Config.LibRetro.CoreInfoDirectory.Help]"
         ClassName="Emulators.Settings.Configuration.LibRetro.CoreInfoDirectorySetting"/>
     
+    <ConfigSetting
+        Id="SystemDirectory"
+        Text="[Emulators.Config.LibRetro.SystemDirectory]"
+        HelpText="[Emulators.Config.LibRetro.SystemDirectory.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.SystemDirectorySetting"/>
+    
   </Register>
 
   <Register Location="/Configuration/Settings/Plugins/Emulators/LibRetro/Advanced">
