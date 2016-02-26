@@ -8,6 +8,8 @@ using SharpRetro.LibRetro;
 using Emulators.LibRetro.Controllers.Mapping;
 using SharpLib.Hid;
 using System.Globalization;
+using MediaPortal.Common;
+using MediaPortal.Common.Logging;
 
 namespace Emulators.LibRetro.Controllers.Hid
 {
@@ -144,6 +146,7 @@ namespace Emulators.LibRetro.Controllers.Hid
         if (state.ProductId != _productId || state.VendorId != _vendorId)
           return false;
         _name = state.Name;
+        ServiceRegistration.Get<ILogger>().Debug("HidGameControl: Mapped Hid controller configuration to device {0}, {1}, {2}", state.Name, state.ProductId, state.VendorId);
       }
       _currentState = state;
       return true;
