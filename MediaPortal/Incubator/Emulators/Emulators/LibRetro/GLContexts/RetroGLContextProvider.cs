@@ -87,6 +87,7 @@ namespace Emulators.LibRetro.GLContexts
       _bottomLeftOrigin = bottomLeftOrigin;
       _contextReset = contextReset;
       _contextDestroy = contextDestroy;
+      ServiceRegistration.Get<ILogger>().Debug("RetroGLContextProvider: Initialised: depth: {0}, strencil: {1}, bottomLeftOrigin: {2}, contextDestroy: {3}", depth, stencil, bottomLeftOrigin, contextDestroy != null);
     }
 
     public void Create(int width, int height)
@@ -116,6 +117,8 @@ namespace Emulators.LibRetro.GLContexts
         _pixels = new byte[width * height * 4];
 
       _isCreated = true;
+
+      ServiceRegistration.Get<ILogger>().Debug("RetroGLContextProvider: Created OpengGL context: width: {0}, height: {1}", width, height);
       if (_contextReset != null)
         _contextReset();
     }

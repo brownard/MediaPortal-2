@@ -53,6 +53,7 @@ namespace SharpRetro.LibRetro
     protected int _maxVideoWidth;
     protected int _maxVideoHeight;
     protected AudioBuffer _audioBuffer;
+    protected bool _hasHWRenderer;
 
     protected SystemInfo _systemInfo;
     protected VideoInfo _videoInfo;
@@ -440,7 +441,7 @@ namespace SharpRetro.LibRetro
       if (!_firstRun)
         return;
       _firstRun = false;
-      if (_glContext != null)
+      if (_hasHWRenderer && _glContext != null)
         _glContext.Create(_maxVideoWidth, _maxVideoHeight);
     }
     #endregion
@@ -733,6 +734,7 @@ namespace SharpRetro.LibRetro
     protected bool InitGlContext(IntPtr data)
     {
       LibRetroCore.retro_hw_render_callback* info = (LibRetroCore.retro_hw_render_callback*)data.ToPointer();
+      _hasHWRenderer = true;
       Log(LibRetroCore.RETRO_LOG_LEVEL.DEBUG, "SET_HW_RENDER: {0}, version={1}.{2}, dbg/cache={3}/{4}, depth/stencil = {5}/{6}{7}", info->context_type, info->version_minor, info->version_major, info->debug_context, info->cache_context, info->depth, info->stencil, info->bottom_left_origin ? " (bottomleft)" : "");
       if (_glContext == null)
         return false;
