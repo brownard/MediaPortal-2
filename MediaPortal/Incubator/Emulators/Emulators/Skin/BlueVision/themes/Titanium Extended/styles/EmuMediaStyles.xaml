@@ -35,19 +35,19 @@
         </Label.Color>
       </Label>
       <Image x:Name="ItemTypeSmall" Stretch="Uniform"
-            Source="{Binding MediaItem}" FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
+            Source="{Binding MediaItem}" FallbackSource="defaultGame.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
         <Image.IsVisible>
           <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
         </Image.IsVisible>
       </Image>
       <Image x:Name="ItemTypeMedium" Stretch="Uniform"
-            Source="{Binding MediaItem}" FallbackSource="VideoSmall.png" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
+            Source="{Binding MediaItem}" FallbackSource="defaultGame.png" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
         <Image.IsVisible>
           <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Medium}"/>
         </Image.IsVisible>
       </Image>
       <Image x:Name="ItemTypeLarge" Stretch="Uniform"
-            Source="{Binding MediaItem}" FallbackSource="VideoLarge.png" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
+            Source="{Binding MediaItem}" FallbackSource="defaultGame.png" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
         <Image.IsVisible>
           <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Large}"/>
         </Image.IsVisible>
@@ -84,7 +84,7 @@
       <Image Stretch="Fill" Margin="3" IsVisible="{Binding ElementName=thumb, Path=!HasImage}"
        Source="filmstrip_background.png" Opacity="0.85"/>
       <Image Stretch="Uniform" Margin="20" IsVisible="{Binding ElementName=thumb, Path=!HasImage}"
-             Source="defaultVideo.png">
+             Source="defaultGame.png">
         <Image.Opacity>
           <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} ? {1} : {2}">
             <Binding RelativeSource="{RelativeSource Mode=FindAncestor,AncestorType={x:Type Button}}" Path="HasFocus"/>
@@ -108,7 +108,7 @@
         <RowDefinition Height="{StaticResource COVERVIEW_HEIGHT}"/>
       </Grid.RowDefinitions>
       <Image x:Name="thumb" Grid.Column="1" Width="{StaticResource COVERVIEW_WIDTH}" Stretch="Uniform" 
-             Source="{Binding MediaItem}" FallbackSource="defaultVideo.png" VerticalAlignment="Bottom">
+             Source="{Binding MediaItem}" FallbackSource="defaultGame.png" VerticalAlignment="Bottom">
         <Image.OpacityMask >
           <ImageBrush ImageSource="filmstrip_mask.png"/>
         </Image.OpacityMask>
@@ -132,7 +132,7 @@
             </VisualBrush.Visual>
           </VisualBrush>
         </Grid.OpacityMask>
-        <Image Width="{StaticResource MEDIA_POSTER_WIDTH}" Stretch="Uniform" Source="{Binding MediaItem}" FallbackSource="VideoLarge.png"
+        <Image Width="{StaticResource MEDIA_POSTER_WIDTH}" Stretch="Uniform" Source="{Binding MediaItem}" FallbackSource="defaultGame.png"
            HorizontalAlignment="Center" VerticalAlignment="Center">
         </Image>
       </Grid>
