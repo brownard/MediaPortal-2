@@ -18,16 +18,15 @@ namespace Emulators
   {
     public ICollection<string> GetMediaCategories(ResourcePath path)
     {
+      List<string> categories = new List<string>();
       var systemResolver = ServiceRegistration.Get<ISystemResolver>();
       var scm = ServiceRegistration.Get<IServerConnectionManager>();
       var cd = ServiceRegistration.Get<IServerConnectionManager>().ContentDirectory;
       if (cd == null)
-        return null;
+        return categories;
 
       ICollection<Share> shares = cd.GetShares(systemResolver.LocalSystemId, SharesFilter.All);
       Share bestShare = SharesHelper.BestContainingPath(shares, path);
-
-      List<string> categories = new List<string>();
       if (bestShare != null)
         categories.AddRange(bestShare.MediaCategories);
       return categories;
