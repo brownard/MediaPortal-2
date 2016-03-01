@@ -43,9 +43,6 @@ namespace Emulators.LibRetro.Cores
       }
     };
 
-    protected List<CustomCore> _customCores = new List<CustomCore>(DEFAULT_CUSTOM_CORES);
-    protected List<string> _unsupportedCores = new List<string>(DEFAULT_UNSUPPORTED);
-
     [Setting(SettingScope.Global, "http://buildbot.libretro.com")]
     public string BaseUrl { get; set; }
 
