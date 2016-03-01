@@ -145,7 +145,7 @@
       <Control Height="{Binding ElementName=PosterGrid,Path=ActualHeight}" Style="{ThemeResource Shadow_3_20}" />
       <!-- SHADOW -->
 
-      <Grid Name="PosterGrid" HorizontalAlignment="Center" VerticalAlignment="Center">
+      <Grid Name="PosterGrid" HorizontalAlignment="Center" VerticalAlignment="Center" MaxHeight="{StaticResource MEDIA_POSTER_HEIGHT}">
         <Grid.OpacityMask>
           <VisualBrush>
             <VisualBrush.Visual>
