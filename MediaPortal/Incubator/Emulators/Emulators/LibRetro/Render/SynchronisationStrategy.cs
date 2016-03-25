@@ -47,12 +47,9 @@ namespace Emulators.LibRetro.Render
       get { return _synchronizationType == SynchronizationType.Audio || !_doVSync || Form.ActiveForm != SkinContext.Form; }
     }
 
-    public void Synchronize(bool wait)
+    public void Synchronize()
     {
-      if (wait)
-        WaitForRenderTime();
-      else
-        _lastRenderTimestamp = Stopwatch.GetTimestamp();
+      WaitForRenderTime();
     }
 
     public void Update()

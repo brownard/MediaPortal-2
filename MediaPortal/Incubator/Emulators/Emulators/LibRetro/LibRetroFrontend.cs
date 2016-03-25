@@ -346,7 +346,8 @@ namespace Emulators.LibRetro
     {
       RenderDlgt dlgt = _renderDlgt;
       bool wait = _synchronizationStrategy.SyncToAudio ? !_hasAudio : dlgt == null;
-      _synchronizationStrategy.Synchronize(wait);
+      if (wait)
+        _synchronizationStrategy.Synchronize();
       if (dlgt != null)
         dlgt();
     }
