@@ -49,6 +49,7 @@ namespace Emulators.LibRetro
     protected RenderDlgt _renderDlgt;    
     protected bool _guiInitialized;
     protected bool _isPaused;
+    protected bool _hasAudio;
 
     protected string _corePath;
     protected string _gamePath;
@@ -334,6 +335,8 @@ namespace Emulators.LibRetro
 
     protected void RunEmulator()
     {
+      //reset this every frame in case we get a frame without audio
+      _hasAudio = false;
       _retroEmulator.Run();
       if (_autoSave)
         _saveHandler.AutoSave();
@@ -342,7 +345,7 @@ namespace Emulators.LibRetro
     protected void RenderFrame()
     {
       RenderDlgt dlgt = _renderDlgt;
-      bool wait = _synchronizationStrategy.SyncToAudio ? _soundOutput == null : dlgt == null;
+      bool wait = _synchronizationStrategy.SyncToAudio ? !_hasAudio : dlgt == null;
       _synchronizationStrategy.Synchronize(wait);
       if (dlgt != null)
         dlgt();
@@ -416,7 +419,10 @@ namespace Emulators.LibRetro
       lock (_audioLock)
       {
         if (_soundOutput != null)
+        {
           _soundOutput.WriteSamples(_retroEmulator.AudioBuffer.Data, _retroEmulator.AudioBuffer.Length, _synchronizationStrategy.SyncToAudio);
+          _hasAudio = true;
+        }
       }
     }
 
