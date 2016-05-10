@@ -52,16 +52,13 @@ namespace Emulators.Emulator
       }
     }
 
-    public bool TryGetConfiguration(string mimeType, out EmulatorConfiguration configuration)
+    public bool TryGetConfiguration(string mimeType, string extension, out EmulatorConfiguration configuration)
     {
-      List<EmulatorConfiguration> configurations = Load();
-      configuration = configurations.FirstOrDefault(c => IsMatch(c, mimeType));
+      var configurations = Load().Where(c=>c.Platforms.Any(p => GameCategory.CategoryNameToMimeType(p) == mimeType));
+      configuration = configurations.FirstOrDefault(c => c.FileExtensions.Contains(extension));
+      if (configuration == null)
+        configuration = configurations.FirstOrDefault(c => c.FileExtensions.Count == 0);
       return configuration != null;
-    }
-
-    protected bool IsMatch(EmulatorConfiguration configuration, string mimeType)
-    {
-      return configuration.Platforms.Any(p => GameCategory.CategoryNameToMimeType(p) == mimeType);
     }
 
     public List<EmulatorConfiguration> Load()

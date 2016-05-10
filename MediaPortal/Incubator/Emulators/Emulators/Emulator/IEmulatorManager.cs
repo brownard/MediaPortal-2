@@ -9,7 +9,7 @@ namespace Emulators.Emulator
 {
   interface IEmulatorManager
   {
-    bool TryGetConfiguration(string mimeType, out EmulatorConfiguration configuration);
+    bool TryGetConfiguration(string mimeType, string extension, out EmulatorConfiguration configuration);
     List<EmulatorConfiguration> Load();
     void Save(List<EmulatorConfiguration> configurations);
     void AddOrUpdate(EmulatorConfiguration configuration);

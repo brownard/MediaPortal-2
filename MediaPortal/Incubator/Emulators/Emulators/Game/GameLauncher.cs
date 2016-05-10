@@ -118,7 +118,12 @@ namespace Emulators.Game
       string mimeType;
       if (mediaItem == null || !MediaItemAspect.TryGetAttribute(mediaItem.Aspects, MediaAspect.ATTR_MIME_TYPE, out mimeType))
         return false;
-      return ServiceRegistration.Get<IEmulatorManager>().TryGetConfiguration(mimeType, out configuration);
+      string path;
+      if (!MediaItemAspect.TryGetAttribute(mediaItem.Aspects, ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, out path))
+        return false;
+      ResourcePath rp = ResourcePath.Deserialize(path);
+      string ext = ProviderPathHelper.GetExtension(rp.FileName);
+      return ServiceRegistration.Get<IEmulatorManager>().TryGetConfiguration(mimeType, ext, out configuration);
     }
 
     protected void ProcessExited(object sender, EventArgs e)
