@@ -1,10 +1,8 @@
-﻿using Emulators.Common;
-using Emulators.Common.Emulators;
+﻿using Emulators.Common.Emulators;
 using Emulators.Common.Games;
 using Emulators.Common.Settings;
 using MediaPortal.Common;
 using MediaPortal.Common.Messaging;
-using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Common.Settings;
 using MediaPortal.Common.SystemResolver;
 using MediaPortal.Plugins.ServerSettings;
