@@ -21,8 +21,8 @@ namespace Emulators.LibRetro.Controllers.XInput
     protected string _deviceName;
     protected int _controllerIndex;
     protected XInputControllerCache _controller;
-    protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, GamepadButtonFlags> _buttonToButtonMappings;
-    protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, XInputAxis> _analogToButtonMappings;
+    protected Dictionary<RETRO_DEVICE_ID_JOYPAD, GamepadButtonFlags> _buttonToButtonMappings;
+    protected Dictionary<RETRO_DEVICE_ID_JOYPAD, XInputAxis> _analogToButtonMappings;
     protected Dictionary<RetroAnalogDevice, XInputAxis> _analogToAnalogMappings;
     protected Dictionary<RetroAnalogDevice, GamepadButtonFlags> _buttonToAnalogMappings;
     protected ushort _leftMotorSpeed;
@@ -50,8 +50,8 @@ namespace Emulators.LibRetro.Controllers.XInput
 
     public XInputController(UserIndex userIndex)
     {
-      _buttonToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, GamepadButtonFlags>();
-      _analogToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, XInputAxis>();
+      _buttonToButtonMappings = new Dictionary<RETRO_DEVICE_ID_JOYPAD, GamepadButtonFlags>();
+      _analogToButtonMappings = new Dictionary<RETRO_DEVICE_ID_JOYPAD, XInputAxis>();
       _analogToAnalogMappings = new Dictionary<RetroAnalogDevice, XInputAxis>();
       _buttonToAnalogMappings = new Dictionary<RetroAnalogDevice, GamepadButtonFlags>();
       InitController(userIndex);
@@ -126,7 +126,7 @@ namespace Emulators.LibRetro.Controllers.XInput
       return _controller.IsConnected();
     }
 
-    public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)
+    public bool IsButtonPressed(uint port, RETRO_DEVICE_ID_JOYPAD button)
     {
       if (port != _controllerIndex)
         return false;
@@ -143,7 +143,7 @@ namespace Emulators.LibRetro.Controllers.XInput
       return false;
     }
 
-    public short GetAnalog(uint port, LibRetroCore.RETRO_DEVICE_INDEX_ANALOG index, LibRetroCore.RETRO_DEVICE_ID_ANALOG direction)
+    public short GetAnalog(uint port, RETRO_DEVICE_INDEX_ANALOG index, RETRO_DEVICE_ID_ANALOG direction)
     {
       if (port != _controllerIndex)
         return 0;
@@ -176,15 +176,15 @@ namespace Emulators.LibRetro.Controllers.XInput
       return 0;
     }
 
-    public bool SetRumbleState(uint port, LibRetroCore.retro_rumble_effect effect, ushort strength)
+    public bool SetRumbleState(uint port, retro_rumble_effect effect, ushort strength)
     {
       if (port != _controllerIndex)
         return false;
 
       //Consider the low frequency (left) motor the "strong" one
-      if (effect == LibRetroCore.retro_rumble_effect.RETRO_RUMBLE_STRONG)
+      if (effect == retro_rumble_effect.RETRO_RUMBLE_STRONG)
         _leftMotorSpeed = strength;
-      else if (effect == LibRetroCore.retro_rumble_effect.RETRO_RUMBLE_WEAK)
+      else if (effect == retro_rumble_effect.RETRO_RUMBLE_WEAK)
         _rightMotorSpeed = strength;
 
       if (!_controller.IsConnected())

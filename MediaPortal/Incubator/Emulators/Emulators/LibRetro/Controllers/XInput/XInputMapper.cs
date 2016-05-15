@@ -80,22 +80,22 @@ namespace Emulators.LibRetro.Controllers.XInput
         SubDeviceId = subDeviceId,
         DeviceName = XInputController.DEVICE_NAME
       };
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.LEFT, DPAD_LEFT);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.RIGHT, DPAD_RIGHT);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.UP, DPAD_UP);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.DOWN, DPAD_DOWN);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.SELECT, BACK);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.START, START);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.A, B);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.B, A);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.X, Y);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.Y, X);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.L, LEFT_SHOULDER);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.R, RIGHT_SHOULDER);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.L2, LEFT_TRIGGER);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.R2, RIGHT_TRIGGER);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.L3, LEFT_THUMB);
-      mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.R3, RIGHT_THUMB);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.LEFT, DPAD_LEFT);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.RIGHT, DPAD_RIGHT);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.UP, DPAD_UP);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.DOWN, DPAD_DOWN);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.SELECT, BACK);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.START, START);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.A, B);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.B, A);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.X, Y);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.Y, X);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.L, LEFT_SHOULDER);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.R, RIGHT_SHOULDER);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.L2, LEFT_TRIGGER);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.R2, RIGHT_TRIGGER);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.L3, LEFT_THUMB);
+      mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.R3, RIGHT_THUMB);
 
       mapping.MapAnalog(RetroAnalogDevice.RightThumbLeft, RIGHT_THUMB_LEFT);
       mapping.MapAnalog(RetroAnalogDevice.RightThumbRight, RIGHT_THUMB_RIGHT);
@@ -104,10 +104,10 @@ namespace Emulators.LibRetro.Controllers.XInput
 
       if (mapAnalogToDPad)
       {
-        mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.LEFT, LEFT_THUMB_LEFT);
-        mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.RIGHT, LEFT_THUMB_RIGHT);
-        mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.UP, LEFT_THUMB_UP);
-        mapping.MapButton(SharpRetro.LibRetro.LibRetroCore.RETRO_DEVICE_ID_JOYPAD.DOWN, LEFT_THUMB_DOWN);
+        mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.LEFT, LEFT_THUMB_LEFT);
+        mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.RIGHT, LEFT_THUMB_RIGHT);
+        mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.UP, LEFT_THUMB_UP);
+        mapping.MapButton(SharpRetro.LibRetro.RETRO_DEVICE_ID_JOYPAD.DOWN, LEFT_THUMB_DOWN);
       }
       else
       {

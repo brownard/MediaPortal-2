@@ -13,17 +13,17 @@ namespace SharpRetro.Controller
 
   public interface IRetroPad : IRetroController
   {
-    bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button);
+    bool IsButtonPressed(uint port, RETRO_DEVICE_ID_JOYPAD button);
   }
 
   public interface IRetroAnalog : IRetroController
   {
-    short GetAnalog(uint port, LibRetroCore.RETRO_DEVICE_INDEX_ANALOG index, LibRetroCore.RETRO_DEVICE_ID_ANALOG direction);
+    short GetAnalog(uint port, RETRO_DEVICE_INDEX_ANALOG index, RETRO_DEVICE_ID_ANALOG direction);
   }
 
   public interface IRetroKeyboard : IRetroController
   {
-    bool IsKeyPressed(LibRetroCore.RETRO_KEY key);
+    bool IsKeyPressed(RETRO_KEY key);
   }
 
   public interface IRetroPointer : IRetroController
@@ -35,6 +35,6 @@ namespace SharpRetro.Controller
 
   public interface IRetroRumble
   {
-    bool SetRumbleState(uint port, LibRetroCore.retro_rumble_effect effect, ushort strength);
+    bool SetRumbleState(uint port, retro_rumble_effect effect, ushort strength);
   }
 }

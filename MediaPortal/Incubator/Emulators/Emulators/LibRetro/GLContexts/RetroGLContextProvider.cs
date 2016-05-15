@@ -18,10 +18,10 @@ namespace Emulators.LibRetro.GLContexts
     [DllImport("opengl32", EntryPoint = "wglGetProcAddress", ExactSpelling = true)]
     private static extern IntPtr wglGetProcAddress(IntPtr function_name);
 
-    protected LibRetroCore.retro_hw_get_current_framebuffer_t _getCurrentFramebufferDlgt;
-    protected LibRetroCore.retro_hw_get_proc_address_t _getProcAddressDlgt;
-    protected LibRetroCore.retro_hw_context_reset_t _contextReset;
-    protected LibRetroCore.retro_hw_context_reset_t _contextDestroy;
+    protected retro_hw_get_current_framebuffer_t _getCurrentFramebufferDlgt;
+    protected retro_hw_get_proc_address_t _getProcAddressDlgt;
+    protected retro_hw_context_reset_t _contextReset;
+    protected retro_hw_context_reset_t _contextDestroy;
 
     protected FBORenderContextProvider _fboContextProvider;
     protected DXRenderContextProvider _dxContextProvider;
@@ -65,12 +65,12 @@ namespace Emulators.LibRetro.GLContexts
       get { return _hasDXContext; }
     }
 
-    public LibRetroCore.retro_hw_get_current_framebuffer_t GetCurrentFramebufferDlgt
+    public retro_hw_get_current_framebuffer_t GetCurrentFramebufferDlgt
     {
       get { return _getCurrentFramebufferDlgt; }
     }
 
-    public LibRetroCore.retro_hw_get_proc_address_t GetProcAddressDlgt
+    public retro_hw_get_proc_address_t GetProcAddressDlgt
     {
       get { return _getProcAddressDlgt; }
     }
@@ -78,11 +78,11 @@ namespace Emulators.LibRetro.GLContexts
     public RetroGLContextProvider(bool dxInteropContext)
     {
       _hasDXContext = dxInteropContext;
-      _getCurrentFramebufferDlgt = new LibRetroCore.retro_hw_get_current_framebuffer_t(GetCurrentFramebuffer);
-      _getProcAddressDlgt = new LibRetroCore.retro_hw_get_proc_address_t(GetProcAddress);
+      _getCurrentFramebufferDlgt = new retro_hw_get_current_framebuffer_t(GetCurrentFramebuffer);
+      _getProcAddressDlgt = new retro_hw_get_proc_address_t(GetProcAddress);
     }
 
-    public void Init(bool depth, bool stencil, bool bottomLeftOrigin, LibRetroCore.retro_hw_context_reset_t contextReset, LibRetroCore.retro_hw_context_reset_t contextDestroy)
+    public void Init(bool depth, bool stencil, bool bottomLeftOrigin, retro_hw_context_reset_t contextReset, retro_hw_context_reset_t contextDestroy)
     {
       _bottomLeftOrigin = bottomLeftOrigin;
       _contextReset = contextReset;

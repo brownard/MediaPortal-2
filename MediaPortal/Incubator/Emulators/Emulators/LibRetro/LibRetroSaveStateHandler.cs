@@ -35,14 +35,14 @@ namespace Emulators.LibRetro
       byte[] saveRam;
       if (TryReadFromFile(saveFile, out saveRam))
       {
-        _retroEmulator.SetMemoryData(LibRetroCore.RETRO_MEMORY.SAVE_RAM, saveRam);
+        _retroEmulator.SetMemoryData(RETRO_MEMORY.SAVE_RAM, saveRam);
         _lastSaveRam = saveRam;
       }
     }
 
     public void SaveSaveRam()
     {
-      byte[] saveRam = _retroEmulator.GetMemoryData(LibRetroCore.RETRO_MEMORY.SAVE_RAM);
+      byte[] saveRam = _retroEmulator.GetMemoryData(RETRO_MEMORY.SAVE_RAM);
       if (saveRam == null)
         return;
       TryWriteToFile(GetSaveFile(SAVE_RAM_EXTENSION), saveRam);
@@ -55,7 +55,7 @@ namespace Emulators.LibRetro
         return;
       _lastSaveTime = now;
       CheckSaveBuffer();
-      if (!_retroEmulator.GetMemoryData(LibRetroCore.RETRO_MEMORY.SAVE_RAM, _currentSaveRam) || !ShouldSave(_lastSaveRam, _currentSaveRam))
+      if (!_retroEmulator.GetMemoryData(RETRO_MEMORY.SAVE_RAM, _currentSaveRam) || !ShouldSave(_lastSaveRam, _currentSaveRam))
         return;
       string savePath = GetSaveFile(SAVE_RAM_EXTENSION);
       if (TryWriteToFile(savePath, _currentSaveRam))
@@ -67,7 +67,7 @@ namespace Emulators.LibRetro
 
     protected void CheckSaveBuffer()
     {
-      int size = _retroEmulator.GetMemorySize(LibRetroCore.RETRO_MEMORY.SAVE_RAM);
+      int size = _retroEmulator.GetMemorySize(RETRO_MEMORY.SAVE_RAM);
       if (_currentSaveRam == null || _currentSaveRam.Length < size)
         _currentSaveRam = new byte[size];
     }

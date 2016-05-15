@@ -16,16 +16,16 @@ namespace Emulators.LibRetro.Controllers
     #region Dummy Controller
     class DummyController : IRetroPad, IRetroAnalog, IRetroRumble
     {
-      public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)
+      public bool IsButtonPressed(uint port, RETRO_DEVICE_ID_JOYPAD button)
       {
         return false;
       }
-      public short GetAnalog(uint port, LibRetroCore.RETRO_DEVICE_INDEX_ANALOG index, LibRetroCore.RETRO_DEVICE_ID_ANALOG direction)
+      public short GetAnalog(uint port, RETRO_DEVICE_INDEX_ANALOG index, RETRO_DEVICE_ID_ANALOG direction)
       {
         return 0;
       }
 
-      public bool SetRumbleState(uint port, LibRetroCore.retro_rumble_effect effect, ushort strength)
+      public bool SetRumbleState(uint port, retro_rumble_effect effect, ushort strength)
       {
         return false;
       }
@@ -95,17 +95,17 @@ namespace Emulators.LibRetro.Controllers
           return;
     }
 
-    public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)
+    public bool IsButtonPressed(uint port, RETRO_DEVICE_ID_JOYPAD button)
     {
       return port < _maxControllers ? _retroPads[port].IsButtonPressed(port, button) : false;
     }
 
-    public short GetAnalog(uint port, LibRetroCore.RETRO_DEVICE_INDEX_ANALOG index, LibRetroCore.RETRO_DEVICE_ID_ANALOG direction)
+    public short GetAnalog(uint port, RETRO_DEVICE_INDEX_ANALOG index, RETRO_DEVICE_ID_ANALOG direction)
     {
       return port < _maxControllers ? _retroAnalogs[port].GetAnalog(port, index, direction) : (short)0;
     }
 
-    public bool SetRumbleState(uint port, LibRetroCore.retro_rumble_effect effect, ushort strength)
+    public bool SetRumbleState(uint port, retro_rumble_effect effect, ushort strength)
     {
       return port < _maxControllers ? _retroRumbles[port].SetRumbleState(port, effect, strength) : false;
     }

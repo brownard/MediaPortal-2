@@ -299,7 +299,7 @@ namespace Emulators.LibRetro
       if (_retroEmulator.SupportsNoGame && _retroEmulator.SystemInfo.ValidExtensions == null)
       {
         Logger.Debug("LibRetroFrontend: Loading no game");
-        result = _retroEmulator.LoadGame(new LibRetroCore.retro_game_info());
+        result = _retroEmulator.LoadGame(new retro_game_info());
       }
       else
       {
@@ -442,21 +442,21 @@ namespace Emulators.LibRetro
     #endregion
 
     #region LibRetro Logging
-    protected void RetroLogDlgt(LibRetroCore.RETRO_LOG_LEVEL level, string message)
+    protected void RetroLogDlgt(RETRO_LOG_LEVEL level, string message)
     {
       string format = "LibRetro: {0}";
       switch (level)
       {
-        case LibRetroCore.RETRO_LOG_LEVEL.INFO:
+        case RETRO_LOG_LEVEL.INFO:
           Logger.Info(format, message);
           break;
-        case LibRetroCore.RETRO_LOG_LEVEL.DEBUG:
+        case RETRO_LOG_LEVEL.DEBUG:
           Logger.Debug(format, message);
           break;
-        case LibRetroCore.RETRO_LOG_LEVEL.WARN:
+        case RETRO_LOG_LEVEL.WARN:
           Logger.Warn(format, message);
           break;
-        case LibRetroCore.RETRO_LOG_LEVEL.ERROR:
+        case RETRO_LOG_LEVEL.ERROR:
           Logger.Error(format, message);
           break;
         default:

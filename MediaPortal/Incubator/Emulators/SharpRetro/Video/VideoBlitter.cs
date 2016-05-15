@@ -9,17 +9,17 @@ namespace SharpRetro.Video
 {
   public static unsafe class VideoBlitter
   {
-    public static void Blit(LibRetroCore.RETRO_PIXEL_FORMAT pixelFormat, IntPtr src, int* dst, int width, int height, int pitch)
+    public static void Blit(RETRO_PIXEL_FORMAT pixelFormat, IntPtr src, int* dst, int width, int height, int pitch)
     {
       switch (pixelFormat)
       {
-        case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB8888:
+        case RETRO_PIXEL_FORMAT.XRGB8888:
           Blit888((int*)src, dst, width, height, pitch / 4);
           break;
-        case LibRetroCore.RETRO_PIXEL_FORMAT.RGB565:
+        case RETRO_PIXEL_FORMAT.RGB565:
           Blit565((short*)src, dst, width, height, pitch / 2);
           break;
-        case LibRetroCore.RETRO_PIXEL_FORMAT.XRGB1555:
+        case RETRO_PIXEL_FORMAT.XRGB1555:
           Blit555((short*)src, dst, width, height, pitch / 2);
           break;
       }

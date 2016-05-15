@@ -25,9 +25,9 @@ namespace Emulators.LibRetro.Controllers.Hid
     protected string _friendlyName;
     protected HidState _currentState;
     protected short _axisDeadZone = DEFAULT_DEADZONE;
-    protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, ushort> _buttonToButtonMappings;
-    protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, HidAxis> _analogToButtonMappings;
-    protected Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DirectionPadState> _directionPadToButtonMappings;
+    protected Dictionary<RETRO_DEVICE_ID_JOYPAD, ushort> _buttonToButtonMappings;
+    protected Dictionary<RETRO_DEVICE_ID_JOYPAD, HidAxis> _analogToButtonMappings;
+    protected Dictionary<RETRO_DEVICE_ID_JOYPAD, DirectionPadState> _directionPadToButtonMappings;
     protected Dictionary<RetroAnalogDevice, HidAxis> _analogToAnalogMappings;
     protected Dictionary<RetroAnalogDevice, ushort> _buttonToAnalogMappings;
     protected Dictionary<RetroAnalogDevice, DirectionPadState> _directionPadToAnalogMappings;
@@ -64,9 +64,9 @@ namespace Emulators.LibRetro.Controllers.Hid
       _productId = productId;
       _subDeviceId = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", vendorId, productId);
       _friendlyName = friendlyName;
-      _buttonToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, ushort>();
-      _analogToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, HidAxis>();
-      _directionPadToButtonMappings = new Dictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DirectionPadState>();
+      _buttonToButtonMappings = new Dictionary<RETRO_DEVICE_ID_JOYPAD, ushort>();
+      _analogToButtonMappings = new Dictionary<RETRO_DEVICE_ID_JOYPAD, HidAxis>();
+      _directionPadToButtonMappings = new Dictionary<RETRO_DEVICE_ID_JOYPAD, DirectionPadState>();
       _analogToAnalogMappings = new Dictionary<RetroAnalogDevice, HidAxis>();
       _buttonToAnalogMappings = new Dictionary<RetroAnalogDevice, ushort>();
       _directionPadToAnalogMappings = new Dictionary<RetroAnalogDevice, DirectionPadState>();
@@ -152,7 +152,7 @@ namespace Emulators.LibRetro.Controllers.Hid
       return true;
     }
 
-    public bool IsButtonPressed(uint port, LibRetroCore.RETRO_DEVICE_ID_JOYPAD button)
+    public bool IsButtonPressed(uint port, RETRO_DEVICE_ID_JOYPAD button)
     {
       HidState state = _currentState;
       if (state == null)
@@ -173,7 +173,7 @@ namespace Emulators.LibRetro.Controllers.Hid
       return false;
     }
 
-    public short GetAnalog(uint port, LibRetroCore.RETRO_DEVICE_INDEX_ANALOG index, LibRetroCore.RETRO_DEVICE_ID_ANALOG direction)
+    public short GetAnalog(uint port, RETRO_DEVICE_INDEX_ANALOG index, RETRO_DEVICE_ID_ANALOG direction)
     {
       HidState state = _currentState;
       if (state == null)

@@ -72,7 +72,8 @@
     <Compile Include="Info\Firmware.cs" />
     <Compile Include="Info\CoreInfo.cs" />
     <Compile Include="LibRetro\AudioBuffer.cs" />
-    <Compile Include="LibRetro\LibRetroCore.cs" />
+    <Compile Include="LibRetro\Libretro.cs" />
+    <Compile Include="LibRetro\LibRetroBase.cs" />
     <Compile Include="LibRetro\LibRetroEmulator.cs" />
     <Compile Include="LibRetro\LibRetroVariables.cs" />
     <Compile Include="LibRetro\SystemInfo.cs" />

@@ -25,7 +25,7 @@ namespace Emulators.LibRetro.Controllers.Mapping
   public class MappedInput
   {
     public string Name { get; set; }
-    public LibRetroCore.RETRO_DEVICE_ID_JOYPAD? Button { get; set; }
+    public RETRO_DEVICE_ID_JOYPAD? Button { get; set; }
     public RetroAnalogDevice? Analog { get; set; }
     public DeviceInput Input { get; set; }
   }
@@ -33,13 +33,13 @@ namespace Emulators.LibRetro.Controllers.Mapping
   public class RetroPadMapping
   {
     protected List<MappedInput> _availableInputs;
-    protected SerializableDictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput> _buttonMappings;
+    protected SerializableDictionary<RETRO_DEVICE_ID_JOYPAD, DeviceInput> _buttonMappings;
     protected SerializableDictionary<RetroAnalogDevice, DeviceInput> _analogMappings;
 
     public RetroPadMapping()
     {
       _availableInputs = GetAvailableInputs();
-      _buttonMappings = new SerializableDictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput>();
+      _buttonMappings = new SerializableDictionary<RETRO_DEVICE_ID_JOYPAD, DeviceInput>();
       _analogMappings = new SerializableDictionary<RetroAnalogDevice, DeviceInput>();
     }
     
@@ -53,7 +53,7 @@ namespace Emulators.LibRetro.Controllers.Mapping
       get { return _availableInputs; }
     }
     
-    public SerializableDictionary<LibRetroCore.RETRO_DEVICE_ID_JOYPAD, DeviceInput> ButtonMappings
+    public SerializableDictionary<RETRO_DEVICE_ID_JOYPAD, DeviceInput> ButtonMappings
     {
       get { return _buttonMappings; }
       set { _buttonMappings = value; }
@@ -73,7 +73,7 @@ namespace Emulators.LibRetro.Controllers.Mapping
         MapAnalog(mappedInput.Analog.Value, mappedInput.Input);
     }
 
-    public void MapButton(LibRetroCore.RETRO_DEVICE_ID_JOYPAD retroButton, DeviceInput deviceInput)
+    public void MapButton(RETRO_DEVICE_ID_JOYPAD retroButton, DeviceInput deviceInput)
     {
       _buttonMappings[retroButton] = deviceInput;
     }
@@ -86,10 +86,10 @@ namespace Emulators.LibRetro.Controllers.Mapping
     public List<MappedInput> GetAvailableInputs()
     {
       List<MappedInput> inputList = new List<MappedInput>();
-      inputList.Add(new MappedInput() { Name = "Up", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.UP });
-      inputList.Add(new MappedInput() { Name = "Down", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.DOWN });
-      inputList.Add(new MappedInput() { Name = "Left", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.LEFT });
-      inputList.Add(new MappedInput() { Name = "Right", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.RIGHT });
+      inputList.Add(new MappedInput() { Name = "Up", Button = RETRO_DEVICE_ID_JOYPAD.UP });
+      inputList.Add(new MappedInput() { Name = "Down", Button = RETRO_DEVICE_ID_JOYPAD.DOWN });
+      inputList.Add(new MappedInput() { Name = "Left", Button = RETRO_DEVICE_ID_JOYPAD.LEFT });
+      inputList.Add(new MappedInput() { Name = "Right", Button = RETRO_DEVICE_ID_JOYPAD.RIGHT });
 
       inputList.Add(new MappedInput() { Name = "Left Analog X- (Left)", Analog = RetroAnalogDevice.LeftThumbLeft });
       inputList.Add(new MappedInput() { Name = "Left Analog X+ (Right)", Analog = RetroAnalogDevice.LeftThumbRight });
@@ -100,26 +100,26 @@ namespace Emulators.LibRetro.Controllers.Mapping
       inputList.Add(new MappedInput() { Name = "Right Analog Y- (Up)", Analog = RetroAnalogDevice.RightThumbUp });
       inputList.Add(new MappedInput() { Name = "Right Analog Y+ (Down)", Analog = RetroAnalogDevice.RightThumbDown });
 
-      inputList.Add(new MappedInput() { Name = "A", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.A });
-      inputList.Add(new MappedInput() { Name = "B", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.B });
-      inputList.Add(new MappedInput() { Name = "X", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.X });
-      inputList.Add(new MappedInput() { Name = "Y", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.Y });
-      inputList.Add(new MappedInput() { Name = "Start", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.START });
-      inputList.Add(new MappedInput() { Name = "Select", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.SELECT });
-      inputList.Add(new MappedInput() { Name = "L1", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.L });
-      inputList.Add(new MappedInput() { Name = "R1", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.R });
-      inputList.Add(new MappedInput() { Name = "L2", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.L2 });
-      inputList.Add(new MappedInput() { Name = "R2", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.R2 });
-      inputList.Add(new MappedInput() { Name = "L3", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.L3 });
-      inputList.Add(new MappedInput() { Name = "R3", Button = LibRetroCore.RETRO_DEVICE_ID_JOYPAD.R3 });
+      inputList.Add(new MappedInput() { Name = "A", Button = RETRO_DEVICE_ID_JOYPAD.A });
+      inputList.Add(new MappedInput() { Name = "B", Button = RETRO_DEVICE_ID_JOYPAD.B });
+      inputList.Add(new MappedInput() { Name = "X", Button = RETRO_DEVICE_ID_JOYPAD.X });
+      inputList.Add(new MappedInput() { Name = "Y", Button = RETRO_DEVICE_ID_JOYPAD.Y });
+      inputList.Add(new MappedInput() { Name = "Start", Button = RETRO_DEVICE_ID_JOYPAD.START });
+      inputList.Add(new MappedInput() { Name = "Select", Button = RETRO_DEVICE_ID_JOYPAD.SELECT });
+      inputList.Add(new MappedInput() { Name = "L1", Button = RETRO_DEVICE_ID_JOYPAD.L });
+      inputList.Add(new MappedInput() { Name = "R1", Button = RETRO_DEVICE_ID_JOYPAD.R });
+      inputList.Add(new MappedInput() { Name = "L2", Button = RETRO_DEVICE_ID_JOYPAD.L2 });
+      inputList.Add(new MappedInput() { Name = "R2", Button = RETRO_DEVICE_ID_JOYPAD.R2 });
+      inputList.Add(new MappedInput() { Name = "L3", Button = RETRO_DEVICE_ID_JOYPAD.L3 });
+      inputList.Add(new MappedInput() { Name = "R3", Button = RETRO_DEVICE_ID_JOYPAD.R3 });
       return inputList;
     }
 
-    public static void GetAnalogEnums(LibRetroCore.RETRO_DEVICE_INDEX_ANALOG index, LibRetroCore.RETRO_DEVICE_ID_ANALOG direction, out RetroAnalogDevice positive, out RetroAnalogDevice negative)
+    public static void GetAnalogEnums(RETRO_DEVICE_INDEX_ANALOG index, RETRO_DEVICE_ID_ANALOG direction, out RetroAnalogDevice positive, out RetroAnalogDevice negative)
     {
-      if (index == LibRetroCore.RETRO_DEVICE_INDEX_ANALOG.LEFT)
+      if (index == RETRO_DEVICE_INDEX_ANALOG.LEFT)
       {
-        if (direction == LibRetroCore.RETRO_DEVICE_ID_ANALOG.X)
+        if (direction == RETRO_DEVICE_ID_ANALOG.X)
         {
           positive = RetroAnalogDevice.LeftThumbRight;
           negative = RetroAnalogDevice.LeftThumbLeft;
@@ -133,7 +133,7 @@ namespace Emulators.LibRetro.Controllers.Mapping
       }
       else
       {
-        if (direction == LibRetroCore.RETRO_DEVICE_ID_ANALOG.X)
+        if (direction == RETRO_DEVICE_ID_ANALOG.X)
         {
           positive = RetroAnalogDevice.RightThumbRight;
           negative = RetroAnalogDevice.RightThumbLeft;
