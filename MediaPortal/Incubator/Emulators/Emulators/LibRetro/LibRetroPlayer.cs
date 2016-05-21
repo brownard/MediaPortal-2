@@ -21,7 +21,7 @@ using MediaPortal.Common.Threading;
 
 namespace Emulators.LibRetro
 {
-  public class LibRetroPlayer : ISharpDXVideoPlayer, IMediaPlaybackControl, IPlayerEvents, IDisposable
+  public class LibRetroPlayer : ISharpDXVideoPlayer, IMediaPlaybackControl, IPlayerEvents, IUIContributorPlayer, IDisposable
   {
     #region Protected Members
     protected const string AUDIO_STREAM_NAME = "Audio1";
@@ -58,6 +58,16 @@ namespace Emulators.LibRetro
     #endregion
 
     #region LibRetroPlayer
+    public LibRetroFrontend LibRetro
+    {
+      get { return _retro; }
+    }
+
+    public Type UIContributorType
+    {
+      get { return typeof(LibRetroPlayerUIContributor); }
+    }
+
     public void SetMediaItem(LibRetroMediaItem mediaItem)
     {
       if (_retro != null)

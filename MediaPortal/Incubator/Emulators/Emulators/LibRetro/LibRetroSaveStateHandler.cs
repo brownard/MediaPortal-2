@@ -13,6 +13,7 @@ namespace Emulators.LibRetro
   public class LibRetroSaveStateHandler
   {
     protected const string SAVE_RAM_EXTENSION = ".srm";
+    protected const string STATE_EXTENSION = ".state";
     protected int _autoSaveInterval;
     protected LibRetroEmulator _retroEmulator;
     protected string _saveName;
@@ -20,6 +21,7 @@ namespace Emulators.LibRetro
     protected DateTime _lastSaveTime = DateTime.MinValue;
     protected byte[] _currentSaveRam;
     protected byte[] _lastSaveRam;
+    protected int _stateIndex;
 
     public LibRetroSaveStateHandler(LibRetroEmulator retroEmulator, string saveName, string saveDirectory, int autoSaveInterval)
     {
@@ -27,6 +29,12 @@ namespace Emulators.LibRetro
       _saveName = saveName;
       _saveDirectory = saveDirectory;
       _autoSaveInterval = autoSaveInterval;
+    }
+
+    public int StateIndex
+    {
+      get { return _stateIndex; }
+      set { _stateIndex = value; }
     }
 
     public void LoadSaveRam()
@@ -46,6 +54,21 @@ namespace Emulators.LibRetro
       if (saveRam == null)
         return;
       TryWriteToFile(GetSaveFile(SAVE_RAM_EXTENSION), saveRam);
+    }
+
+    public void LoadState()
+    {
+      string stateFile = GetSaveFile(STATE_EXTENSION + _stateIndex);
+      byte[] state;
+      if (TryReadFromFile(stateFile, out state))
+        _retroEmulator.Unserialize(state);
+    }
+
+    public void SaveState()
+    {
+      byte[] state = _retroEmulator.Serialize();
+      if (state != null)
+        TryWriteToFile(GetSaveFile(STATE_EXTENSION + _stateIndex), state);
     }
 
     public void AutoSave()

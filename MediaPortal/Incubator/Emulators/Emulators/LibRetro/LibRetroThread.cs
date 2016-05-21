@@ -1,7 +1,7 @@
 ﻿using MediaPortal.Common;
 using MediaPortal.Common.Logging;
-using SharpRetro.LibRetro;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,6 +24,9 @@ namespace Emulators.LibRetro
     protected ManualResetEventSlim _initWaitHandle;
     protected ManualResetEventSlim _runWaitHandle;
     protected ManualResetEventSlim _pauseWaitHandle;
+    protected WaitHandle[] _waitHandles;
+    protected AutoResetEvent _actionWaitHandle;
+    protected ConcurrentQueue<Action> _actionQueue;
     protected bool _isInit;
     protected volatile bool _doRun;
 
@@ -40,6 +43,9 @@ namespace Emulators.LibRetro
       _initWaitHandle = new ManualResetEventSlim();
       _runWaitHandle = new ManualResetEventSlim();
       _pauseWaitHandle = new ManualResetEventSlim(true);
+      _actionWaitHandle = new AutoResetEvent(false);
+      _waitHandles = new[] { _actionWaitHandle, _pauseWaitHandle.WaitHandle };
+      _actionQueue = new ConcurrentQueue<Action>();
     }
 
     public bool IsInit
@@ -92,6 +98,19 @@ namespace Emulators.LibRetro
       _pauseWaitHandle.Set();
     }
 
+    public void EnqueueAction(Action action)
+    {
+      _actionQueue.Enqueue(action);
+      _actionWaitHandle.Set();
+    }
+
+    protected void InvokeQueuedActions()
+    {
+      Action action;
+      while (_actionQueue.TryDequeue(out action))
+        action();
+    }
+
     protected void Fire(EventHandler handler)
     {
       if (handler != null)
@@ -132,6 +151,7 @@ namespace Emulators.LibRetro
         Fire(Started);
         while (_doRun)
         {
+          InvokeQueuedActions();
           Fire(Running);
           CheckPauseState();
         }
@@ -154,6 +174,8 @@ namespace Emulators.LibRetro
       if (!_pauseWaitHandle.IsSet)
       {
         Fire(Paused);
+        while (WaitHandle.WaitAny(_waitHandles) == 0)
+          InvokeQueuedActions();
         _pauseWaitHandle.Wait();
         Fire(UnPaused);
       }
@@ -177,6 +199,7 @@ namespace Emulators.LibRetro
     public void Dispose()
     {
       Stop();
+      _waitHandles = null;
       TryDispose(ref _initWaitHandle);
       TryDispose(ref _runWaitHandle);
       TryDispose(ref _pauseWaitHandle);

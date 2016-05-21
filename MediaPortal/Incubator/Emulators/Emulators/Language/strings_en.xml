@@ -119,4 +119,8 @@
   <string name="Emulators.LibRetro.SelectDevice">Select device...</string>
   <string name="Emulators.LibRetro.Mappings">Mappings</string>
   <string name="Emulators.LibRetro.PressInput">Press input...</string>
+  
+  <string name="Emulators.LibRetro.StateIndex">State Index</string>
+  <string name="Emulators.LibRetro.LoadState">Load State</string>
+  <string name="Emulators.LibRetro.SaveState">Save State</string>
 </resources>

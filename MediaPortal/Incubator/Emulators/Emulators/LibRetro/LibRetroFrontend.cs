@@ -176,6 +176,25 @@ namespace Emulators.LibRetro
           _textureProvider.Release();
       }
     }
+
+    public void SetStateIndex(int index)
+    {
+      if (_saveHandler != null)
+        _saveHandler.StateIndex = index;
+    }
+
+    public void LoadState()
+    {
+      if (_retroThread != null && _saveHandler != null)
+        _retroThread.EnqueueAction(_saveHandler.LoadState);
+    }
+
+    public void SaveState()
+    {
+      if (_retroThread != null && _saveHandler != null)
+        _retroThread.EnqueueAction(_saveHandler.SaveState);
+    }
+
     #endregion
 
     #region Init

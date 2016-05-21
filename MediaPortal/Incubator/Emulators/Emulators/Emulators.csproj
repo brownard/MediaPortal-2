@@ -130,6 +130,7 @@
     <Compile Include="LibRetro\GLContexts\SharedTexture.cs" />
     <Compile Include="LibRetro\ILibRetroCoreInstanceManager.cs" />
     <Compile Include="LibRetro\LibRetroCoreInstanceManager.cs" />
+    <Compile Include="LibRetro\LibRetroPlayerUIContributor.cs" />
     <Compile Include="LibRetro\LibRetroThread.cs" />
     <Compile Include="LibRetro\Render\RefreshRateHelper.cs" />
     <Compile Include="LibRetro\Render\SynchronisationStrategy.cs" />
@@ -460,6 +461,16 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Skin\default\screens\emulator_config_choose_core.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Skin\default\screens\dialog_retro_context_menu.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Skin\default\screens\dialog_retro_choose_state.xaml">
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
