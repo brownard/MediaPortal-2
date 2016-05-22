@@ -809,7 +809,7 @@ namespace SharpRetro.LibRetro
 
     protected bool RetroSetRumbleState(uint port, retro_rumble_effect effect, ushort strength)
     {
-      return _retroRumble != null ? _retroRumble.SetRumbleState(port, effect, strength) : false;
+      return _retroRumble != null && _retroRumble.SetRumbleState(port, effect, strength);
     }
 
     protected short GetPointerStatus(RETRO_DEVICE_ID_POINTER id)
