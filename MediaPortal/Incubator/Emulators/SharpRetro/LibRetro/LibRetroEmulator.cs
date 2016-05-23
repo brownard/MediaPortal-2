@@ -251,11 +251,11 @@ namespace SharpRetro.LibRetro
     /// </summary>
     public override void Init()
     {
-      base.Init();
       try
       {
         InitInterfaces();
         InitPaths();
+        base.Init();
         retro_init();
         UpdateSystemInfo();
       }
