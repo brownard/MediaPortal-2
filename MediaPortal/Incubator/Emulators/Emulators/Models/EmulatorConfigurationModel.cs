@@ -88,28 +88,6 @@ namespace Emulators.Models
       NavigatePush(STATE_CHOOSE_TYPE);
     }
 
-    public void AddOrEditLibRetroCore(string corePath)
-    {
-      List<EmulatorConfiguration> configurations = ServiceRegistration.Get<IEmulatorManager>().Load();
-      EmulatorConfiguration configuration = configurations.FirstOrDefault(c => c.IsLibRetro && c.Path == corePath);
-      bool add = false;
-      if (configuration == null)
-      {
-        add = true;
-        configuration = new EmulatorConfiguration()
-        {
-          IsLibRetro = true,
-          Id = Guid.NewGuid(),
-          LocalSystemId = ServiceRegistration.Get<ISystemResolver>().LocalSystemId,
-          Path = corePath
-        };
-      }
-      _emulatorProxy = new EmulatorProxy(configuration);
-      if (add)
-        _emulatorProxy.SetSuggestedSettings(true);
-      NavigatePush(STATE_EDIT_NAME);
-    }
-
     public void BeginNewEmulatorConfiguration()
     {
       ListItem selectedTypeItem = _emulatorTypes.FirstOrDefault(i => i.Selected);
@@ -161,6 +139,7 @@ namespace Emulators.Models
       configuration.Name = _emulatorProxy.Name;
       configuration.FileExtensions = _emulatorProxy.FileExtensions;
       configuration.ExitsOnEscapeKey = _emulatorProxy.ExitsOnEscapeKey;
+      configuration.Platforms.Clear();
       foreach (string category in _emulatorProxy.SelectedGameCategories)
         configuration.Platforms.Add(category);
       ServiceRegistration.Get<IEmulatorManager>().AddOrUpdate(configuration);
