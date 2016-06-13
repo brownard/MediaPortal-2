@@ -24,6 +24,11 @@ namespace Emulators.LibRetro.Controllers.Hid
       _hidListener.Register(SkinContext.Form.Handle);
     }
 
+    public bool SupportsDeadZone
+    {
+      get { return true; }
+    }
+
     protected void HidListener_StateChanged(object sender, HidStateEventArgs e)
     {
       HidState state = e.State;

@@ -12,6 +12,11 @@ namespace Emulators.LibRetro.Controllers.Keyboard
   {
     protected KeyboardListener _listener;
 
+    public bool SupportsDeadZone
+    {
+      get { return false; }
+    }
+
     public KeyboardMapper()
     {
       _listener = new KeyboardListener();

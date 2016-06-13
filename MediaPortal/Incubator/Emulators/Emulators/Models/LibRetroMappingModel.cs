@@ -18,6 +18,7 @@ using MediaPortal.Common.Localization;
 using Emulators.LibRetro.Controllers;
 using MediaPortal.Common.Services.Settings;
 using Emulators.LibRetro.Settings;
+using MediaPortal.Utilities;
 
 namespace Emulators.Models
 {
@@ -36,6 +37,7 @@ namespace Emulators.Models
     #region Protected Members
     protected AbstractProperty _currentPlayerHeaderProperty = new WProperty(typeof(string), null);
     protected AbstractProperty _currentDeviceNameProperty = new WProperty(typeof(string), null);
+    protected AbstractProperty _deviceMapperProperty = new WProperty(typeof(DeviceMapperProxy), null);
     protected SettingsChangeWatcher<LibRetroSettings> _settings;
 
     protected int _maxPlayers;
@@ -46,9 +48,6 @@ namespace Emulators.Models
     protected MappingProxy _mappingProxy = new MappingProxy();
     protected PortMapping _currentPortMapping;
     protected IMappableDevice _currentDevice;
-    protected IDeviceMapper _deviceMapper;
-    protected RetroPadMapping _currentMapping;
-    protected MappedInput _mappedInput;
     protected Thread _inputPollThread;
     protected volatile bool _doPoll;
     #endregion
@@ -76,6 +75,17 @@ namespace Emulators.Models
     public ItemsList Inputs
     {
       get { return _inputList; }
+    }
+
+    public AbstractProperty DeviceMapperProperty
+    {
+      get { return _deviceMapperProperty; }
+    }
+
+    public DeviceMapperProxy DeviceMapper
+    {
+      get { return (DeviceMapperProxy)_deviceMapperProperty.GetValue(); }
+      protected set { _deviceMapperProperty.SetValue(value); }
     }
 
     public AbstractProperty CurrentPlayerHeaderProperty
@@ -127,16 +137,6 @@ namespace Emulators.Models
       CurrentDeviceName = _currentDevice != null ? _currentDevice.DeviceName : null;
       UpdateMappings();
     }
-
-    public void InputItemSelected(MappedInputItem item)
-    {
-      _mappedInput = item.MappedInput;
-      if (_mappedInput != null)
-      {
-        var wm = ServiceRegistration.Get<IWorkflowManager>();
-        wm.NavigatePushAsync(STATE_MAP_INPUT);
-      }
-    }
     #endregion
 
     #region Protected Methods
@@ -157,7 +157,12 @@ namespace Emulators.Models
       if (oldContext.WorkflowState.StateId == STATE_MAP_INPUT)
       {
         EndMapping();
-        UpdateInputList();
+        DeviceMapperProxy mapper = DeviceMapper;
+        if (mapper != null)
+        {
+          mapper.UpdateInputs();
+          _inputList.FireChange();
+        }
       }
 
       Guid newState = newContext.WorkflowState.StateId;
@@ -181,8 +186,10 @@ namespace Emulators.Models
 
     protected void Save()
     {
+      bool update = false;
       if (_currentPortMapping != null)
       {
+        update = true;
         if (_currentDevice != null)
         {
           _currentPortMapping.SetDevice(_currentDevice);
@@ -194,23 +201,37 @@ namespace Emulators.Models
         }
       }
 
-      if (_currentMapping != null)
-        _mappingProxy.AddDeviceMapping(_currentMapping);
+      DeviceMapperProxy mapper = DeviceMapper;
+      if (mapper != null)
+      {
+        update = true;
+        mapper.Save();
+        _mappingProxy.AddDeviceMapping(mapper.Mapping);
+      }
 
-      if (_currentPortMapping != null || _currentMapping != null)
+      if (update)
         _mappingProxy.Save();
+    }
+
+    protected void ResetMapper()
+    {
+      DeviceMapperProxy mapper = DeviceMapper;
+      if (mapper != null)
+      {
+        DeviceMapper = null;
+        mapper.SelectedInputProperty.Detach(OnSelectedInputChanged);
+        mapper.Dispose();
+      }
     }
 
     protected void Reset()
     {
       EndMapping();
-      DisposeDeviceMapper();
+      ResetMapper();
       CurrentPlayerHeader = null;
       CurrentDeviceName = null;
       _currentDevice = null;
       _currentPortMapping = null;
-      _currentMapping = null;
-      _mappedInput = null;
       _portsList.Clear();
       _portsList.FireChange();
       _deviceList.Clear();
@@ -246,49 +267,37 @@ namespace Emulators.Models
 
     protected void UpdateMappings()
     {
-      DisposeDeviceMapper();
-      _currentMapping = null;
+      ResetMapper();
+      _inputList.Clear();
       if (_currentDevice != null)
       {
-        _deviceMapper = _currentDevice.CreateMapper();
-        _currentMapping = _mappingProxy.GetDeviceMapping(_currentDevice);
-      }
-      RecreateInputList();
-    }
-
-    protected void RecreateInputList()
-    {
-      _inputList.Clear();
-      if (_currentMapping != null)
-      {
-        foreach (MappedInput mappedInput in _currentMapping.AvailableInputs)
+        IDeviceMapper mapper = _currentDevice.CreateMapper();
+        RetroPadMapping mapping = _mappingProxy.GetDeviceMapping(_currentDevice);
+        if (mapper != null && mapping != null)
         {
-          DeviceInput input;
-          if ((mappedInput.Button.HasValue && _currentMapping.ButtonMappings.TryGetValue(mappedInput.Button.Value, out input))
-            || (mappedInput.Analog.HasValue && _currentMapping.AnalogMappings.TryGetValue(mappedInput.Analog.Value, out input)))
-            mappedInput.Input = input;
-
-          MappedInputItem inputItem = new MappedInputItem(mappedInput.Name, mappedInput);
-          inputItem.Command = new MethodDelegateCommand(() => InputItemSelected(inputItem));
-          _inputList.Add(inputItem);
+          DeviceMapperProxy deviceMapper = new DeviceMapperProxy(mapper, mapping);
+          deviceMapper.SelectedInputProperty.Attach(OnSelectedInputChanged);
+          CollectionUtils.AddAll(_inputList, deviceMapper.Inputs);
+          DeviceMapper = deviceMapper;
         }
       }
       _inputList.FireChange();
     }
 
-    protected void UpdateInputList()
+    void OnSelectedInputChanged(AbstractProperty property, object oldValue)
     {
-      foreach (MappedInputItem item in _inputList)
-        item.Update();
-      _inputList.FireChange();
+      DeviceMapperProxy mapper = DeviceMapper;
+      if (mapper != null && mapper.SelectedInput != null)
+      {
+        var wm = ServiceRegistration.Get<IWorkflowManager>();
+        wm.NavigatePushAsync(STATE_MAP_INPUT);
+      }
     }
 
     protected void BeginMapping(NavigationContext newContext)
     {
-      if (_deviceMapper == null || _currentMapping == null || _mappedInput == null)
-        return;
       _doPoll = true;
-      _inputPollThread = new Thread(() => DoPoll(_deviceMapper, _currentMapping, _mappedInput)) { IsBackground = true };
+      _inputPollThread = new Thread(DoPoll) { IsBackground = true };
       _inputPollThread.Start();
     }
 
@@ -300,34 +309,28 @@ namespace Emulators.Models
         _inputPollThread.Join();
         _inputPollThread = null;
       }
+      DeviceMapperProxy mapper = DeviceMapper;
+      if (mapper != null)
+        mapper.SelectedInput = null;
     }
 
-    protected void DoPoll(IDeviceMapper mapper, RetroPadMapping currentMapping, MappedInput mappedInput)
+    protected void DoPoll()
     {
+      DeviceMapperProxy mapper = DeviceMapper;
+      if (mapper == null)
+        return;
+
       Thread.Sleep(POLL_INITIAL_WAIT);
       while (_doPoll)
       {
-        DeviceInput input = mapper.GetPressedInput();
-        if (input != null)
+        if (mapper.TryMap())
         {
-          mappedInput.Input = input;
-          currentMapping.Map(mappedInput);
           var wm = ServiceRegistration.Get<IWorkflowManager>();
           wm.NavigatePopToStateAsync(STATE_DEVICE_CONFIGURE, false);
           break;
         }
         Thread.Sleep(POLL_INTERVAL);
       }
-    }
-
-    protected void DisposeDeviceMapper()
-    {
-      if (_deviceMapper == null)
-        return;
-      IDisposable disposable = _deviceMapper as IDisposable;
-      if (disposable != null)
-        disposable.Dispose();
-      _deviceMapper = null;
     }
     #endregion
 

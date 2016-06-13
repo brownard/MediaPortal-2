@@ -137,6 +137,11 @@ namespace Emulators.LibRetro.Controllers.XInput
       InitializeInputs();
     }
 
+    public bool SupportsDeadZone
+    {
+      get { return true; }
+    }
+
     public DeviceInput GetPressedInput()
     {
       State state;

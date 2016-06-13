@@ -35,6 +35,7 @@ namespace Emulators.LibRetro.Controllers.Mapping
     protected List<MappedInput> _availableInputs;
     protected SerializableDictionary<RETRO_DEVICE_ID_JOYPAD, DeviceInput> _buttonMappings;
     protected SerializableDictionary<RetroAnalogDevice, DeviceInput> _analogMappings;
+    protected int _deadZone = -1;
 
     public RetroPadMapping()
     {
@@ -63,6 +64,22 @@ namespace Emulators.LibRetro.Controllers.Mapping
     {
       get { return _analogMappings; }
       set { _analogMappings = value; }
+    }
+
+    public int DeadZone
+    {
+      get { return _deadZone; }
+      set { _deadZone = value; }
+    }
+
+    public bool TryGetMapping(MappedInput mappedInput, out DeviceInput deviceInput)
+    {
+      if ((mappedInput.Button.HasValue && _buttonMappings.TryGetValue(mappedInput.Button.Value, out deviceInput))
+            || (mappedInput.Analog.HasValue && _analogMappings.TryGetValue(mappedInput.Analog.Value, out deviceInput)))
+        return true;
+
+      deviceInput = null;
+      return false;
     }
 
     public void Map(MappedInput mappedInput)

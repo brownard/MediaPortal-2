@@ -49,7 +49,7 @@
           <Label Margin="10" Content="[Emulators.LibRetro.Mappings]" Color="{ThemeResource TextColor}"/>
           <ListView Grid.Row="1" Name="InputList" Margin="10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
               Style="{ThemeResource emuLibRetroMappingInputsListViewStyle}"
-              ItemsSource="{Binding Path=Inputs,Mode=OneTime}">
+              ItemsSource="{Binding Path=Inputs}">
           </ListView>
         </Grid>
 

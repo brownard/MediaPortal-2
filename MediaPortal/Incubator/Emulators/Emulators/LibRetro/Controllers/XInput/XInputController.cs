@@ -16,6 +16,8 @@ namespace Emulators.LibRetro.Controllers.XInput
     public static readonly Guid DEVICE_ID = new Guid("FD60533F-00E0-4301-8B97-F9681D6FC67D");
     public const string DEVICE_NAME = "Xbox 360 Controller (XInput)";
     const int CONTROLLER_CONNECTED_TIMEOUT = 2000;
+    protected static short DEFAULT_THUMB_DEADZONE = Gamepad.LeftThumbDeadZone;
+    protected static short DEFAULT_TRIGGER_DEADZONE = NumericUtils.ScaleByteToShort(Gamepad.TriggerThreshold);
 
     protected string _subDeviceId;
     protected string _deviceName;
@@ -27,6 +29,8 @@ namespace Emulators.LibRetro.Controllers.XInput
     protected Dictionary<RetroAnalogDevice, GamepadButtonFlags> _buttonToAnalogMappings;
     protected ushort _leftMotorSpeed;
     protected ushort _rightMotorSpeed;
+    protected short _thumbDeadZone;
+    protected short _triggerDeadZone;
 
     public Guid DeviceId
     {
@@ -76,8 +80,21 @@ namespace Emulators.LibRetro.Controllers.XInput
     {
       if (mapping == null)
         mapping = DefaultMapping;
-
       ClearMappings();
+
+      int percent = mapping.DeadZone;
+      if (percent < 0)
+      {
+        _thumbDeadZone = DEFAULT_THUMB_DEADZONE;
+        _triggerDeadZone = DEFAULT_TRIGGER_DEADZONE;
+      }
+      else
+      {
+        short deadZone = percent < 100 ? (short)(short.MaxValue * 100 / percent) : short.MaxValue;
+        _thumbDeadZone = deadZone;
+        _triggerDeadZone = deadZone;
+      }
+
       foreach (var kvp in mapping.ButtonMappings)
       {
         DeviceInput deviceInput = kvp.Value;
@@ -139,7 +156,7 @@ namespace Emulators.LibRetro.Controllers.XInput
         return IsButtonPressed(buttonFlag, gamepad);
       XInputAxis axis;
       if (_analogToButtonMappings.TryGetValue(button, out axis))
-        return IsAxisPressed(axis, gamepad);
+        return IsAxisPressed(axis, gamepad, _thumbDeadZone, _triggerDeadZone);
       return false;
     }
 
@@ -217,63 +234,38 @@ namespace Emulators.LibRetro.Controllers.XInput
 
     public static bool IsAxisPressed(XInputAxis axis, Gamepad gamepad)
     {
-      short axisValue = 0;
-      short deadZone = 0;
+      return IsAxisPressed(axis, gamepad, DEFAULT_THUMB_DEADZONE, DEFAULT_TRIGGER_DEADZONE);
+    }
+
+    protected static bool IsAxisPressed(XInputAxis axis, Gamepad gamepad, short thumbDeadZone, short triggerDeadZone)
+    {
+      short position = GetAxisPosition(axis, gamepad, thumbDeadZone, triggerDeadZone);
+      return axis.PositiveValues ? position > 0 : position < 0;
+    }
+
+    protected static short GetAxisPosition(XInputAxis axis, Gamepad gamepad, short thumbDeadZone, short triggerDeadZone)
+    {
       switch (axis.AxisType)
       {
         case XInputAxisType.LeftThumbX:
-          axisValue = gamepad.LeftThumbX;
-          deadZone = Gamepad.LeftThumbDeadZone;
-          break;
+          return CheckDeadZone(gamepad.LeftThumbX, thumbDeadZone);
         case XInputAxisType.LeftThumbY:
-          axisValue = gamepad.LeftThumbY;
-          deadZone = Gamepad.LeftThumbDeadZone;
-          break;
+          return CheckDeadZone(gamepad.LeftThumbY, thumbDeadZone);
         case XInputAxisType.RightThumbX:
-          axisValue = gamepad.RightThumbX;
-          deadZone = Gamepad.RightThumbDeadZone;
-          break;
+          return CheckDeadZone(gamepad.RightThumbX, thumbDeadZone);
         case XInputAxisType.RightThumbY:
-          axisValue = gamepad.RightThumbY;
-          deadZone = Gamepad.RightThumbDeadZone;
-          break;
+          return CheckDeadZone(gamepad.RightThumbY, thumbDeadZone);
         case XInputAxisType.LeftTrigger:
-          axisValue = gamepad.LeftTrigger;
-          deadZone = Gamepad.TriggerThreshold;
-          break;
+          return CheckDeadZone(NumericUtils.ScaleByteToShort(gamepad.LeftTrigger), triggerDeadZone);
         case XInputAxisType.RightTrigger:
-          axisValue = gamepad.RightTrigger;
-          deadZone = Gamepad.TriggerThreshold;
-          break;
+          return CheckDeadZone(NumericUtils.ScaleByteToShort(gamepad.RightTrigger), triggerDeadZone);
       }
-
-      return axis.PositiveValues ? axisValue > deadZone : axisValue < -deadZone;
+      return 0;
     }
 
-    public static short GetAxisPosition(XInputAxisType axisType, Gamepad gamepad)
+    protected short GetAxisPositionMapped(XInputAxis axis, Gamepad gamepad, bool isMappedToPositive)
     {
-      switch (axisType)
-      {
-        case XInputAxisType.LeftThumbX:
-          return gamepad.LeftThumbX;
-        case XInputAxisType.LeftThumbY:
-          return gamepad.LeftThumbY;
-        case XInputAxisType.RightThumbX:
-          return gamepad.RightThumbX;
-        case XInputAxisType.RightThumbY:
-          return gamepad.RightThumbY;
-        case XInputAxisType.LeftTrigger:
-          return NumericUtils.ScaleByteToShort(gamepad.LeftTrigger);
-        case XInputAxisType.RightTrigger:
-          return NumericUtils.ScaleByteToShort(gamepad.RightTrigger);
-        default:
-          return 0;
-      }
-    }
-
-    public static short GetAxisPositionMapped(XInputAxis axis, Gamepad gamepad, bool isMappedToPositive)
-    {
-      short position = GetAxisPosition(axis.AxisType, gamepad);
+      short position = GetAxisPosition(axis, gamepad, _thumbDeadZone, _triggerDeadZone);
       if (position == 0 || (axis.PositiveValues && position <= 0) || (!axis.PositiveValues && position >= 0))
         return 0;
 
@@ -281,6 +273,13 @@ namespace Emulators.LibRetro.Controllers.XInput
       if (shouldInvert)
         position = (short)(-position - 1);
       return position;
+    }
+
+    protected static short CheckDeadZone(short value, short deadZone)
+    {
+      if (value > deadZone || value < -deadZone)
+        return value;
+      return 0;
     }
   }
 }

@@ -164,6 +164,7 @@
     <Compile Include="Models\GoodMergeSelectModel.cs" />
     <Compile Include="Models\LibRetroCoreUpdaterModel.cs" />
     <Compile Include="Models\LibRetroMappingModel.cs" />
+    <Compile Include="Models\DeviceMapperProxy.cs" />
     <Compile Include="Models\LibRetroProxy.cs" />
     <Compile Include="Models\Navigation\GameFilterItem.cs" />
     <Compile Include="Models\Navigation\GameItem.cs" />
