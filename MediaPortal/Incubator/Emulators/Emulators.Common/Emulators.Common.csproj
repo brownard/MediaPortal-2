@@ -110,11 +110,8 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetPath)" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\Emulators\" /Y /E /I
-xcopy "$(TargetDir)$(TargetName).pdb" "%25programfiles(x86)%25\Team MediaPortal\MP2-Client\Plugins\Emulators\" /Y /E /I
-
-xcopy "$(TargetPath)" "%25programfiles(x86)%25\Team MediaPortal\MP2-Server\Plugins\Emulators.Server\" /Y /E /I
-xcopy "$(TargetDir)$(TargetName).pdb" "%25programfiles(x86)%25\Team MediaPortal\MP2-Server\Plugins\Emulators.Server\" /Y /E /I</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
