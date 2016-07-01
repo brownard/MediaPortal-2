@@ -13,31 +13,31 @@ namespace SharpRetro.LibRetro
   {
     #region entry points
     // these are all hooked up by reflection on dll load
-    public epretro_set_environment retro_set_environment;
-    public epretro_set_video_refresh retro_set_video_refresh;
-    public epretro_set_audio_sample retro_set_audio_sample;
-    public epretro_set_audio_sample_batch retro_set_audio_sample_batch;
-    public epretro_set_input_poll retro_set_input_poll;
-    public epretro_set_input_state retro_set_input_state;
-    public epretro_init retro_init;
-    public epretro_deinit retro_deinit;
-    public epretro_api_version retro_api_version;
-    public epretro_get_system_info retro_get_system_info;
-    public epretro_get_system_av_info retro_get_system_av_info;
-    public epretro_set_controller_port_device retro_set_controller_port_device;
-    public epretro_reset retro_reset;
-    public epretro_run retro_run;
-    public epretro_serialize_size retro_serialize_size;
-    public epretro_serialize retro_serialize;
-    public epretro_unserialize retro_unserialize;
-    public epretro_cheat_reset retro_cheat_reset;
-    public epretro_cheat_set retro_cheat_set;
-    public epretro_load_game retro_load_game;
-    public epretro_load_game_special retro_load_game_special;
-    public epretro_unload_game retro_unload_game;
-    public epretro_get_region retro_get_region;
-    public epretro_get_memory_data retro_get_memory_data;
-    public epretro_get_memory_size retro_get_memory_size;
+    protected epretro_set_environment retro_set_environment;
+    protected epretro_set_video_refresh retro_set_video_refresh;
+    protected epretro_set_audio_sample retro_set_audio_sample;
+    protected epretro_set_audio_sample_batch retro_set_audio_sample_batch;
+    protected epretro_set_input_poll retro_set_input_poll;
+    protected epretro_set_input_state retro_set_input_state;
+    protected epretro_init retro_init;
+    protected epretro_deinit retro_deinit;
+    protected epretro_api_version retro_api_version;
+    protected epretro_get_system_info retro_get_system_info;
+    protected epretro_get_system_av_info retro_get_system_av_info;
+    protected epretro_set_controller_port_device retro_set_controller_port_device;
+    protected epretro_reset retro_reset;
+    protected epretro_run retro_run;
+    protected epretro_serialize_size retro_serialize_size;
+    protected epretro_serialize retro_serialize;
+    protected epretro_unserialize retro_unserialize;
+    protected epretro_cheat_reset retro_cheat_reset;
+    protected epretro_cheat_set retro_cheat_set;
+    protected epretro_load_game retro_load_game;
+    protected epretro_load_game_special retro_load_game_special;
+    protected epretro_unload_game retro_unload_game;
+    protected epretro_get_region retro_get_region;
+    protected epretro_get_memory_data retro_get_memory_data;
+    protected epretro_get_memory_size retro_get_memory_size;
     #endregion
 
     #region LibRetro Callbacks
@@ -73,42 +73,21 @@ namespace SharpRetro.LibRetro
     {
       _dll = new InstanceDll(_corePath);
       if (!_dll.IsLoaded)
-      {
-        _dll = null;
         throw new Exception("Unable to load LibRetro core. LoadLibrary failed.");
-      }
 
-      if (!ConnectAllEntryPoints())
+      foreach (var field in GetAllEntryPoints())
       {
-        _dll.Dispose();
-        _dll = null;
-        throw new Exception("Unable to load LibRetro core. ConnectAllEntryPoints failed.");
+        IntPtr entry = _dll.GetProcAddress(field.Name);
+        if (entry != IntPtr.Zero)
+          field.SetValue(this, Marshal.GetDelegateForFunctionPointer(entry, field.FieldType));
+        else
+          throw new Exception("Unable to load LibRetro core. ConnectAllEntryPoints failed.");
       }
     }
 
     static IEnumerable<FieldInfo> GetAllEntryPoints()
     {
-      return typeof(LibRetroBase).GetFields().Where((field) => field.FieldType.Name.StartsWith("epretro"));
-    }
-
-    bool ConnectAllEntryPoints()
-    {
-      bool succeed = true;
-      foreach (var field in GetAllEntryPoints())
-      {
-        string fieldname = field.Name;
-        IntPtr entry = _dll.GetProcAddress(fieldname);
-        if (entry != IntPtr.Zero)
-        {
-          field.SetValue(this, Marshal.GetDelegateForFunctionPointer(entry, field.FieldType));
-        }
-        else
-        {
-          Console.WriteLine("Couldn't bind libretro entry point {0}", fieldname);
-          succeed = false;
-        }
-      }
-      return succeed;
+      return typeof(LibRetroBase).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where((field) => field.FieldType.Name.StartsWith("epretro"));
     }
     #endregion
 
