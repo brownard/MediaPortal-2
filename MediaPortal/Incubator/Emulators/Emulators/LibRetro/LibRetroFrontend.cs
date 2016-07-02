@@ -41,7 +41,7 @@ namespace Emulators.LibRetro
     protected LibRetroThread _retroThread;
     protected LibRetroEmulator _retroEmulator;
     protected LibRetroSaveStateHandler _saveHandler;
-    protected RetroGLContextProvider _glContext;
+    protected RetroGLContext _glContext;
     protected ITextureProvider _textureProvider;
     protected ISoundOutput _soundOutput;
     protected ControllerWrapper _controllerWrapper;
@@ -224,7 +224,7 @@ namespace Emulators.LibRetro
 
     protected void InitializeLibRetro()
     {
-      _glContext = new RetroGLContextProvider(true);
+      _glContext = new RetroGLContext();
       _retroEmulator = new LibRetroEmulator(_corePath)
       {
         SaveDirectory = _settings.SavesDirectory,

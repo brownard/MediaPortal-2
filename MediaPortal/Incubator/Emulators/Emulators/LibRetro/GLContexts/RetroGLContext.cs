@@ -13,7 +13,7 @@ using MediaPortal.Common.Logging;
 
 namespace Emulators.LibRetro.GLContexts
 {
-  public class RetroGLContextProvider : IRetroGLContext
+  public class RetroGLContext : IRetroGLContext
   {
     [DllImport("opengl32", EntryPoint = "wglGetProcAddress", ExactSpelling = true)]
     private static extern IntPtr wglGetProcAddress(IntPtr function_name);
@@ -22,9 +22,7 @@ namespace Emulators.LibRetro.GLContexts
     protected retro_hw_get_proc_address_t _getProcAddressDlgt;
     protected retro_hw_context_reset_t _contextReset;
     protected retro_hw_context_reset_t _contextDestroy;
-
-    protected FBORenderContextProvider _fboContextProvider;
-    protected DXRenderContextProvider _dxContextProvider;
+    protected DXRenderContextProvider _contextProvider;
 
     protected bool _hasDXContext;
     protected byte[] _pixels;
@@ -41,7 +39,7 @@ namespace Emulators.LibRetro.GLContexts
 
     public Texture Texture
     {
-      get { return _dxContextProvider != null ? _dxContextProvider.CurrentTexture : null; }
+      get { return _hasDXContext && _contextProvider != null ? _contextProvider.CurrentTexture : null; }
     }
 
     public bool IsTextureDirty
@@ -75,9 +73,8 @@ namespace Emulators.LibRetro.GLContexts
       get { return _getProcAddressDlgt; }
     }
 
-    public RetroGLContextProvider(bool dxInteropContext)
+    public RetroGLContext()
     {
-      _hasDXContext = dxInteropContext;
       _getCurrentFramebufferDlgt = new retro_hw_get_current_framebuffer_t(GetCurrentFramebuffer);
       _getProcAddressDlgt = new retro_hw_get_proc_address_t(GetProcAddress);
     }
@@ -94,30 +91,16 @@ namespace Emulators.LibRetro.GLContexts
     {
       if (_isCreated)
         return;
-      
-      if (_hasDXContext)
-      {
-        _dxContextProvider = new DXRenderContextProvider();
-        _fboContextProvider = _dxContextProvider;
-        _dxContextProvider.Create(OpenGLVersion.OpenGL2_1, new OpenGLEx(), width, height, 32, null);
-        if (!_dxContextProvider.HasDXContext)
-        {
-          _dxContextProvider = null;
-          _hasDXContext = false;
-          ServiceRegistration.Get<ILogger>().Warn("RetroGLContextProvider: WGL_NV_DX_interop extensions are not supported by the graphics driver, falling back to read back. This will reduce performance");
-        }
-      }
-      else
-      {
-        _fboContextProvider = new FBORenderContextProvider();
-        _fboContextProvider.Create(OpenGLVersion.OpenGL2_1, new OpenGLEx(), width, height, 32, null);
-      }
 
+      _contextProvider = new DXRenderContextProvider();
+      _contextProvider.Create(OpenGLVersion.OpenGL2_1, new OpenGLEx(), width, height, 32, null);
+      _hasDXContext = _contextProvider.HasDXContext;
       if (!_hasDXContext)
+      {
+        ServiceRegistration.Get<ILogger>().Warn("RetroGLContextProvider: WGL_NV_DX_interop extensions are not supported by the graphics driver, falling back to read back. This will reduce performance");
         _pixels = new byte[width * height * 4];
-
+      }
       _isCreated = true;
-
       ServiceRegistration.Get<ILogger>().Debug("RetroGLContextProvider: Created OpengGL context: width: {0}, height: {1}", width, height);
       if (_contextReset != null)
         _contextReset();
@@ -127,7 +110,7 @@ namespace Emulators.LibRetro.GLContexts
     {
       if (!_isCreated || _hasDXContext)
         return null;
-      _fboContextProvider.ReadPixels(_pixels, width, height);
+      _contextProvider.ReadPixels(_pixels, width, height);
       return _pixels;
     }
 
@@ -135,7 +118,7 @@ namespace Emulators.LibRetro.GLContexts
     {
       if (!_isCreated || !_hasDXContext)
         return;
-      _dxContextProvider.UpdateCurrentTexture(_bottomLeftOrigin);
+      _contextProvider.UpdateCurrentTexture(_bottomLeftOrigin);
       _currentWidth = width;
       _currentHeight = height;
       _isTextureDirty = true;
@@ -143,19 +126,18 @@ namespace Emulators.LibRetro.GLContexts
 
     protected IntPtr GetProcAddress(IntPtr sym)
     {
-      IntPtr ptr = wglGetProcAddress(sym);
-      return ptr;
+      return wglGetProcAddress(sym);
     }
 
     protected uint GetCurrentFramebuffer()
     {
-      return _fboContextProvider.FramebufferId;
+      return _contextProvider.FramebufferId;
     }
 
     public void Dispose()
     {
       if (_isCreated)
-        _fboContextProvider.Destroy();
+        _contextProvider.Destroy();
     }
   }
 }
