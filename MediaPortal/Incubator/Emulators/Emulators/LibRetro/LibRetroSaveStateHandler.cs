@@ -58,7 +58,7 @@ namespace Emulators.LibRetro
 
     public void LoadState()
     {
-      string stateFile = GetSaveFile(STATE_EXTENSION + _stateIndex);
+      string stateFile = GetSaveFile(STATE_EXTENSION);
       byte[] state;
       if (TryReadFromFile(stateFile, out state))
         _retroEmulator.Unserialize(state);
@@ -68,7 +68,7 @@ namespace Emulators.LibRetro
     {
       byte[] state = _retroEmulator.Serialize();
       if (state != null)
-        TryWriteToFile(GetSaveFile(STATE_EXTENSION + _stateIndex), state);
+        TryWriteToFile(GetSaveFile(STATE_EXTENSION), state);
     }
 
     public void AutoSave()
@@ -139,7 +139,8 @@ namespace Emulators.LibRetro
 
     protected string GetSaveFile(string extension)
     {
-      return Path.Combine(_saveDirectory, _saveName + extension);
+      string indexString = _stateIndex > 0 ? _stateIndex.ToString() : string.Empty;
+      return Path.Combine(_saveDirectory, _saveName + extension + indexString);
     }
 
     protected static bool ShouldSave(byte[] original, byte[] updated)
