@@ -84,14 +84,7 @@ namespace Emulators.LibRetro
       {
         lock (_surfaceLock)
         {
-          if (_textureProvider == null)
-            return null;
-          if (_glContext != null && _glContext.IsTextureDirty)
-          {
-            _textureProvider.UpdateTexture(SkinContext.Device, _glContext.Texture, _glContext.CurrentWidth, _glContext.CurrentHeight, _glContext.BottomLeftOrigin);
-            _glContext.IsTextureDirty = false;
-          }
-          return _textureProvider.Texture;
+          return _textureProvider != null ? _textureProvider.Texture : null;
         }
       }
     }
@@ -421,6 +414,7 @@ namespace Emulators.LibRetro
         lock (_surfaceLock)
         {
           _glContext.UpdateCurrentTexture(width, height);
+          _textureProvider.UpdateTexture(SkinContext.Device, _glContext.Texture, _glContext.CurrentWidth, _glContext.CurrentHeight, _glContext.BottomLeftOrigin);
         }
       }
       else
