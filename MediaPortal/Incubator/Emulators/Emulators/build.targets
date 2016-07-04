@@ -20,6 +20,7 @@
       <References Include="$(TargetDir)SharpLibHid.dll" />
       <References Include="$(TargetDir)SharpLibWin32.dll" />
       <References Include="$(TargetDir)SharpRetro.dll" />
+      <References Include="$(TargetDir)SharpCompress.dll" />
     </ItemGroup>
     
     <ItemGroup>
