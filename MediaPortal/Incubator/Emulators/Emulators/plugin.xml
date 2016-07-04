@@ -4,7 +4,8 @@
     PluginId="{FFAC513C-40B3-4FB0-8CBC-1683B4B7395C}"
     Author="Brownard"
     Copyright="GPL"
-    Description="Frontend for the emulators plugin.">
+    Description="Frontend for the emulators plugin."
+    AutoActivate="True">
   
   <Version
         PluginVersion="1.0"
