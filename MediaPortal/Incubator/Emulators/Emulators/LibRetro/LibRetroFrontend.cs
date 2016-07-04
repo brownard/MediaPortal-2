@@ -413,8 +413,11 @@ namespace Emulators.LibRetro
       {
         lock (_surfaceLock)
         {
-          _glContext.UpdateCurrentTexture(width, height);
-          _textureProvider.UpdateTexture(SkinContext.Device, _glContext.Texture, _glContext.CurrentWidth, _glContext.CurrentHeight, _glContext.BottomLeftOrigin);
+          if (_guiInitialized)
+          {
+            _glContext.UpdateCurrentTexture(width, height);
+            _textureProvider.UpdateTexture(SkinContext.Device, _glContext.Texture, _glContext.CurrentWidth, _glContext.CurrentHeight, _glContext.BottomLeftOrigin);
+          }
         }
       }
       else
