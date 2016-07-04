@@ -150,7 +150,7 @@ namespace Emulators.LibRetro.GLContexts
       //  Delete the render buffers.
       gl.DeleteRenderbuffersEXT(1, new uint[] { _depthRenderBufferID });
       //	Delete the framebuffer.
-      gl.DeleteFramebuffersEXT(1, new uint[] { _framebufferID, _outputFramebufferId });
+      gl.DeleteFramebuffersEXT(2, new uint[] { _framebufferID, _outputFramebufferId });
       gl.DXCloseDeviceNV(_dxDeviceGLHandle);
 
       //  Reset the IDs.
