@@ -400,7 +400,7 @@ namespace Emulators.LibRetro
       lock (_surfaceLock)
       {
         if (_guiInitialized)
-          _textureProvider.UpdateTexture(SkinContext.Device, _retroEmulator.VideoBuffer, _retroEmulator.VideoInfo.Width, _retroEmulator.VideoInfo.Height, false);
+          _textureProvider.UpdateTexture(_retroEmulator.VideoBuffer, _retroEmulator.VideoInfo.Width, _retroEmulator.VideoInfo.Height, false);
       }
     }
 
@@ -416,7 +416,7 @@ namespace Emulators.LibRetro
           if (_guiInitialized)
           {
             _glContext.UpdateCurrentTexture(width, height);
-            _textureProvider.UpdateTexture(SkinContext.Device, _glContext.Texture, width, height, _glContext.BottomLeftOrigin);
+            _textureProvider.UpdateTexture(_glContext.Texture, width, height, _glContext.BottomLeftOrigin);
           }
         }
       }
@@ -426,7 +426,7 @@ namespace Emulators.LibRetro
         lock (_surfaceLock)
         {
           if (_guiInitialized)
-            _textureProvider.UpdateTexture(SkinContext.Device, pixels, width, height, _glContext.BottomLeftOrigin);
+            _textureProvider.UpdateTexture(pixels, width, height, _glContext.BottomLeftOrigin);
         }
       }
     }

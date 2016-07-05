@@ -1,5 +1,6 @@
 ﻿using MediaPortal.Common;
 using MediaPortal.Common.Logging;
+using MediaPortal.UI.SkinEngine.SkinManagement;
 using SharpDX;
 using SharpDX.Direct3D9;
 using System;
@@ -48,23 +49,24 @@ namespace Emulators.LibRetro.VideoProviders
 
     protected SynchronizedTexture[] _textures = new SynchronizedTexture[TEXTURE_BUFFER_LENGTH];
     protected int _currentTextureIndex;
+    protected Device _device = SkinContext.Device;
 
     public Texture Texture
     {
       get { return _textures[_currentTextureIndex]; }
     }
 
-    public void UpdateTexture(Device device, int[] pixels, int width, int height, bool bottomLeftOrigin)
+    public void UpdateTexture(int[] pixels, int width, int height, bool bottomLeftOrigin)
     {
-      UpdateTexture(device, pixels, width, height, INT_COUNT_PER_PIXEL, bottomLeftOrigin);
+      UpdateTexture(pixels, width, height, INT_COUNT_PER_PIXEL, bottomLeftOrigin);
     }
 
-    public void UpdateTexture(Device device, byte[] pixels, int width, int height, bool bottomLeftOrigin)
+    public void UpdateTexture(byte[] pixels, int width, int height, bool bottomLeftOrigin)
     {
-      UpdateTexture(device, pixels, width, height, BYTE_COUNT_PER_PIXEL, bottomLeftOrigin);
+      UpdateTexture(pixels, width, height, BYTE_COUNT_PER_PIXEL, bottomLeftOrigin);
     }
 
-    protected void UpdateTexture<T>(Device device, T[] pixels, int width, int height, int countPerPixel, bool bottomLeftOrigin) where T : struct
+    protected void UpdateTexture<T>(T[] pixels, int width, int height, int countPerPixel, bool bottomLeftOrigin) where T : struct
     {
       if (pixels == null)
         return;
@@ -72,7 +74,7 @@ namespace Emulators.LibRetro.VideoProviders
       SynchronizedTexture texture = null;
       try
       {
-        texture = GetOrCreateTexture(device, width, height, Usage.Dynamic);
+        texture = GetOrCreateTexture(width, height, Usage.Dynamic);
         lock (texture.SyncRoot)
         {
           if (texture.IsDisposing)
@@ -103,17 +105,17 @@ namespace Emulators.LibRetro.VideoProviders
       }
     }
 
-    public void UpdateTexture(Device device, Texture source, int width, int height, bool bottomLeftOrigin)
+    public void UpdateTexture(Texture source, int width, int height, bool bottomLeftOrigin)
     {
       SynchronizedTexture texture = null;
       try
       {
-        texture = GetOrCreateTexture(device, width, height, Usage.RenderTarget);
+        texture = GetOrCreateTexture(width, height, Usage.RenderTarget);
         lock (texture.SyncRoot)
         {
           if (texture.IsDisposing)
             return;
-          device.StretchRectangle(source.GetSurfaceLevel(0), new Rectangle(0, 0, width, height), texture.GetSurfaceLevel(0), null, TextureFilter.None);
+          _device.StretchRectangle(source.GetSurfaceLevel(0), new Rectangle(0, 0, width, height), texture.GetSurfaceLevel(0), null, TextureFilter.None);
         }
       }
       catch (Exception ex)
@@ -127,7 +129,7 @@ namespace Emulators.LibRetro.VideoProviders
       }
     }
 
-    protected SynchronizedTexture GetOrCreateTexture(Device device, int width, int height, Usage usage)
+    protected SynchronizedTexture GetOrCreateTexture(int width, int height, Usage usage)
     {
       _currentTextureIndex = (_currentTextureIndex + 1) % _textures.Length;
       SynchronizedTexture texture = _textures[_currentTextureIndex];
@@ -152,7 +154,7 @@ namespace Emulators.LibRetro.VideoProviders
 
       if (texture == null)
       {
-        texture = new SynchronizedTexture(device, width, height, 1, usage, Format.X8R8G8B8, Pool.Default);
+        texture = new SynchronizedTexture(_device, width, height, 1, usage, Format.X8R8G8B8, Pool.Default);
         _textures[_currentTextureIndex] = texture;
       }
       return texture;
