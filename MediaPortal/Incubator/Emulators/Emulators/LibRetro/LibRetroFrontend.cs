@@ -416,7 +416,7 @@ namespace Emulators.LibRetro
           if (_guiInitialized)
           {
             _glContext.UpdateCurrentTexture(width, height);
-            _textureProvider.UpdateTexture(SkinContext.Device, _glContext.Texture, _glContext.CurrentWidth, _glContext.CurrentHeight, _glContext.BottomLeftOrigin);
+            _textureProvider.UpdateTexture(SkinContext.Device, _glContext.Texture, width, height, _glContext.BottomLeftOrigin);
           }
         }
       }
