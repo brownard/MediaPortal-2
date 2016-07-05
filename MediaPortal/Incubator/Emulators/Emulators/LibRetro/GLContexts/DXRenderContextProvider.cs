@@ -44,6 +44,7 @@ namespace Emulators.LibRetro.GLContexts
       gl.PushAttrib(OpenGL.GL_TEXTURE_BIT | OpenGL.GL_DEPTH_TEST | OpenGL.GL_LIGHTING);
       gl.Disable(OpenGL.GL_DEPTH_TEST);
       gl.Disable(OpenGL.GL_LIGHTING);
+      gl.UseProgram(0);
 
       gl.MatrixMode(SharpGL.Enumerations.MatrixMode.Projection);
       gl.PushMatrix();
