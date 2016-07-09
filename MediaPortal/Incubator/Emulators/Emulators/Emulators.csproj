@@ -79,6 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Actions\AddEmulatorAction.cs" />
+    <Compile Include="Actions\GamesAction.cs" />
     <Compile Include="Actions\RemoveEmulatorAction.cs" />
     <Compile Include="EmulatorsConsts.cs" />
     <Compile Include="EmulatorsPlugin.cs" />
@@ -255,7 +256,9 @@
     <Content Include="Skin\BlueVision\images\A24958E2-538A-455E-A1DB-A7BB241AF7EC.jpg" />
     <Content Include="Skin\BlueVision\themes\Titanium Extended\screens\MediaItemGameDetails.inc" />
     <Content Include="Skin\BlueVision\themes\Titanium Extended\screens\MediaItemGameDetailsCover.inc" />
-    <Content Include="Skin\default\workflow\Emulators-actions.xml" />
+    <Content Include="Skin\default\workflow\Emulators-actions.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Skin\Titanium\images\A24958E2-538A-455E-A1DB-A7BB241AF7EC.jpg" />
     <Content Include="Skin\Titanium\screens\MediaItemGameDetails.inc" />
   </ItemGroup>

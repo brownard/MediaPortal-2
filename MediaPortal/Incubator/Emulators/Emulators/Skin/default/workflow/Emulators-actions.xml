@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Workflow DescriptorVersion="1.0">
   <MenuActions>
-    <PushNavigationTransition Id="A24958E2-538A-455E-A1DB-A7BB241AF7EC"
+    <WorkflowContributorAction Id="A24958E2-538A-455E-A1DB-A7BB241AF7EC"
       Name="Home->Games"
       DisplayCategory="a-Media"
       SortOrder="f"
       SourceStates="7F702D9C-F2DD-42da-9ED8-0BA92F07787F"
-      TargetState="DFC41902-DE22-4AEF-B9D2-C369BD79C4E0"
-      DisplayTitle="[Emulators.MenuItem]"/>
+      ContributorModelId="9929690F-BFB9-47CF-8FFE-11617D3B8B44"/>
 
     <WorkflowContributorAction Id="27657AA4-B1B6-422C-80C7-9C30DEB01268"
       Name="Emulators->AddEmulator"
