@@ -1,6 +1,6 @@
-﻿using Emulators.Common.Games;
+﻿using Emulators.Common.FanartProvider;
+using Emulators.Common.Games;
 using Emulators.Common.Matchers;
-using Emulators.Common.TheGamesDb;
 using MediaPortal.Backend.MediaLibrary;
 using MediaPortal.Common;
 using MediaPortal.Common.MediaManagement;
@@ -16,7 +16,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Emulators.Common.FanartProvider
+namespace Emulators.Server
 {
   public class GameFanartProvider : IFanArtProvider
   {
