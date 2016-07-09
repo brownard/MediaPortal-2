@@ -80,7 +80,7 @@ namespace Emulators.LibRetro.VideoProviders
           if (texture.IsDisposing)
             return;
           DataStream dataStream;
-          DataRectangle rectangle = texture.LockRectangle(0, LockFlags.None, out dataStream);
+          DataRectangle rectangle = texture.LockRectangle(0, LockFlags.Discard, out dataStream);
           int padding = rectangle.Pitch - (width * sizeof(int));
           int countPerLine = width * countPerPixel;
 
