@@ -45,7 +45,7 @@ namespace Emulators.Common.TheGamesDb
     protected const int MAX_SEARCH_DISTANCE = 2;
     protected const string BASE_URL = "http://thegamesdb.net/api/";
     protected const string SEARCH_PATH = "GetGamesList.php";
-    protected const string GET_PATH = "GetGame.php?id=";
+    protected const string GET_PATH = "GetGame.php";
     protected static readonly CultureInfo DATE_CULTURE = CultureInfo.CreateSpecificCulture("en-US");
     protected static readonly Regex REGEX_ID = new Regex(@"[\[\(]gg(\d+)[\)\]]", RegexOptions.IgnoreCase);
     protected static readonly string _matchesSettingsFile = Path.Combine(CACHE_PATH, "Matches.xml");
@@ -132,10 +132,9 @@ namespace Emulators.Common.TheGamesDb
 
     public bool FindAndUpdateGame(GameInfo gameInfo)
     {
-      GameResult result;
-      if (!TryGetBestMatch(gameInfo, out result))
+      Game game;
+      if (!TryGetBestMatch(gameInfo, out game))
         return false;
-      Game game = result.Game;
       gameInfo.GameName = game.GameTitle;
       gameInfo.GamesDbId = game.Id;
       gameInfo.MatcherId = MatcherId;
@@ -187,25 +186,32 @@ namespace Emulators.Common.TheGamesDb
     #endregion
 
     #region Protected Methods
-    protected bool TryGetBestMatch(GameInfo gameInfo, out GameResult result)
+    protected bool TryGetBestMatch(GameInfo gameInfo, out Game game)
     {
-      result = null;
+      game = null;
+      GameResult result;
       try
       {
         if (gameInfo.GamesDbId > 0 && Get(gameInfo.GamesDbId, out result))
         {
-          AddToStorage(result.Game.GameTitle, result.Game.Platform, result.Game.Id);
+          game = result.Games[0];
+          AddToStorage(game.GameTitle, game.Platform, game.Id);
           return true;
         }
 
         GameMatch<int> match;
         if (TryGetFromStorage(gameInfo, out match))
         {
-          return match.Id > 0 && Get(match.Id, out result);
+          if (match.Id > 0 && Get(match.Id, out result))
+          {
+            game = result.Games[0];
+            return true;
+          }
+          return false;
         }
-        else if (TryGetClosestMatch(gameInfo, out result))
+        else if (TryGetClosestMatch(gameInfo, out game))
         {
-          AddToStorage(gameInfo.GameName, gameInfo.Platform, result.Game.Id);
+          AddToStorage(gameInfo.GameName, gameInfo.Platform, game.Id);
           return true;
         }
         AddToStorage(gameInfo.GameName, gameInfo.Platform, 0);
@@ -232,9 +238,11 @@ namespace Emulators.Common.TheGamesDb
       if (searchResults != null && searchResults.Results != null && searchResults.Results.Length > 0)
       {
         results = new List<GameSearchResult>(searchResults.Results);
-        Logger.Debug("TheGamesDb: Found {0} search results for '{1}'", results.Count, searchTerm);
+        Logger.Debug("TheGamesDb: Found {0} search results for '{1} : {2}'", results.Count, searchTerm, platform);
+        return true;
       }
-      return results != null;
+      Logger.Debug("TheGamesDb: No search results for '{0} : {1}'", searchTerm, platform);
+      return false;
     }
 
     protected bool Get(int id, out GameResult result)
@@ -245,9 +253,9 @@ namespace Emulators.Common.TheGamesDb
       if (_memoryCache.TryGetValue(id, out result))
         return true;
       string cache = CreateAndGetCacheName(id);
-      string url = string.Format("{0}{1}{2}", BASE_URL, GET_PATH, id);
+      string url = string.Format("{0}{1}?id={2}", BASE_URL, GET_PATH, id);
       result = _downloader.Download<GameResult>(url, cache);
-      if (result != null)
+      if (IsValid(result))
       {
         _memoryCache.Add(id, result);
         return true;
@@ -255,26 +263,60 @@ namespace Emulators.Common.TheGamesDb
       return false;
     }
 
-    protected bool TryGetClosestMatch(GameInfo gameInfo, out GameResult result)
+    protected bool Get(string name, string platform, out GameResult result)
     {
+      result = null;
+      if (string.IsNullOrEmpty(name))
+        return false;
+      string query = "?name=" + HttpUtility.UrlEncode(name);
+      if (!string.IsNullOrEmpty(platform))
+        query += "&platform=" + HttpUtility.UrlEncode(platform);
+
+      string url = string.Format("{0}{1}{2}", BASE_URL, GET_PATH, query);
+      result = _downloader.Download<GameResult>(url);
+      return IsValid(result);
+    }
+
+    protected bool TryGetClosestMatch(GameInfo gameInfo, out Game game)
+    {
+      GameResult result;
+      if (Get(gameInfo.GameName, gameInfo.Platform, out result))
+      {
+        game = result.Games.FirstOrDefault(g => NameProcessor.AreStringsEqual(g.Platform, gameInfo.Platform) && NameProcessor.AreStringsEqual(g.GameTitle, gameInfo.GameName, MAX_SEARCH_DISTANCE));
+        if (game != null)
+        {
+          Logger.Debug("TheGamesDb: Matched '{0}' to '{1}'", gameInfo.GameName, game.GameTitle);
+          return true;
+        }
+      }
+
       List<GameSearchResult> results;
       if (Search(gameInfo.GameName, gameInfo.Platform, out results))
       {
-        results = results.FindAll(r => r.GameTitle == gameInfo.GameName || NameProcessor.GetLevenshteinDistance(r.GameTitle, gameInfo.GameName) <= MAX_SEARCH_DISTANCE);
+        results = results.FindAll(r => NameProcessor.AreStringsEqual(r.GameTitle, gameInfo.GameName, MAX_SEARCH_DISTANCE));
         if (results.Count > 0 && Get(results[0].Id, out result))
+        {
+          game = result.Games[0];
+          Logger.Debug("TheGamesDb: Matched '{0}' to '{1}'", gameInfo.GameName, game.GameTitle);
           return true;
+        }
       }
       Logger.Debug("TheGamesDb: No match found for: '{0}'", gameInfo.GameName);
-      result = null;
+      game = null;
       return false;
+    }
+
+    protected static bool IsValid(GameResult result)
+    {
+      return result != null && result.Games != null && result.Games.Length > 0;
     }
 
     protected override void DownloadFanArt(int itemId)
     {
       GameResult result;
-      if (!Get(itemId, out result) || result.Game == null)
+      if (!Get(itemId, out result))
         return;
-      GameImages images = result.Game.Images;
+      GameImages images = result.Games[0].Images;
       if (images == null)
         return;
       string baseUrl = result.BaseImgUrl;

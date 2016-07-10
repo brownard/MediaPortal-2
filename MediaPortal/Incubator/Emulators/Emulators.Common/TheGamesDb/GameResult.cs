@@ -12,7 +12,8 @@ namespace Emulators.Common.TheGamesDb
   {
     [XmlElement("baseImgUrl")]
     public string BaseImgUrl { get; set; }
-    public Game Game { get; set; }
+    [XmlElement("Game")]
+    public Game[] Games { get; set; }
   }
 
   public class Game

@@ -50,6 +50,22 @@ namespace Emulators.Common.NameProcessing
       return _trimWhiteSpaces.Replace(str, " ").Trim(' ', '-');
     }
 
+    public static bool AreStringsEqual(string name, string other)
+    {
+      return AreStringsEqual(name, other, 0);
+    }
+
+    public static bool AreStringsEqual(string name, string other, int distance)
+    {
+      if (name == other)
+        return true;
+      if (name == null || other == null)
+        return false;
+      if (name.ToLowerInvariant() == other.ToLowerInvariant())
+        return true;
+      return distance > 0 ? GetLevenshteinDistance(name, other) <= distance : false;
+    }
+
     public static int GetLevenshteinDistance(string resultName, string searchName)
     {
       return StringUtils.GetLevenshteinDistance(RemoveCharacters(resultName), RemoveCharacters(searchName));
