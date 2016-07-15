@@ -15,7 +15,6 @@ namespace Emulators.Emulator
 {
   public class EmulatorProcess : IDisposable
   {
-    protected string _mimeType;
     protected string _gamePath;
     protected EmulatorConfiguration _emulatorConfiguration;
     protected Process _process;
@@ -40,32 +39,27 @@ namespace Emulators.Emulator
     {
       try
       {
-        return Start();
+        string path = CreatePath(_emulatorConfiguration, _gamePath);
+        string arguments = CreateArguments(_emulatorConfiguration, _gamePath);
+        ServiceRegistration.Get<ILogger>().Debug("EmulatorProcess: Starting '{0} {1}'", path, arguments);
+        _process = new Process();
+        _process.StartInfo = new ProcessStartInfo(path, arguments);
+        _process.StartInfo.WorkingDirectory = string.IsNullOrEmpty(_emulatorConfiguration.WorkingDirectory) ? DosPathHelper.GetDirectory(_emulatorConfiguration.Path) : _emulatorConfiguration.WorkingDirectory;
+        _process.EnableRaisingEvents = true;
+        _process.Exited += OnExited;
+        bool result = _process.Start();
+        if (result && !_emulatorConfiguration.IsNative && _mappedKey != null && _mappedKey != Key.None)
+        {
+          _inputHandler = new InputHandler(_process.Id, _mappedKey);
+          _inputHandler.MappedKeyPressed += OnMappedKeyPressed;
+        }
+        return result;
       }
       catch (Exception ex)
       {
         ServiceRegistration.Get<ILogger>().Error("EmulatorProcess: Error starting process", ex);
         return false;
       }
-    }
-
-    public bool Start()
-    {
-      string path = CreatePath(_emulatorConfiguration, _gamePath);
-      string arguments = CreateArguments(_emulatorConfiguration, _gamePath);
-      ServiceRegistration.Get<ILogger>().Debug("EmulatorProcess: Starting '{0} {1}'", path, arguments);
-      _process = new Process();
-      _process.StartInfo = new ProcessStartInfo(path, arguments);
-      _process.StartInfo.WorkingDirectory = string.IsNullOrEmpty(_emulatorConfiguration.WorkingDirectory) ? DosPathHelper.GetDirectory(_emulatorConfiguration.Path) : _emulatorConfiguration.WorkingDirectory;
-      _process.EnableRaisingEvents = true;
-      _process.Exited += OnExited;
-      bool result = _process.Start();
-      if (result && !_emulatorConfiguration.IsNative && _mappedKey != null && _mappedKey != Key.None)
-      {
-        _inputHandler = new InputHandler(_process.Id, _mappedKey);
-        _inputHandler.MappedKeyPressed += OnMappedKeyPressed;
-      }
-      return result;
     }
 
     protected void OnMappedKeyPressed(object sender, EventArgs e)
