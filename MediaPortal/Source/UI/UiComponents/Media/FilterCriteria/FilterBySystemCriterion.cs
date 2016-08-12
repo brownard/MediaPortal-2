@@ -45,14 +45,17 @@ namespace MediaPortal.UiComponents.Media.FilterCriteria
       IServerController serverController = serverConnectionManager.ServerController;
       if (serverController == null)
         throw new NotConnectedException("The MediaLibrary is not connected");
+
       IDictionary<string, string> systemNames = new Dictionary<string, string>();
       foreach (MPClientMetadata client in serverController.GetAttachedClients())
         systemNames.Add(client.SystemId, client.LastClientName);
       systemNames.Add(serverConnectionManager.HomeServerSystemId, serverConnectionManager.LastHomeServerName);
+
       IContentDirectory cd = ServiceRegistration.Get<IServerConnectionManager>().ContentDirectory;
       if (cd == null)
         return new List<FilterValue>();
-      HomogenousMap valueGroups = cd.GetValueGroups(ProviderResourceAspect.ATTR_SYSTEM_ID, null, ProjectionFunction.None, necessaryMIATypeIds, filter, true);
+
+      HomogenousMap valueGroups = cd.GetValueGroups(ProviderResourceAspect.ATTR_SYSTEM_ID, null, ProjectionFunction.None, necessaryMIATypeIds, filter, true, ShowVirtual);
       IList<FilterValue> result = new List<FilterValue>(valueGroups.Count);
       int numEmptyEntries = 0;
       foreach (KeyValuePair<object, object> group in valueGroups)

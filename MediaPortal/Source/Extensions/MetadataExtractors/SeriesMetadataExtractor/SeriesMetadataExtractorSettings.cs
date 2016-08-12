@@ -25,6 +25,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using MediaPortal.Common.Settings;
+using MediaPortal.Extensions.OnlineLibraries;
 
 namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 {
@@ -154,7 +155,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
       };
 
       // Init default patterns.
-      Patterns = new List<MatchPattern>
+      SeriesPatterns = new List<MatchPattern>
       {
         // Filename only pattern
         // Series\Season...\S01E01* or Series\Season...\1x01*
@@ -173,8 +174,10 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
         // "Series\1\11 - Episode" "Series\Staffel 2\11 - Episode" "Series\Season 3\12 Episode" "Series\3. Season\13-Episode"
         new MatchPattern { Enabled = true, Pattern = @"(?<series>[^\\]*)\\[^\\|\d]*(?<seasonnum>\d+)\D*\\(?<episodenum>\d+)\s*-\s*(?<episode>[^\\]+)\.", RegexOptions = RegexOptions.IgnoreCase },
         // "Series.Name.101.Episode.Or.Release.Info", attention: this expression can lead to false matches for every filename with nnn included
-        new MatchPattern { Enabled = true, Pattern = @"(?<series>[^\\]+).\W(?<seasonnum>\d{1})(?<episodenum>\d{2})\W(?<episode>.*)\.", RegexOptions = RegexOptions.IgnoreCase },
+        new MatchPattern { Enabled = true, Pattern = @"(?<series>[^\\]+)\D(?<seasonnum>\d{1})(?<episodenum>\d{2})\D(?<episode>.*)\.", RegexOptions = RegexOptions.IgnoreCase },
       };
+
+      SeriesYearPattern = new SerializableRegex(@"(?<series>.*)[( .-_]+(?<year>\d{4})", RegexOptions.IgnoreCase);
     }
 
     #region Public properties
@@ -196,7 +199,19 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
     /// Gets a list of matching patterns which can be extended by users.
     /// </summary>
     [Setting(SettingScope.Global)]
-    public List<MatchPattern> Patterns { get; set; }
+    public List<MatchPattern> SeriesPatterns { get; set; }
+
+    /// <summary>
+    /// Regular expression used to find a year in the series name
+    /// </summary>
+    [Setting(SettingScope.Global)]
+    public SerializableRegex SeriesYearPattern { get; set; }
+
+    /// <summary>
+    /// If <c>true</c>, the SeriesMetadataExtractor does not fetch any information for missing local episodes.
+    /// </summary>
+    [Setting(SettingScope.Global, false)]
+    public bool OnlyLocalMedia { get; set; }
 
     #endregion
   }

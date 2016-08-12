@@ -65,11 +65,11 @@ namespace MediaPortal.UI.Services.ServerCommunication
       #region IMediaBrowsing implementation
 
       public MediaItem LoadLocalItem(ResourcePath path,
-          IEnumerable<Guid> necessaryRequestedMIATypeIDs, IEnumerable<Guid> optionalRequestedMIATypeIDs)
+          IEnumerable<Guid> necessaryRequestedMIATypeIDs, IEnumerable<Guid> optionalRequestedMIATypeIDs, Guid? userProfile)
       {
         try
         {
-          return _contentDirectory.LoadItem(_localSystemId, path, necessaryRequestedMIATypeIDs, optionalRequestedMIATypeIDs);
+          return _contentDirectory.LoadItem(_localSystemId, path, necessaryRequestedMIATypeIDs, optionalRequestedMIATypeIDs, userProfile);
         }
         catch (Exception)
         {
@@ -78,11 +78,11 @@ namespace MediaPortal.UI.Services.ServerCommunication
       }
 
       public IList<MediaItem> Browse(Guid parentDirectoryId,
-          IEnumerable<Guid> necessaryRequestedMIATypeIDs, IEnumerable<Guid> optionalRequestedMIATypeIDs, uint? offset = null, uint? limit = null)
+          IEnumerable<Guid> necessaryRequestedMIATypeIDs, IEnumerable<Guid> optionalRequestedMIATypeIDs, Guid? userProfile, bool includVirtual, uint? offset = null, uint? limit = null)
       {
         try
         {
-          return _contentDirectory.Browse(parentDirectoryId, necessaryRequestedMIATypeIDs, optionalRequestedMIATypeIDs, offset, limit);
+          return _contentDirectory.Browse(parentDirectoryId, necessaryRequestedMIATypeIDs, optionalRequestedMIATypeIDs, userProfile, includVirtual, offset, limit);
         }
         catch (Exception)
         {
@@ -102,11 +102,23 @@ namespace MediaPortal.UI.Services.ServerCommunication
         }
       }
 
+      public ICollection<Guid> GetAllManagedMediaItemAspectTypes()
+      {
+        try
+        {
+          return _contentDirectory.GetAllManagedMediaItemAspectTypes();
+        }
+        catch (Exception)
+        {
+          throw new DisconnectedException();
+        }
+      }
+
       #endregion
 
       #region IImportResultHandler implementation
 
-      public Guid UpdateMediaItem(Guid parentDirectoryId, ResourcePath path, IEnumerable<MediaItemAspect> updatedAspects)
+      public Guid UpdateMediaItem(Guid parentDirectoryId, ResourcePath path, IEnumerable<MediaItemAspect> updatedAspects, bool isRefresh)
       {
         try
         {

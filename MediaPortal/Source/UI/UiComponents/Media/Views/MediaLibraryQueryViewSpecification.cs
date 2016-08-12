@@ -33,6 +33,7 @@ using MediaPortal.Common.MediaManagement.MLQueries;
 using MediaPortal.Common.SystemCommunication;
 using MediaPortal.UI.ServerCommunication;
 using UPnP.Infrastructure.CP;
+using MediaPortal.UI.Services.UserManagement;
 
 namespace MediaPortal.UiComponents.Media.Views
 {
@@ -102,11 +103,20 @@ namespace MediaPortal.UiComponents.Media.Views
 
     public MediaLibraryQueryViewSpecification CreateSubViewSpecification(string viewDisplayName, IFilter filter)
     {
-      IFilter combinedFilter = _filter == null ? filter : BooleanCombinationFilter.CombineFilters(BooleanOperator.And, new IFilter[] {_filter, filter});
+      IFilter combinedFilter;
+      if (_filter == null)
+        combinedFilter = filter;
+      else
+      {
+        if (filter is RelationshipFilter)
+          combinedFilter = BooleanCombinationFilter.CombineFilters(BooleanOperator.And, new IFilter[] { filter, _filter });
+        else
+          combinedFilter = BooleanCombinationFilter.CombineFilters(BooleanOperator.And, new IFilter[] { _filter, filter });
+      }
       return new MediaLibraryQueryViewSpecification(viewDisplayName, combinedFilter, _necessaryMIATypeIds, _optionalMIATypeIds, _onlyOnline)
-        {
-            MaxNumItems = _maxNumItems
-        };
+      {
+        MaxNumItems = _maxNumItems
+      };
     }
 
     public override IEnumerable<MediaItem> GetAllMediaItems()
@@ -114,7 +124,13 @@ namespace MediaPortal.UiComponents.Media.Views
       IContentDirectory cd = ServiceRegistration.Get<IServerConnectionManager>().ContentDirectory;
       if (cd == null)
         return new List<MediaItem>();
-      return cd.Search(_query, _onlyOnline);
+
+      Guid? userProfile = null;
+      IUserManagement userProfileDataManagement = ServiceRegistration.Get<IUserManagement>();
+      if (userProfileDataManagement != null && userProfileDataManagement.IsValidUser)
+        userProfile = userProfileDataManagement.CurrentUser.ProfileId;
+
+      return cd.Search(_query, _onlyOnline, userProfile, ShowVirtual);
     }
 
     protected internal override void ReLoadItemsAndSubViewSpecifications(out IList<MediaItem> mediaItems, out IList<ViewSpecification> subViewSpecifications)
@@ -124,6 +140,12 @@ namespace MediaPortal.UiComponents.Media.Views
       IContentDirectory cd = ServiceRegistration.Get<IServerConnectionManager>().ContentDirectory;
       if (cd == null)
         return;
+
+      Guid? userProfile = null;
+      IUserManagement userProfileDataManagement = ServiceRegistration.Get<IUserManagement>();
+      if (userProfileDataManagement != null && userProfileDataManagement.IsValidUser)
+        userProfile = userProfileDataManagement.CurrentUser.ProfileId;
+
       try
       {
         if (MaxNumItems.HasValue)
@@ -133,7 +155,7 @@ namespace MediaPortal.UiComponents.Media.Views
           // We request the groups first to make it faster for the many items case. In the case of few items, both groups and items
           // are requested which doesn't take so long because there are only few items.
           IList<MLQueryResultGroup> groups = cd.GroupValueGroups(MediaAspect.ATTR_TITLE, null, ProjectionFunction.None,
-              _query.NecessaryRequestedMIATypeIDs, _query.Filter, _onlyOnline, GroupingFunction.FirstCharacter);
+              _query.NecessaryRequestedMIATypeIDs, _query.Filter, _onlyOnline, GroupingFunction.FirstCharacter, ShowVirtual);
           long numItems = groups.Aggregate<MLQueryResultGroup, long>(0, (current, group) => current + group.NumItemsInGroup);
           if (numItems > MaxNumItems.Value)
           { // Group items
@@ -151,7 +173,7 @@ namespace MediaPortal.UiComponents.Media.Views
           // Else: No grouping
         }
         // Else: No grouping
-        mediaItems = cd.Search(_query, _onlyOnline);
+        mediaItems = cd.Search(_query, _onlyOnline, userProfile, ShowVirtual);
         subViewSpecifications = new List<ViewSpecification>(0);
       }
       catch (UPnPRemoteException e)

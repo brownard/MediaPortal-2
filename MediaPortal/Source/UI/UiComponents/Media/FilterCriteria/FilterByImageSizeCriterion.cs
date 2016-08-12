@@ -63,10 +63,10 @@ namespace MediaPortal.UiComponents.Media.FilterCriteria
       IFilter mediumFilter = BooleanCombinationFilter.CombineFilters(BooleanOperator.And,
           new NotFilter(simpleSmallFilter),
           new NotFilter(bigFilter));
-      int numEmptyItems = cd.CountMediaItems(necessaryMIATypeIds, emptyFilter, true);
-      int numSmallItems = cd.CountMediaItems(necessaryMIATypeIds, smallFilter, true);
-      int numMediumItems = cd.CountMediaItems(necessaryMIATypeIds, mediumFilter, true);
-      int numBigItems = cd.CountMediaItems(necessaryMIATypeIds, bigFilter, true);
+      int numEmptyItems = cd.CountMediaItems(necessaryMIATypeIds, emptyFilter, true, ShowVirtual);
+      int numSmallItems = cd.CountMediaItems(necessaryMIATypeIds, smallFilter, true, ShowVirtual);
+      int numMediumItems = cd.CountMediaItems(necessaryMIATypeIds, mediumFilter, true, ShowVirtual);
+      int numBigItems = cd.CountMediaItems(necessaryMIATypeIds, bigFilter, true, ShowVirtual);
       return new List<FilterValue>(new FilterValue[]
         {
             new FilterValue(Consts.RES_VALUE_EMPTY_TITLE, emptyFilter, null, numEmptyItems, this),

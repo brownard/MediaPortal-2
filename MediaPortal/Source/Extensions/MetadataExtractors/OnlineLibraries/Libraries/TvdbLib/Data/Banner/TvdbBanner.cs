@@ -24,6 +24,7 @@ using System.Net;
 using System.IO;
 using MediaPortal.Extensions.OnlineLibraries.Libraries.Common;
 using MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib.Cache;
+using System.Threading;
 
 namespace MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib.Data.Banner
 {
@@ -59,6 +60,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib.Data.Banner
     #region private/protected fields
 
     private readonly object _bannerLoadingLock = new object();
+    private const int _bannerLoadTimeout = 2000;
 
     public TvdbBanner ()
     {
@@ -198,9 +200,13 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib.Data.Banner
     public bool UnloadBanner(bool saveToCache)
     {
       if (BannerLoading)
-      {//banner is currently loading
-        Log.Warn("Can't remove banner while it's loading");
-        return false;
+      {
+        if (!SpinWait.SpinUntil(BannerIsLoading, _bannerLoadTimeout))
+        {
+          //banner is currently loading
+          Log.Warn("Can't remove banner while it's loading");
+          return false;
+        }
       }
       try
       {
@@ -222,6 +228,11 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib.Data.Banner
         Log.Warn("Error while unloading banner", ex);
       }
       return true;
+    }
+
+    private bool BannerIsLoading()
+    {
+      return BannerLoading;
     }
 
     /// <summary>
@@ -255,6 +266,8 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib.Data.Banner
         IsLoaded = true;
         return true;
       }
+      if (BannerImage != null)
+        BannerImage.Dispose();
       BannerImage = null;
       IsLoaded = false;
       return false;
@@ -271,9 +284,25 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib.Data.Banner
       {
         WebClient client = new CompressionWebClient();
         byte[] imgData = client.DownloadData(path);
-        MemoryStream ms = new MemoryStream(imgData);
-        Image img = Image.FromStream(ms, true, true);
-        return img;
+
+        using (MemoryStream ms = new MemoryStream(imgData))
+        {
+          using (Image sourceImage = Image.FromStream(ms, true, false))
+          {
+            Image targetImage = new Bitmap(sourceImage.Width, sourceImage.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using (Graphics g = Graphics.FromImage(targetImage))
+            {
+              g.DrawImageUnscaled(sourceImage, 0, 0);
+            }
+            return targetImage;
+          }
+        }
+
+        //Below leads to memory leaking because stream is not disposed as it is not allowed to dispose
+        //the stream for the lifetime of the image
+        //MemoryStream ms = new MemoryStream(imgData);
+        //Image img = Image.FromStream(ms, true, true);
+        //return img;
       }
       catch (Exception ex)
       {

@@ -29,15 +29,15 @@ using MediaPortal.UiComponents.Media.Models.Navigation;
 
 namespace MediaPortal.UiComponents.Media.Models.ScreenData
 {
-  public class AudioFilterByArtistScreenData : AbstractAudioFilterScreenData
+  public class AudioFilterByArtistScreenData : AbstractAudioFilterScreenData<ArtistFilterItem>
   {
     public AudioFilterByArtistScreenData() :
         base(Consts.SCREEN_AUDIO_FILTER_BY_ARTIST, Consts.RES_FILTER_BY_ARTIST_MENU_ITEM,
-        Consts.RES_FILTER_ARTIST_NAVBAR_DISPLAY_LABEL, new SimpleMLFilterCriterion(AudioAspect.ATTR_ARTISTS))
+        Consts.RES_FILTER_ARTIST_NAVBAR_DISPLAY_LABEL, new FilterByAudioArtistCriterion())
     {
     }
 
-    public override AbstractFiltersScreenData<FilterItem> Derive()
+    public override AbstractFiltersScreenData<ArtistFilterItem> Derive()
     {
       return new AudioFilterByArtistScreenData();
     }

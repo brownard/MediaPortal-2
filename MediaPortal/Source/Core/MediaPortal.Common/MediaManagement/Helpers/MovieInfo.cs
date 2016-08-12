@@ -24,9 +24,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
+using System.Text.RegularExpressions;
+using System.Collections;
 
 namespace MediaPortal.Common.MediaManagement.Helpers
 {
@@ -34,85 +35,392 @@ namespace MediaPortal.Common.MediaManagement.Helpers
   /// <see cref="MovieInfo"/> contains information about a movie. It's used as an interface structure for external 
   /// online data scrapers to fill in metadata.
   /// </summary>
-  public class MovieInfo
+  public class MovieInfo : BaseInfo, IComparable<MovieInfo>
   {
-    public bool Matched { get; set; }
+    /// <summary>
+    /// Returns the index for "Movie" used in <see cref="FormatString"/>.
+    /// </summary>
+    public static int MOVIE_INDEX = 0;
+    /// <summary>
+    /// Returns the index for "Year" used in <see cref="FormatString"/>.
+    /// </summary>
+    public static int MOVIE_YEAR_INDEX = 1;
+    /// <summary>
+    /// Format string that holds movie name including premiere year.
+    /// </summary>
+    public static string MOVIE_FORMAT_STR = "{0} ({1})";
+    /// <summary>
+    /// Short format string that holds movie name.
+    /// </summary>
+    public static string SHORT_FORMAT_STR = "{0}";
 
-    public int MovieDbId { get; set; }
-    public string ImdbId { get; set; }
+    protected static Regex _fromName = new Regex(@"(?<movie>.*) \((?<year>\d+)\)", RegexOptions.IgnoreCase);
 
-    public string MovieName { get; set; }
-    public string OriginalName { get; set; }
-    public int Year { get; set; }
-    public int Runtime { get; set; }
-    public string Certification { get; set; }
-    public string Tagline { get; set; }
-    public string Summary { get; set; }
+    public int MovieDbId = 0;
+    public string ImdbId = null;
+    public int AllocinebId = 0;
+    public int CinePassionId = 0;
 
-    public string CollectionName { get; set; }
-    public int CollectionMovieDbId { get; set; }
+    public SimpleTitle MovieName = null;
+    public string OriginalName = null;
+    public DateTime? ReleaseDate = null;
+    public int Runtime = 0;
+    public string Certification = null;
+    public string Tagline = null;
+    public SimpleTitle Summary = null;
 
-    public float Popularity { get; set; }
-    public long Budget { get; set; }
-    public long Revenue { get; set; }
-    public double Score { get; set; }
-    public double TotalRating { get; set; }
-    public int RatingCount { get; set; }
+    public SimpleTitle CollectionName = null;
+    public int CollectionMovieDbId = 0;
+
+    public float Popularity = 0;
+    public long Budget = 0;
+    public long Revenue = 0;
+    public double Score = 0;
+    public SimpleRating Rating = new SimpleRating();
+    public int Order = int.MaxValue;
 
     /// <summary>
     /// Contains a list of <see cref="CultureInfo.TwoLetterISOLanguageName"/> of the medium. This can be used
     /// to do an online lookup in the best matching language.
     /// </summary>
-    public List<string> Languages { get; internal set; }
-    public List<string> Actors { get; internal set; }
-    public List<string> Directors { get; internal set; }
-    public List<string> Writers { get; internal set; }
-    public List<string> Genres { get; internal set; }
+    public List<string> Languages = new List<string>();
+    public List<PersonInfo> Actors = new List<PersonInfo>();
+    public List<PersonInfo> Directors = new List<PersonInfo>();
+    public List<PersonInfo> Writers = new List<PersonInfo>();
+    public List<CharacterInfo> Characters = new List<CharacterInfo>();
+    public List<CompanyInfo> ProductionCompanies = new List<CompanyInfo>();
+    public List<string> Genres = new List<string>();
+    public List<string> Awards = new List<string>();
 
-    public MovieInfo ()
+    public override bool IsBaseInfoPresent
     {
-      Languages = new List<string>();
-      Actors = new List<string>();
-      Directors = new List<string>();
-      Writers = new List<string>();
-      Genres = new List<string>();
+      get
+      {
+        if (MovieName.IsEmpty)
+          return false;
+        if (Runtime == 0)
+          return false;
+        if (!ReleaseDate.HasValue)
+          return false;
+
+        return true;
+      }
     }
+
+    public override bool HasExternalId
+    {
+      get
+      {
+        if (MovieDbId > 0)
+          return true;
+        if (AllocinebId > 0)
+          return true;
+        if (CinePassionId > 0)
+          return true;
+        if (!string.IsNullOrEmpty(ImdbId))
+          return true;
+
+        return false;
+      }
+    }
+
+    #region Members
 
     /// <summary>
     /// Copies the contained movie information into MediaItemAspect.
     /// </summary>
     /// <param name="aspectData">Dictionary with extracted aspects.</param>
-    public bool SetMetadata(IDictionary<Guid, MediaItemAspect> aspectData)
+    public override bool SetMetadata(IDictionary<Guid, IList<MediaItemAspect>> aspectData)
     {
-      if (!string.IsNullOrEmpty(MovieName))
-      {
-        MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_TITLE, MovieName);
-        MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_MOVIE_NAME, MovieName);
-      }
-      if (!string.IsNullOrEmpty(Summary)) MediaItemAspect.SetAttribute(aspectData, VideoAspect.ATTR_STORYPLOT, Summary);
+      if (MovieName.IsEmpty) return false;
+
+      MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_TITLE, ToString());
+      MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_SORT_TITLE, GetSortTitle(MovieName.Text));
+      MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_ISVIRTUAL, IsVirtualResource(aspectData));
+      MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_MOVIE_NAME, MovieName.Text);
+      if (ReleaseDate.HasValue) MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_RECORDINGTIME, ReleaseDate.Value);
+      if (!Summary.IsEmpty) MediaItemAspect.SetAttribute(aspectData, VideoAspect.ATTR_STORYPLOT, CleanString(Summary.Text));
       if (!string.IsNullOrEmpty(Tagline)) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_TAGLINE, Tagline);
+      if (!CollectionName.IsEmpty) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_COLLECTION_NAME, CollectionName.Text);
       if (!string.IsNullOrEmpty(Certification)) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_CERTIFICATION, Certification);
-      if (!string.IsNullOrEmpty(ImdbId)) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_IMDB_ID, ImdbId);
-      if (MovieDbId > 0) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_TMDB_ID, MovieDbId);
+
+      if (!string.IsNullOrEmpty(ImdbId)) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_IMDB, ExternalIdentifierAspect.TYPE_MOVIE, ImdbId);
+      if (MovieDbId > 0) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_TMDB, ExternalIdentifierAspect.TYPE_MOVIE, MovieDbId.ToString());
+      if (AllocinebId > 0) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_ALLOCINE, ExternalIdentifierAspect.TYPE_MOVIE, AllocinebId.ToString());
+      if (CinePassionId > 0) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_CINEPASSION, ExternalIdentifierAspect.TYPE_MOVIE, CinePassionId.ToString());
+      if (CollectionMovieDbId > 0) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_TMDB, ExternalIdentifierAspect.TYPE_COLLECTION, CollectionMovieDbId.ToString());
+
       if (Runtime > 0) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_RUNTIME_M, Runtime);
-      if (Popularity > 0f) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_POPULARITY, Popularity);
       if (Budget > 0) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_BUDGET, Budget);
       if (Revenue > 0) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_REVENUE, Revenue);
+
+      if (Popularity > 0f) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_POPULARITY, Popularity);
       if (Score > 0d) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_SCORE, Score);
-      if (TotalRating > 0d) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_TOTAL_RATING, TotalRating);
-      if (RatingCount > 0) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_RATING_COUNT, RatingCount);
 
-      if (!string.IsNullOrEmpty(CollectionName)) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_COLLECTION_NAME, CollectionName);
-      if (CollectionMovieDbId > 0) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_COLLECTION_ID, CollectionMovieDbId);
+      if (!Rating.IsEmpty)
+      {
+        MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_TOTAL_RATING, Rating.RatingValue.Value);
+        if (Rating.VoteCount.HasValue) MediaItemAspect.SetAttribute(aspectData, MovieAspect.ATTR_RATING_COUNT, Rating.VoteCount.Value);
+      }
 
-      if (Year > 0)
-        MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_RECORDINGTIME, new DateTime(Year, 1, 1));
+      MediaItemAspect.SetAttribute(aspectData, VideoAspect.ATTR_ISDVD, false);
+      if (Actors.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, VideoAspect.ATTR_ACTORS, Actors.Where(p => !string.IsNullOrEmpty(p.Name)).Select(p => p.Name).ToList<object>());
+      if (Directors.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, VideoAspect.ATTR_DIRECTORS, Directors.Where(p => !string.IsNullOrEmpty(p.Name)).Select(p => p.Name).ToList<object>());
+      if (Writers.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, VideoAspect.ATTR_WRITERS, Writers.Where(p => !string.IsNullOrEmpty(p.Name)).Select(p => p.Name).ToList<object>());
+      if (Characters.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, VideoAspect.ATTR_CHARACTERS, Characters.Where(p => !string.IsNullOrEmpty(p.Name)).Select(p => p.Name).ToList<object>());
 
-      if (Actors.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, VideoAspect.ATTR_ACTORS, Actors);
-      if (Directors.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, VideoAspect.ATTR_DIRECTORS, Directors);
-      if (Writers.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, VideoAspect.ATTR_WRITERS, Writers);
-      if (Genres.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, VideoAspect.ATTR_GENRES, Genres);
+      if (Genres.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, VideoAspect.ATTR_GENRES, Genres.Where(g => !string.IsNullOrEmpty(g)).ToList<object>());
+      if (Awards.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, MovieAspect.ATTR_AWARDS, Awards.Where(a => !string.IsNullOrEmpty(a)).ToList<object>());
+
+      if (ProductionCompanies.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, MovieAspect.ATTR_COMPANIES, ProductionCompanies.Where(c => !string.IsNullOrEmpty(c.Name)).Select(c => c.Name).ToList<object>());
+
+      SetThumbnailMetadata(aspectData);
+
       return true;
     }
+
+    public override bool FromMetadata(IDictionary<Guid, IList<MediaItemAspect>> aspectData)
+    {
+      if (aspectData.ContainsKey(MovieAspect.ASPECT_ID))
+      {
+        MediaItemAspect.TryGetAttribute(aspectData, MediaAspect.ATTR_RECORDINGTIME, out ReleaseDate);
+        MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_TAGLINE, out Tagline);
+        MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_CERTIFICATION, out Certification);
+
+        MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_RUNTIME_M, out Runtime);
+        MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_BUDGET, out Budget);
+        MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_REVENUE, out Revenue);
+        MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_POPULARITY, out Popularity);
+        MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_SCORE, out Score);
+
+        double? rating;
+        MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_TOTAL_RATING, out rating);
+        int? voteCount;
+        MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_RATING_COUNT, out voteCount);
+        Rating = new SimpleRating(rating, voteCount);
+
+        string tempString;
+        MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_MOVIE_NAME, out tempString);
+        MovieName = new SimpleTitle(tempString, false);
+        MediaItemAspect.TryGetAttribute(aspectData, VideoAspect.ATTR_STORYPLOT, out tempString);
+        Summary = new SimpleTitle(tempString, false);
+        MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_COLLECTION_NAME, out tempString);
+        CollectionName = new SimpleTitle(tempString, false);
+
+        string id;
+        if (MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_TMDB, ExternalIdentifierAspect.TYPE_MOVIE, out id))
+          MovieDbId = Convert.ToInt32(id);
+        if (MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_ALLOCINE, ExternalIdentifierAspect.TYPE_MOVIE, out id))
+          AllocinebId = Convert.ToInt32(id);
+        if (MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_CINEPASSION, ExternalIdentifierAspect.TYPE_MOVIE, out id))
+          CinePassionId = Convert.ToInt32(id);
+        if (MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_TMDB, ExternalIdentifierAspect.TYPE_COLLECTION, out id))
+          CollectionMovieDbId = Convert.ToInt32(id);
+        MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_IMDB, ExternalIdentifierAspect.TYPE_MOVIE, out ImdbId);
+
+        //Brownard 17.06.2016
+        //The returned type of the collection differs on the server and client.
+        //On the server it's an object collection but on the client it's a string collection due to [de]serialization.
+        //Use the non generic Ienumerable to allow for both types.
+        IEnumerable collection;
+        Actors.Clear();
+        if (MediaItemAspect.TryGetAttribute(aspectData, VideoAspect.ATTR_ACTORS, out collection))
+          Actors.AddRange(collection.Cast<object>().Select(s => new PersonInfo() { Name = s.ToString(), Occupation = PersonAspect.OCCUPATION_ACTOR }));
+
+        Directors.Clear();
+        if (MediaItemAspect.TryGetAttribute(aspectData, VideoAspect.ATTR_DIRECTORS, out collection))
+          Directors.AddRange(collection.Cast<object>().Select(s => new PersonInfo() { Name = s.ToString(), Occupation = PersonAspect.OCCUPATION_DIRECTOR }));
+
+        Writers.Clear();
+        if (MediaItemAspect.TryGetAttribute(aspectData, VideoAspect.ATTR_WRITERS, out collection))
+          Writers.AddRange(collection.Cast<object>().Select(s => new PersonInfo() { Name = s.ToString(), Occupation = PersonAspect.OCCUPATION_WRITER }));
+
+        Characters.Clear();
+        if (MediaItemAspect.TryGetAttribute(aspectData, VideoAspect.ATTR_CHARACTERS, out collection))
+          Characters.AddRange(collection.Cast<object>().Select(s => new CharacterInfo() { Name = s.ToString() }));
+
+        Genres.Clear();
+        if (MediaItemAspect.TryGetAttribute(aspectData, VideoAspect.ATTR_GENRES, out collection))
+          Genres.AddRange(collection.Cast<object>().Select(s => s.ToString()));
+
+        Awards.Clear();
+        if (MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_AWARDS, out collection))
+          Awards.AddRange(collection.Cast<object>().Select(s => s.ToString()));
+
+        ProductionCompanies.Clear();
+        if (MediaItemAspect.TryGetAttribute(aspectData, MovieAspect.ATTR_COMPANIES, out collection))
+          ProductionCompanies.AddRange(collection.Cast<object>().Select(s => new CompanyInfo() { Name = s.ToString(), Type = CompanyAspect.COMPANY_PRODUCTION }));
+
+        byte[] data;
+        if (MediaItemAspect.TryGetAttribute(aspectData, ThumbnailLargeAspect.ATTR_THUMBNAIL, out data))
+          Thumbnail = data;
+
+        if (aspectData.ContainsKey(VideoAudioStreamAspect.ASPECT_ID))
+        {
+          Languages.Clear();
+          IList<MultipleMediaItemAspect> audioAspects;
+          if (MediaItemAspect.TryGetAspects(aspectData, VideoAudioStreamAspect.Metadata, out audioAspects))
+          {
+            foreach (MultipleMediaItemAspect audioAspect in audioAspects)
+            {
+              string language = audioAspect.GetAttributeValue<string>(VideoAudioStreamAspect.ATTR_AUDIOLANGUAGE);
+              if (!string.IsNullOrEmpty(language))
+              {
+                if (Languages.Contains(language))
+                  Languages.Add(language);
+              }
+            }
+          }
+        }
+
+        return true;
+      }
+      else if (aspectData.ContainsKey(MediaAspect.ASPECT_ID))
+      {
+        string tempString;
+        MediaItemAspect.TryGetAttribute(aspectData, MediaAspect.ATTR_TITLE, out tempString);
+        MovieName = new SimpleTitle(tempString, false);
+
+        string id;
+        if (MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_TMDB, ExternalIdentifierAspect.TYPE_MOVIE, out id))
+          MovieDbId = Convert.ToInt32(id);
+        if (MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_ALLOCINE, ExternalIdentifierAspect.TYPE_MOVIE, out id))
+          AllocinebId = Convert.ToInt32(id);
+        if (MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_CINEPASSION, ExternalIdentifierAspect.TYPE_MOVIE, out id))
+          CinePassionId = Convert.ToInt32(id);
+        if (MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_TMDB, ExternalIdentifierAspect.TYPE_COLLECTION, out id))
+          CollectionMovieDbId = Convert.ToInt32(id);
+        MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_IMDB, ExternalIdentifierAspect.TYPE_MOVIE, out ImdbId);
+
+        byte[] data;
+        if (MediaItemAspect.TryGetAttribute(aspectData, ThumbnailLargeAspect.ATTR_THUMBNAIL, out data))
+          Thumbnail = data;
+
+        if (aspectData.ContainsKey(VideoAudioStreamAspect.ASPECT_ID))
+        {
+          Languages.Clear();
+          IList<MultipleMediaItemAspect> audioAspects;
+          if (MediaItemAspect.TryGetAspects(aspectData, VideoAudioStreamAspect.Metadata, out audioAspects))
+          {
+            foreach (MultipleMediaItemAspect audioAspect in audioAspects)
+            {
+              string language = audioAspect.GetAttributeValue<string>(VideoAudioStreamAspect.ATTR_AUDIOLANGUAGE);
+              if (!string.IsNullOrEmpty(language))
+              {
+                if (Languages.Contains(language))
+                  Languages.Add(language);
+              }
+            }
+          }
+        }
+
+        return true;
+      }
+      return false;
+    }
+
+    public string ToShortString()
+    {
+      return string.Format(SHORT_FORMAT_STR, MovieName);
+    }
+
+    public override bool FromString(string name)
+    {
+      if (name.Contains("("))
+      {
+        Match match = _fromName.Match(name);
+        if (match.Success)
+        {
+          MovieName = match.Groups["movie"].Value;
+          int year = Convert.ToInt32(match.Groups["year"].Value);
+          if (year > 0)
+            ReleaseDate = new DateTime(year, 1, 1);
+          return true;
+        }
+        return false;
+      }
+      MovieName = name;
+      return true;
+    }
+
+    public override bool CopyIdsFrom<T>(T otherInstance)
+    {
+      if (otherInstance == null)
+        return false;
+
+      if (otherInstance is MovieInfo)
+      {
+        MovieInfo otherMovie = otherInstance as MovieInfo;
+        MovieDbId = otherMovie.MovieDbId;
+        AllocinebId = otherMovie.AllocinebId;
+        CinePassionId = otherMovie.CinePassionId;
+        ImdbId = otherMovie.ImdbId;
+        CollectionMovieDbId = otherMovie.CollectionMovieDbId;
+        return true;
+      }
+      return false;
+    }
+
+    public override T CloneBasicInstance<T>()
+    {
+      if (typeof(T) == typeof(MovieCollectionInfo))
+      {
+        MovieCollectionInfo info = new MovieCollectionInfo();
+        info.MovieDbId = CollectionMovieDbId;
+        info.CollectionName = new SimpleTitle(CollectionName.Text, CollectionName.DefaultLanguage);
+        return (T)(object)info;
+      }
+      return default(T);
+    }
+
+    #endregion
+
+    #region Overrides
+
+    public override string ToString()
+    {
+      if (ReleaseDate.HasValue)
+        return string.Format(MOVIE_FORMAT_STR, MovieName, ReleaseDate.Value.Year);
+      return MovieName.Text;
+    }
+
+    public override bool Equals(object obj)
+    {
+      MovieInfo other = obj as MovieInfo;
+      if (other == null) return false;
+
+      if (MovieDbId > 0 && other.MovieDbId > 0)
+        return MovieDbId == other.MovieDbId;
+      if (AllocinebId > 0 && other.AllocinebId > 0)
+        return AllocinebId == other.AllocinebId;
+      if (CinePassionId > 0 && other.CinePassionId > 0)
+        return CinePassionId == other.CinePassionId;
+      if (!string.IsNullOrEmpty(ImdbId) && !string.IsNullOrEmpty(other.ImdbId))
+        return string.Equals(ImdbId, other.ImdbId, StringComparison.InvariantCultureIgnoreCase);
+      if (!MovieName.IsEmpty && !other.MovieName.IsEmpty && MatchNames(MovieName.Text, other.MovieName.Text))
+        return true;
+
+      return false;
+    }
+
+    public override int GetHashCode()
+    {
+      //TODO: Check if this is functional
+      return (MovieName.IsEmpty ? "Unnamed Movie" : MovieName.Text).GetHashCode();
+    }
+
+    public int CompareTo(MovieInfo other)
+    {
+      if (Order != other.Order)
+        return Order.CompareTo(other.Order);
+      if (ReleaseDate.HasValue && other.ReleaseDate.HasValue && ReleaseDate.Value != other.ReleaseDate.Value)
+        return ReleaseDate.Value.CompareTo(other.ReleaseDate.Value);
+      if (MovieName.IsEmpty || other.MovieName.IsEmpty)
+        return 1;
+
+      return MovieName.Text.CompareTo(other.MovieName.Text);
+    }
+
+    #endregion
   }
 }

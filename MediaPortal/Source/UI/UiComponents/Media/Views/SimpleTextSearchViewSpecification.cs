@@ -27,12 +27,12 @@ using System.Collections.Generic;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
-using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.MLQueries;
 using MediaPortal.Common.SystemCommunication;
 using MediaPortal.UiComponents.Media.General;
 using MediaPortal.UI.ServerCommunication;
 using UPnP.Infrastructure.CP;
+using MediaPortal.UI.Services.UserManagement;
 
 namespace MediaPortal.UiComponents.Media.Views
 {
@@ -93,13 +93,19 @@ namespace MediaPortal.UiComponents.Media.Views
       IContentDirectory cd = ServiceRegistration.Get<IServerConnectionManager>().ContentDirectory;
       if (cd == null)
         return;
+
+      Guid? userProfile = null;
+      IUserManagement userProfileDataManagement = ServiceRegistration.Get<IUserManagement>();
+      if (userProfileDataManagement != null && userProfileDataManagement.IsValidUser)
+        userProfile = userProfileDataManagement.CurrentUser.ProfileId;
+
       try
       {
         MediaItemQuery query = new MediaItemQuery(_necessaryMIATypeIds, _optionalMIATypeIds, _filter)
         {
           Limit = Consts.MAX_NUM_ITEMS_VISIBLE
         };
-        mediaItems = cd.Search(query, true);
+        mediaItems = cd.Search(query, true, userProfile, ShowVirtual);
       }
       catch (UPnPRemoteException e)
       {

@@ -31,7 +31,7 @@ namespace MediaPortal.UI.Services.Players.Settings
     #region Protected properties
 
     protected string _openPlayerStrategyTypeName = null;
-
+    
     #endregion
 
     [Setting(SettingScope.User)]

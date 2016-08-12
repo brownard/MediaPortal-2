@@ -24,7 +24,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.UiComponents.Media.General;
 using MediaPortal.UiComponents.Media.Models.ScreenData;
 using MediaPortal.UiComponents.Media.Models.Sorting;
@@ -60,14 +59,16 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
           // We could offer sortings here which are specific for one media item type but which will cope with all three item types (and sort items of the three types in a defined order)
         };
 
-      var optionalMias = new[]
-      {
-        MovieAspect.ASPECT_ID,
-        SeriesAspect.ASPECT_ID,
-        AudioAspect.ASPECT_ID,
-        VideoAspect.ASPECT_ID,
-        ImageAspect.ASPECT_ID
-      }.Union(MediaNavigationModel.GetMediaSkinOptionalMIATypes(MediaNavigationMode));
+      _defaultGrouping = null;
+      _availableGroupings = new List<Sorting.Sorting>
+        {
+          //_defaultGrouping,
+          new SortByTitle(),
+          new SortByDate(),
+        };
+
+      var optionalMias = Consts.OPTIONAL_MEDIA_LIBRARY_BROWSING_MIAS
+        .Union(MediaNavigationModel.GetMediaSkinOptionalMIATypes(MediaNavigationMode));
 
       _customRootViewSpecification = new AddedRemovableMediaViewSpecificationFacade(
         new BrowseMediaRootProxyViewSpecification(_viewName, _necessaryMias, optionalMias));

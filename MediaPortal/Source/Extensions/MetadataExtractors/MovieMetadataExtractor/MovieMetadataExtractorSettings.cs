@@ -23,6 +23,9 @@
 #endregion
 
 using MediaPortal.Common.Settings;
+using MediaPortal.Extensions.OnlineLibraries;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
 {
@@ -31,7 +34,22 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
   /// </summary>
   public class MovieMetadataExtractorSettings
   {
+    public MovieMetadataExtractorSettings()
+    {
+      // Init default patterns.
+      MovieYearPatterns = new List<SerializableRegex>
+      {
+        new SerializableRegex(@"(?<title>[^\\|\/]+?)\s*[\[\(]?(?<year>(19|20)\d{2})[\]\)]?[\.|\\|\/]*", RegexOptions.IgnoreCase),
+      };
+    }
+
     #region Public properties
+
+    /// <summary>
+    /// Regular expression used to find title and year in the movie name
+    /// </summary>
+    [Setting(SettingScope.Global)]
+    public List<SerializableRegex> MovieYearPatterns { get; set; }
 
     /// <summary>
     /// If <c>true</c>, the MovieMetadataExtractor does not store any information in the MediaLibrary but just downloads fanart.
@@ -39,6 +57,12 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
     /// </summary>
     [Setting(SettingScope.Global, false)]
     public bool OnlyFanArt { get; set; }
+
+    /// <summary>
+    /// If <c>true</c>, the MovieMetadataExtractor does not fetch any information for missing movies in a collection.
+    /// </summary>
+    [Setting(SettingScope.Global, false)]
+    public bool OnlyLocalMedia { get; set; }
 
     #endregion
   }

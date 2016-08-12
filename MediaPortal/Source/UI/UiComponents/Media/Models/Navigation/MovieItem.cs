@@ -22,10 +22,11 @@
 
 #endregion
 
+using MediaPortal.Common.Localization;
 using MediaPortal.Common.MediaManagement;
-using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.UiComponents.Media.General;
+using System;
 
 namespace MediaPortal.UiComponents.Media.Models.Navigation
 {
@@ -39,13 +40,16 @@ namespace MediaPortal.UiComponents.Media.Models.Navigation
     public override void Update(MediaItem mediaItem)
     {
       base.Update(mediaItem);
+
       MovieInfo movieInfo = new MovieInfo();
-      MediaItemAspect movieAspect;
-      if (!mediaItem.Aspects.TryGetValue(MovieAspect.ASPECT_ID, out movieAspect))
+      if (!movieInfo.FromMetadata(mediaItem.Aspects)) 
         return;
 
-      MovieName = (string)movieAspect[MovieAspect.ATTR_MOVIE_NAME] ?? string.Empty;
-      CollectionName = movieInfo.CollectionName = (string)movieAspect[MovieAspect.ATTR_COLLECTION_NAME] ?? string.Empty;
+      MovieName = movieInfo.MovieName.Text ?? "";
+      CollectionName = movieInfo.CollectionName.Text ?? "";
+      StoryPlot = movieInfo.Summary.Text ?? "";
+      Year = movieInfo.ReleaseDate.HasValue ? movieInfo.ReleaseDate.Value.Year.ToString() : "";
+
       FireChange();
     }
 
@@ -55,10 +59,22 @@ namespace MediaPortal.UiComponents.Media.Models.Navigation
       set { SetLabel(Consts.KEY_SERIES_EPISODE_NAME, value); }
     }
 
+    public string Year
+    {
+      get { return this[Consts.KEY_YEAR]; }
+      set { SetLabel(Consts.KEY_YEAR, value); }
+    }
+
     public string CollectionName
     {
       get { return this[Consts.KEY_MOVIE_COLLECTION]; }
       set { SetLabel(Consts.KEY_MOVIE_COLLECTION, value); }
+    }
+
+    public string StoryPlot
+    {
+      get { return this[Consts.KEY_STORY_PLOT]; }
+      set { SetLabel(Consts.KEY_STORY_PLOT, value); }
     }
   }
 }

@@ -22,6 +22,11 @@
 
 #endregion
 
+using MediaPortal.Common.MediaManagement;
+using MediaPortal.Common.MediaManagement.DefaultItemAspects;
+using MediaPortal.Common.MediaManagement.Helpers;
+using MediaPortal.UiComponents.Media.General;
+
 namespace MediaPortal.UiComponents.Media.Models.Navigation
 {
   /// <summary>
@@ -29,5 +34,74 @@ namespace MediaPortal.UiComponents.Media.Models.Navigation
   /// </summary>
   public class SeasonFilterItem : FilterItem
   {
+    public override void Update(MediaItem mediaItem)
+    {
+      base.Update(mediaItem);
+
+      SeasonInfo seasonInfo = new SeasonInfo();
+      if (!seasonInfo.FromMetadata(mediaItem.Aspects))
+        return;
+
+      Season = seasonInfo.SeasonNumber.HasValue ? seasonInfo.SeasonNumber.Value.ToString() : "";
+      Series = seasonInfo.SeriesName.Text ?? "";
+      StoryPlot = seasonInfo.Description.Text ?? "";
+
+      int? count;
+      if (mediaItem.Aspects.ContainsKey(SeasonAspect.ASPECT_ID))
+      {
+        if (MediaItemAspect.TryGetAttribute(mediaItem.Aspects, SeasonAspect.ATTR_AVAILABLE_EPISODES, out count))
+          AvailableEpisodes = count.Value.ToString();
+        else
+          AvailableEpisodes = "";
+
+        if (MediaItemAspect.TryGetAttribute(mediaItem.Aspects, SeasonAspect.ATTR_NUM_EPISODES, out count))
+          TotalEpisodes = count.Value.ToString();
+        else
+          TotalEpisodes = "";
+
+        if (ShowVirtual)
+          Episodes = TotalEpisodes;
+        else
+          Episodes = AvailableEpisodes;
+      }
+
+      FireChange();
+    }
+
+    public string Series
+    {
+      get { return this[Consts.KEY_SERIES_NAME]; }
+      set { SetLabel(Consts.KEY_SERIES_NAME, value); }
+    }
+
+    public string Season
+    {
+      get { return this[Consts.KEY_SERIES_SEASON]; }
+      set { SetLabel(Consts.KEY_SERIES_SEASON, value); }
+    }
+
+    public string StoryPlot
+    {
+      get { return this[Consts.KEY_STORY_PLOT]; }
+      set { SetLabel(Consts.KEY_STORY_PLOT, value); }
+    }
+
+    public string AvailableEpisodes
+    {
+      get { return this[Consts.KEY_AVAIL_EPISODES]; }
+      set { SetLabel(Consts.KEY_AVAIL_EPISODES, value); }
+    }
+
+    public string TotalEpisodes
+    {
+      get { return this[Consts.KEY_TOTAL_EPISODES]; }
+      set { SetLabel(Consts.KEY_TOTAL_EPISODES, value); }
+    }
+
+    public string Episodes
+    {
+      get { return this[Consts.KEY_NUM_EPISODES]; }
+      set { SetLabel(Consts.KEY_NUM_EPISODES, value); }
+    }
   }
 }

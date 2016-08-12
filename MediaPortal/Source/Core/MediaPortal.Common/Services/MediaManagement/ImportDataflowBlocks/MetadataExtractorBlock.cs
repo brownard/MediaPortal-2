@@ -40,15 +40,13 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
   {
     #region Consts
 
-    public const String BLOCK_NAME_QUICK = "MetadataExtractorBlock_Quick";
-    public const String BLOCK_NAME_FULL = "MetadataExtractorBlock_Full";
+    public const String BLOCK_NAME = "MetadataExtractorBlock";
 
     #endregion
 
     #region Variables
 
-    private readonly bool _forceQuickMode;
-    private readonly Lazy<Task<DateTime>> _mostRecentMiaCreationDate; 
+    private readonly Lazy<Task<DateTime>> _mostRecentMiaCreationDate;
 
     #endregion
 
@@ -58,7 +56,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     /// Initiates the MetadataExtractorBlock
     /// </summary>
     /// <remarks>
-    /// The preceding FileUnfoldBlock has a BoundedCapacity. To avoid that this limitation does not have any effect
+    /// The preceding MediaItemLoadBlock has a BoundedCapacity. To avoid that this limitation does not have any effect
     /// because all the items are immediately passed to an unbounded InputBlock of this MetadataExtractorBlock, we
     /// have to set the BoundedCapacity of the InputBlock to 1. The BoundedCapacity of the InnerBlock is set to 100,
     /// which is a good trade-off between speed and memory usage. For the reason mentioned before, we also have to
@@ -67,15 +65,13 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     /// <param name="ct">CancellationToken used to cancel this DataflowBlock</param>
     /// <param name="importJobInformation"><see cref="ImportJobInformation"/> of the ImportJob this DataflowBlock belongs to</param>
     /// <param name="parentImportJobController">ImportJobController to which this DataflowBlock belongs</param>
-    /// <param name="forceQuickMode"><c>true</c> if this is the MetadataExtractorBlock used for FirstPassImports, else <c>false</c></param>
-    public MetadataExtractorBlock(CancellationToken ct, ImportJobInformation importJobInformation, ImportJobController parentImportJobController, bool forceQuickMode)
+    public MetadataExtractorBlock(CancellationToken ct, ImportJobInformation importJobInformation, ImportJobController parentImportJobController)
       : base(importJobInformation,
       new ExecutionDataflowBlockOptions { CancellationToken = ct, BoundedCapacity = 1 },
       new ExecutionDataflowBlockOptions { CancellationToken = ct, MaxDegreeOfParallelism = Environment.ProcessorCount * 5, BoundedCapacity = 100 },
       new ExecutionDataflowBlockOptions { CancellationToken = ct, BoundedCapacity = 1 },
-      forceQuickMode ? BLOCK_NAME_QUICK : BLOCK_NAME_FULL, true, parentImportJobController)
+      BLOCK_NAME, true, parentImportJobController)
     {
-      _forceQuickMode = forceQuickMode;
       _mostRecentMiaCreationDate = new Lazy<Task<DateTime>>(GetMostRecentMiaCreationDate);
     }
 
@@ -113,14 +109,15 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
           // and there were no new relevant MIAs added since then.
           // ToDo: We should only omit MDEs that get their data from the file or directory itself. All others should be called anyway.
           if (importResource.DateOfLastImport > importResource.ResourceAccessor.LastChanged &&
-              importResource.DateOfLastImport > await _mostRecentMiaCreationDate.Value)
+              importResource.DateOfLastImport > await _mostRecentMiaCreationDate.Value &&
+              ((DateTime.Now - importResource.DateOfLastImport).TotalHours <= MINIMUM_IMPORT_AGE || importResource.ExistingAspects == null))
           {
             importResource.IsValid = false;
             return importResource;
           }
         }
-        
-        importResource.Aspects = await ExtractMetadata(importResource.ResourceAccessor, _forceQuickMode);
+
+        importResource.Aspects = await ExtractMetadata(importResource.ResourceAccessor, importResource.ExistingAspects, ImportJobInformation.JobType == ImportJobType.Import);
         if (importResource.Aspects == null)
           importResource.IsValid = false;
 

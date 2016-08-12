@@ -26,6 +26,9 @@ using System.Collections.Generic;
 using MediaPortal.UiComponents.Media.General;
 using MediaPortal.UiComponents.Media.Models.ScreenData;
 using MediaPortal.UiComponents.Media.Models.Sorting;
+using MediaPortal.Common.MediaManagement.DefaultItemAspects;
+using System.Linq;
+using MediaPortal.UiComponents.Media.Views;
 
 namespace MediaPortal.UiComponents.Media.Models.NavigationModel
 {
@@ -38,7 +41,8 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
       _mediaNavigationMode = Models.MediaNavigationMode.Series;
       _mediaNavigationRootState = Consts.WF_STATE_ID_SERIES_NAVIGATION_ROOT;
       _viewName = Consts.RES_SERIES_VIEW_NAME;
-      _necessaryMias = Consts.NECESSARY_SERIES_MIAS;
+      _necessaryMias = Consts.NECESSARY_EPISODE_MIAS;
+      _optionalMias = Consts.OPTIONAL_EPISODE_MIAS;
       _restrictedMediaCategories = RESTRICTED_MEDIA_CATEGORIES;
     }
 
@@ -54,6 +58,10 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
         new SeriesFilterBySeasonScreenData(),
         new VideosFilterByLanguageScreenData(),
         new VideosFilterByPlayCountScreenData(),
+        new SeriesEpisodeFilterByActorScreenData(),
+        new SeriesEpisodeFilterByCharacterScreenData(),
+        new SeriesFilterByCompanyScreenData(),
+        new SeriesFilterByTvNetworkScreenData(),
         new VideosFilterByGenreScreenData(),
         new SeriesSimpleSearchScreenData(_genericPlayableItemCreatorDelegate),
       };
@@ -61,6 +69,16 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
       _availableSortings = new List<Sorting.Sorting>
       {
         _defaultSorting,
+        new SortByTitle(),
+        new SortByFirstAiredDate(),
+        new SortByDate(),
+        new SortBySystem(),
+      };
+      _defaultGrouping = null;
+      _availableGroupings = new List<Sorting.Sorting>
+      {
+        //_defaultGrouping,
+        new SeriesSortByEpisode(),
         new SortByTitle(),
         new SortByFirstAiredDate(),
         new SortByDate(),

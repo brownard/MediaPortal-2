@@ -22,6 +22,12 @@
 
 #endregion
 
+using MediaPortal.Common;
+using MediaPortal.Common.MediaManagement;
+using MediaPortal.Common.Settings;
+using MediaPortal.UiComponents.Media.General;
+using MediaPortal.UiComponents.Media.Settings;
+
 namespace MediaPortal.UiComponents.Media.Models.Navigation
 {
   /// <summary>
@@ -29,12 +35,42 @@ namespace MediaPortal.UiComponents.Media.Models.Navigation
   /// </summary>
   public class FilterItem : ContainerItem
   {
-    public FilterItem(string name, int? numItems) : base(numItems)
+    public bool ShowVirtual
+    {
+      get
+      {
+        //TODO: Decide whether the value should be cached to avoid reading from disk or leave like this so
+        //if it is changed the new value is loaded
+        ViewSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<ViewSettings>();
+        return settings.ShowVirtual;
+      }
+    }
+
+    public FilterItem(string name, int? numItems)
+      : base(numItems)
     {
       SimpleTitle = name;
     }
 
-    public FilterItem() 
+    public FilterItem()
+    { }
+
+    public MediaItem MediaItem
+    {
+      get
+      {
+        object mi;
+        AdditionalProperties.TryGetValue(Consts.KEY_MEDIA_ITEM, out mi);
+        return mi as MediaItem;
+      }
+      set
+      {
+        AdditionalProperties[Consts.KEY_MEDIA_ITEM] = value;
+        Update(value);
+      }
+    }
+
+    public virtual void Update(MediaItem mediaItem)
     { }
   }
 }

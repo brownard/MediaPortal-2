@@ -39,6 +39,7 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
       _mediaNavigationRootState = Consts.WF_STATE_ID_MOVIES_NAVIGATION_ROOT;
       _viewName = Consts.RES_MOVIES_VIEW_NAME;
       _necessaryMias = Consts.NECESSARY_MOVIES_MIAS;
+      _optionalMias = Consts.OPTIONAL_MOVIES_MIAS;
       _restrictedMediaCategories = RESTRICTED_MEDIA_CATEGORIES;
     }
 
@@ -52,9 +53,11 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
           new MoviesShowItemsScreenData(_genericPlayableItemCreatorDelegate),
           new MovieFilterByCollectionScreenData(),
           new VideosFilterByPlayCountScreenData(),
-          new VideosFilterByActorScreenData(),
-          new VideosFilterByDirectorScreenData(),
-          new VideosFilterByWriterScreenData(),
+          new MovieFilterByActorScreenData(),
+          new MovieFilterByCharacterScreenData(),
+          new MovieFilterByDirectorScreenData(),
+          new MovieFilterByWriterScreenData(),
+          new MovieFilterByCompanyScreenData(),
           _defaultScreen,
           new VideosFilterByYearScreenData(),
           new VideosFilterBySystemScreenData(),
@@ -74,6 +77,21 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
           new VideoSortBySize(),
           new VideoSortByAspectRatio(),
           new SortBySystem(),
+        };
+
+      _defaultGrouping = null;
+      _availableGroupings = new List<Sorting.Sorting>
+        {
+          //_defaultGrouping,
+          new SortByTitle(),
+          new SortByYear(),
+          new VideoSortByFirstGenre(),
+          new VideoSortByDuration(),
+          new VideoSortByFirstActor(),
+          new VideoSortByFirstDirector(),
+          new VideoSortByFirstWriter(),
+          new VideoSortBySize(),
+          new VideoSortByAspectRatio()
         };
     }
   }

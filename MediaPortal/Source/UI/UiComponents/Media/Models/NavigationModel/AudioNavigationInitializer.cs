@@ -39,6 +39,7 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
       _mediaNavigationRootState = Consts.WF_STATE_ID_AUDIO_NAVIGATION_ROOT;
       _viewName = Consts.RES_AUDIO_VIEW_NAME;
       _necessaryMias = Consts.NECESSARY_AUDIO_MIAS;
+      _optionalMias = Consts.OPTIONAL_AUDIO_MIAS;
       _restrictedMediaCategories = RESTRICTED_MEDIA_CATEGORIES;
     }
 
@@ -52,8 +53,10 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
           new AudioShowItemsScreenData(_genericPlayableItemCreatorDelegate),
           // C# doesn't like it to have an assignment inside a collection initializer
           _defaultScreen,
+          new AudioFilterByComposerScreenData(),
           new AudioFilterByAlbumArtistScreenData(),
           new AudioFilterByAlbumScreenData(),
+          new AudioFilterByAlbumLabelScreenData(),
           new AudioFilterByGenreScreenData(),
           new AudioFilterByDecadeScreenData(),
           new AudioFilterBySystemScreenData(),
@@ -64,6 +67,20 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
       _availableSortings = new List<Sorting.Sorting>
         {
           _defaultSorting,
+          new SortByTitle(),
+          new AudioSortByFirstGenre(),
+          new AudioSortByFirstArtist(),
+          new AudioSortByAlbum(),
+          new AudioSortByTrack(),
+          new SortByYear(),
+          new SortBySystem(),
+        };
+
+      _defaultGrouping = null;
+      _availableGroupings = new List<Sorting.Sorting>
+        {
+          //_defaultGrouping,
+          new AudioSortByAlbumTrack(),
           new SortByTitle(),
           new AudioSortByFirstGenre(),
           new AudioSortByFirstArtist(),

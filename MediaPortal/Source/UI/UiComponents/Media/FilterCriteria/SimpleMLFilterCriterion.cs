@@ -54,7 +54,8 @@ namespace MediaPortal.UiComponents.Media.FilterCriteria
       IContentDirectory cd = ServiceRegistration.Get<IServerConnectionManager>().ContentDirectory;
       if (cd == null)
         throw new NotConnectedException("The MediaLibrary is not connected");
-      HomogenousMap valueGroups = cd.GetValueGroups(_attributeType, selectAttributeFilter, ProjectionFunction.None, necessaryMIATypeIds, filter, true);
+
+      HomogenousMap valueGroups = cd.GetValueGroups(_attributeType, selectAttributeFilter, ProjectionFunction.None, necessaryMIATypeIds, filter, true, ShowVirtual);
       IList<FilterValue> result = new List<FilterValue>(valueGroups.Count);
       int numEmptyEntries = 0;
       foreach (KeyValuePair<object, object> group in valueGroups)
@@ -80,8 +81,9 @@ namespace MediaPortal.UiComponents.Media.FilterCriteria
       IContentDirectory cd = ServiceRegistration.Get<IServerConnectionManager>().ContentDirectory;
       if (cd == null)
         throw new NotConnectedException("The MediaLibrary is not connected");
+
       IList<MLQueryResultGroup> valueGroups = cd.GroupValueGroups(_attributeType, selectAttributeFilter, ProjectionFunction.None,
-          necessaryMIATypeIds, filter, true, GroupingFunction.FirstCharacter);
+          necessaryMIATypeIds, filter, true, GroupingFunction.FirstCharacter, ShowVirtual);
       IList<FilterValue> result = new List<FilterValue>(valueGroups.Count);
       int numEmptyEntries = 0;
       foreach (MLQueryResultGroup group in valueGroups)

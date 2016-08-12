@@ -47,6 +47,8 @@ using MediaPortal.Common.Services.ThumbnailGenerator;
 using MediaPortal.Common.Settings;
 using MediaPortal.Common.TaskScheduler;
 using MediaPortal.Common.Threading;
+using MediaPortal.Common.FileEventNotification;
+using MediaPortal.Common.Services.FileEventNotification;
 
 namespace MediaPortal.Common
 {
@@ -60,21 +62,29 @@ namespace MediaPortal.Common
     /// be used to startup the application using a custom directory for data storage.
     /// </summary>
     /// <param name="dataDirectory">Path to custom data directory</param>
-    public static void RegisterVitalCoreServices(string dataDirectory = null)
+    public static void RegisterVitalCoreServices(bool paths, string dataDirectory = null)
     {
-      // Insert a dummy while loading the path manager to break circular dependency of logger and path manager. This should not
-      // be considered as a hack - simply the logger needs a path managed by the path manager and I don't want to remove log
-      // output from the path manager only to prevent the dependency. Maybe we have a better solution in the future.
-      ServiceRegistration.Set<ILogger>(new NoLogger());
+      ILogger logger = null;
+      if (paths)
+      {
+        // Insert a dummy while loading the path manager to break circular dependency of logger and path manager. This should not
+        // be considered as a hack - simply the logger needs a path managed by the path manager and I don't want to remove log
+        // output from the path manager only to prevent the dependency. Maybe we have a better solution in the future.
+        ServiceRegistration.Set<ILogger>(new NoLogger());
 
-      Services.PathManager.PathManager pathManager = new Services.PathManager.PathManager();
-      pathManager.InitializeDefaults();
-      if (!string.IsNullOrEmpty(dataDirectory))
-        pathManager.SetPath("DATA", dataDirectory);
+        Services.PathManager.PathManager pathManager = new Services.PathManager.PathManager();
+        pathManager.InitializeDefaults();
+        if (!string.IsNullOrEmpty(dataDirectory))
+          pathManager.SetPath("DATA", dataDirectory);
 
-      ServiceRegistration.Set<IPathManager>(pathManager);
+        ServiceRegistration.Set<IPathManager>(pathManager);
 
-      ILogger logger = new Log4NetLogger(pathManager.GetPath(@"<LOG>"));
+        logger = new Log4NetLogger(pathManager.GetPath(@"<LOG>"));
+      }
+      else
+      {
+        logger = ServiceRegistration.Get<ILogger>();
+      }
 
       logger.Info("ApplicationCore: Launching in AppDomain {0}...", AppDomain.CurrentDomain.FriendlyName);
 
@@ -123,6 +133,9 @@ namespace MediaPortal.Common
 
       logger.Debug("ApplicationCore: Registering IMediaAccessor service");
       ServiceRegistration.Set<IMediaAccessor>(new MediaAccessor());
+
+      logger.Debug("ApplicationCore: Registering IFileEventNotifier service");
+      ServiceRegistration.Set<IFileEventNotifier>(new FileEventNotifier());
 
       // ToDo: Remove the old ImporterWorker and this setting once the NewGen ImporterWorker actually works
       var importerWorkerSettings = ServiceRegistration.Get<ISettingsManager>().Load<ImporterWorkerSettings>();
@@ -175,16 +188,65 @@ namespace MediaPortal.Common
     public static void RegisterDefaultMediaItemAspectTypes()
     {
       IMediaItemAspectTypeRegistration miatr = ServiceRegistration.Get<IMediaItemAspectTypeRegistration>();
+
       miatr.RegisterLocallyKnownMediaItemAspectType(ProviderResourceAspect.Metadata);
       miatr.RegisterLocallyKnownMediaItemAspectType(ImporterAspect.Metadata);
+
       miatr.RegisterLocallyKnownMediaItemAspectType(DirectoryAspect.Metadata);
+
       miatr.RegisterLocallyKnownMediaItemAspectType(MediaAspect.Metadata);
+
       miatr.RegisterLocallyKnownMediaItemAspectType(VideoAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectType(VideoStreamAspect.Metadata, 
+        new MediaItemAspectMetadata.AttributeSpecification[] { VideoStreamAspect.Metadata.AttributeSpecifications[VideoStreamAspect.ATTR_RESOURCE_INDEX.AttributeName] },
+        ProviderResourceAspect.Metadata,
+        new MediaItemAspectMetadata.AttributeSpecification[] { ProviderResourceAspect.Metadata.AttributeSpecifications[ProviderResourceAspect.ATTR_RESOURCE_INDEX.AttributeName] });
+      miatr.RegisterLocallyKnownMediaItemAspectType(VideoAudioStreamAspect.Metadata,
+        new MediaItemAspectMetadata.AttributeSpecification[] { VideoAudioStreamAspect.Metadata.AttributeSpecifications[VideoAudioStreamAspect.ATTR_RESOURCE_INDEX.AttributeName] },
+        ProviderResourceAspect.Metadata,
+        new MediaItemAspectMetadata.AttributeSpecification[] { ProviderResourceAspect.Metadata.AttributeSpecifications[ProviderResourceAspect.ATTR_RESOURCE_INDEX.AttributeName] });
+      miatr.RegisterLocallyKnownMediaItemAspectType(SubtitleAspect.Metadata,
+        new MediaItemAspectMetadata.AttributeSpecification[] { SubtitleAspect.Metadata.AttributeSpecifications[SubtitleAspect.ATTR_RESOURCE_INDEX.AttributeName] },
+        ProviderResourceAspect.Metadata,
+        new MediaItemAspectMetadata.AttributeSpecification[] { ProviderResourceAspect.Metadata.AttributeSpecifications[ProviderResourceAspect.ATTR_RESOURCE_INDEX.AttributeName] });
+
       miatr.RegisterLocallyKnownMediaItemAspectType(AudioAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectType(AudioAlbumAspect.Metadata);
+      miatr.RegisterMediaItemAspectRoleHierarchy(AudioAspect.ROLE_TRACK, AudioAlbumAspect.ROLE_ALBUM);
+      miatr.RegisterMediaItemAspectRoleHierarchyChildCountAttribute(AudioAspect.ROLE_TRACK,AudioAlbumAspect.ROLE_ALBUM, AudioAlbumAspect.Metadata, AudioAlbumAspect.ATTR_NUMTRACKS, true);
+      miatr.RegisterMediaItemAspectRoleHierarchyChildCountAttribute(AudioAspect.ROLE_TRACK, AudioAlbumAspect.ROLE_ALBUM, AudioAlbumAspect.Metadata, AudioAlbumAspect.ATTR_AVAILABLE_TRACKS, false);
+
       miatr.RegisterLocallyKnownMediaItemAspectType(ImageAspect.Metadata);
+
+      miatr.RegisterLocallyKnownMediaItemAspectType(EpisodeAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectType(SeasonAspect.Metadata);
       miatr.RegisterLocallyKnownMediaItemAspectType(SeriesAspect.Metadata);
+      miatr.RegisterMediaItemAspectRoleHierarchy(EpisodeAspect.ROLE_EPISODE, SeriesAspect.ROLE_SERIES);
+      miatr.RegisterMediaItemAspectRoleHierarchyChildCountAttribute(EpisodeAspect.ROLE_EPISODE, SeriesAspect.ROLE_SERIES, SeriesAspect.Metadata, SeriesAspect.ATTR_NUM_EPISODES, true);
+      miatr.RegisterMediaItemAspectRoleHierarchyChildCountAttribute(EpisodeAspect.ROLE_EPISODE, SeriesAspect.ROLE_SERIES, SeriesAspect.Metadata, SeriesAspect.ATTR_AVAILABLE_EPISODES, false);
+      miatr.RegisterMediaItemAspectRoleHierarchy(EpisodeAspect.ROLE_EPISODE, SeasonAspect.ROLE_SEASON);
+      miatr.RegisterMediaItemAspectRoleHierarchyChildCountAttribute(EpisodeAspect.ROLE_EPISODE, SeasonAspect.ROLE_SEASON, SeasonAspect.Metadata, SeasonAspect.ATTR_NUM_EPISODES, true);
+      miatr.RegisterMediaItemAspectRoleHierarchyChildCountAttribute(EpisodeAspect.ROLE_EPISODE, SeasonAspect.ROLE_SEASON, SeasonAspect.Metadata, SeasonAspect.ATTR_AVAILABLE_EPISODES, false);
+      miatr.RegisterMediaItemAspectRoleHierarchy(SeasonAspect.ROLE_SEASON, SeriesAspect.ROLE_SERIES);
+      miatr.RegisterMediaItemAspectRoleHierarchyChildCountAttribute(SeasonAspect.ROLE_SEASON, SeriesAspect.ROLE_SERIES, SeriesAspect.Metadata, SeriesAspect.ATTR_NUM_SEASONS, true);
+      miatr.RegisterMediaItemAspectRoleHierarchyChildCountAttribute(SeasonAspect.ROLE_SEASON, SeriesAspect.ROLE_SERIES, SeriesAspect.Metadata, SeriesAspect.ATTR_AVAILABLE_SEASONS, false);
+
       miatr.RegisterLocallyKnownMediaItemAspectType(MovieAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectType(MovieCollectionAspect.Metadata);
+      miatr.RegisterMediaItemAspectRoleHierarchy(MovieAspect.ROLE_MOVIE, MovieCollectionAspect.ROLE_MOVIE_COLLECTION);
+      miatr.RegisterMediaItemAspectRoleHierarchyChildCountAttribute(MovieAspect.ROLE_MOVIE, MovieCollectionAspect.ROLE_MOVIE_COLLECTION, MovieCollectionAspect.Metadata, 
+        MovieCollectionAspect.ATTR_NUM_MOVIES, true);
+      miatr.RegisterMediaItemAspectRoleHierarchyChildCountAttribute(MovieAspect.ROLE_MOVIE, MovieCollectionAspect.ROLE_MOVIE_COLLECTION, MovieCollectionAspect.Metadata, 
+        MovieCollectionAspect.ATTR_AVAILABLE_MOVIES, false);
+
+      miatr.RegisterLocallyKnownMediaItemAspectType(CompanyAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectType(PersonAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectType(CharacterAspect.Metadata);
+
       miatr.RegisterLocallyKnownMediaItemAspectType(ThumbnailLargeAspect.Metadata);
+
+      miatr.RegisterLocallyKnownMediaItemAspectType(ExternalIdentifierAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectType(RelationshipAspect.Metadata);
     }
 
     public static void DisposeCoreServices()
@@ -208,6 +270,9 @@ namespace MediaPortal.Common
 
       logger.Debug("ApplicationCore: Removing IMediaAccessor service");
       ServiceRegistration.RemoveAndDispose<IMediaAccessor>();
+
+      logger.Debug("ApplicationCore: Removing IFileEventNotifier service");
+      ServiceRegistration.RemoveAndDispose<IFileEventNotifier>();
 
       logger.Debug("ApplicationCore: Removing ITaskScheduler service");
       ServiceRegistration.RemoveAndDispose<ITaskScheduler>();

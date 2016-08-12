@@ -73,7 +73,7 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Client.Models
       _itemDescriptionProperty = new WProperty(typeof(string), string.Empty);
       _mediaItemProperty = new WProperty(typeof(MediaItem), null);
       _imageSourceProperty = new WProperty(typeof(ImageSource), null);
-      Update();
+      SetFanArtType();
       SetImageSource();
       SubscribeToMessages();
     }
@@ -240,7 +240,7 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Client.Models
 
     private void SetFanArtType(AbstractProperty property, object value)
     {
-      Update();
+      SetFanArtType();
       SetImageSource();
     }
 
@@ -269,7 +269,7 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Client.Models
         };
     }
 
-    private void Update()
+    private void SetFanArtType()
     {
       PlayableMediaItem playableMediaItem = SelectedItem as PlayableMediaItem;
       if (playableMediaItem != null)
@@ -286,13 +286,29 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Client.Models
       SeriesFilterItem series = SelectedItem as SeriesFilterItem;
       if (series != null)
       {
+        MediaItem = series.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Series;
+        FanArtName = series.MediaItem.MediaItemId.ToString();
         SimpleTitle = series.SimpleTitle;
-        ItemDescription = null;
+        ItemDescription = series.StoryPlot;
         return;
       }
-      SeriesItem episode = SelectedItem as SeriesItem;
+      SeasonFilterItem season = SelectedItem as SeasonFilterItem;
+      if (season != null)
+      {
+        MediaItem = season.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.SeriesSeason;
+        FanArtName = season.MediaItem.MediaItemId.ToString();
+        SimpleTitle = season.SimpleTitle;
+        ItemDescription = season.StoryPlot;
+        return;
+      }
+      EpisodeItem episode = SelectedItem as EpisodeItem;
       if (episode != null)
       {
+        MediaItem = episode.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Episode;
+        FanArtName = episode.MediaItem.MediaItemId.ToString();
         SimpleTitle = episode.Series;
         ItemDescription = episode.StoryPlot;
         return;
@@ -300,6 +316,9 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Client.Models
       MovieFilterItem movieCollection = SelectedItem as MovieFilterItem;
       if (movieCollection != null)
       {
+        MediaItem = movieCollection.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.MovieCollection;
+        FanArtName = movieCollection.MediaItem.MediaItemId.ToString();
         SimpleTitle = movieCollection.SimpleTitle;
         ItemDescription = null;
         return;
@@ -307,6 +326,9 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Client.Models
       MovieItem movie = SelectedItem as MovieItem;
       if (movie != null)
       {
+        MediaItem = movie.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Movie;
+        FanArtName = movie.MediaItem.MediaItemId.ToString();
         SimpleTitle = movie.SimpleTitle;
         ItemDescription = movie.StoryPlot;
         return;
@@ -314,17 +336,115 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Client.Models
       VideoItem video = SelectedItem as VideoItem;
       if (video != null)
       {
+        MediaItem = video.MediaItem;
+        FanArtName = video.MediaItem.MediaItemId.ToString();
         SimpleTitle = video.SimpleTitle;
-        ItemDescription = video.StoryPlot;
+        ItemDescription = string.Empty;
         return;
+      }
+      AlbumFilterItem albumItem = SelectedItem as AlbumFilterItem;
+      if (albumItem != null)
+      {
+        MediaItem = albumItem.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Album;
+        FanArtName = albumItem.MediaItem.MediaItemId.ToString();
+        SimpleTitle = albumItem.SimpleTitle;
+        ItemDescription = albumItem.Description;
+        return;
+      }
+      AudioItem audioItem = SelectedItem as AudioItem;
+      if (audioItem != null)
+      {
+        MediaItem = albumItem.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Audio;
+        FanArtName = audioItem.MediaItem.MediaItemId.ToString();
+        SimpleTitle = audioItem.SimpleTitle;
+        ItemDescription = string.Empty;
+        return;
+      }
+      ActorFilterItem actorItem = SelectedItem as ActorFilterItem;
+      if (actorItem != null)
+      {
+        MediaItem = actorItem.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Actor;
+        FanArtName = actorItem.MediaItem.MediaItemId.ToString();
+        SimpleTitle = actorItem.SimpleTitle;
+        ItemDescription = actorItem.Description;
+        return;
+      }
+      DirectorFilterItem directorItem = SelectedItem as DirectorFilterItem;
+      if (directorItem != null)
+      {
+        MediaItem = directorItem.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Director;
+        FanArtName = directorItem.MediaItem.MediaItemId.ToString();
+        SimpleTitle = directorItem.SimpleTitle;
+        ItemDescription = directorItem.Description;
+      }
+      WriterFilterItem writerItem = SelectedItem as WriterFilterItem;
+      if (writerItem != null)
+      {
+        MediaItem = writerItem.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Writer;
+        FanArtName = writerItem.MediaItem.MediaItemId.ToString();
+        SimpleTitle = writerItem.SimpleTitle;
+        ItemDescription = writerItem.Description;
+      }
+      ArtistFilterItem artisitItem = SelectedItem as ArtistFilterItem;
+      if (artisitItem != null)
+      {
+        MediaItem = artisitItem.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Artist;
+        FanArtName = artisitItem.MediaItem.MediaItemId.ToString();
+        SimpleTitle = artisitItem.SimpleTitle;
+        ItemDescription = artisitItem.Description;
+      }
+      ComposerFilterItem composerItem = SelectedItem as ComposerFilterItem;
+      if (composerItem != null)
+      {
+        MediaItem = composerItem.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Writer;
+        FanArtName = composerItem.MediaItem.MediaItemId.ToString();
+        SimpleTitle = composerItem.SimpleTitle;
+        ItemDescription = composerItem.Description;
+      }
+      CharacterFilterItem characterItem = SelectedItem as CharacterFilterItem;
+      if (characterItem != null)
+      {
+        MediaItem = characterItem.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Character;
+        FanArtName = characterItem.MediaItem.MediaItemId.ToString();
+        SimpleTitle = characterItem.SimpleTitle;
+        ItemDescription = string.Empty;
+      }
+      CompanyFilterItem companyItem = SelectedItem as CompanyFilterItem;
+      if (companyItem != null)
+      {
+        MediaItem = companyItem.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.Company;
+        FanArtName = companyItem.MediaItem.MediaItemId.ToString();
+        SimpleTitle = companyItem.SimpleTitle;
+        ItemDescription = companyItem.Description;
+      }
+      TVNetworkFilterItem tvNetworkItem = SelectedItem as TVNetworkFilterItem;
+      if (tvNetworkItem != null)
+      {
+        MediaItem = companyItem.MediaItem;
+        FanArtMediaType = FanArtMediaTypes.TVNetwork;
+        FanArtName = companyItem.MediaItem.MediaItemId.ToString();
+        SimpleTitle = companyItem.SimpleTitle;
+        ItemDescription = companyItem.Description;
       }
       FilterItem filterItem = SelectedItem as FilterItem;
       if (filterItem != null)
       {
+        MediaItem = filterItem.MediaItem;
         SimpleTitle = filterItem.SimpleTitle;
         ItemDescription = string.Empty;
         return;
       }
+      FanArtMediaType = FanArtMediaTypes.Undefined;
+      FanArtName = string.Empty;
       ItemDescription = string.Empty;
     }
   }

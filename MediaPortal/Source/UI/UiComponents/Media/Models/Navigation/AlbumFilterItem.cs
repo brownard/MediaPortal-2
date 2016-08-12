@@ -22,6 +22,11 @@
 
 #endregion
 
+using MediaPortal.Common.MediaManagement;
+using MediaPortal.Common.MediaManagement.DefaultItemAspects;
+using MediaPortal.Common.MediaManagement.Helpers;
+using MediaPortal.UiComponents.Media.General;
+
 namespace MediaPortal.UiComponents.Media.Models.Navigation
 {
   /// <summary>
@@ -29,5 +34,67 @@ namespace MediaPortal.UiComponents.Media.Models.Navigation
   /// </summary>
   public class AlbumFilterItem : FilterItem
   {
+    public override void Update(MediaItem mediaItem)
+    {
+      base.Update(mediaItem);
+
+      AlbumInfo album = new AlbumInfo();
+      if (!album.FromMetadata(mediaItem.Aspects))
+        return;
+
+      Album = album.Album ?? "";
+      Description = album.Description.Text ?? "";
+
+      int? count;
+      if (mediaItem.Aspects.ContainsKey(AudioAlbumAspect.ASPECT_ID))
+      {
+        if (MediaItemAspect.TryGetAttribute(mediaItem.Aspects, AudioAlbumAspect.ATTR_AVAILABLE_TRACKS, out count))
+          AvailableTracks = count.Value.ToString();
+        else
+          AvailableTracks = "";
+
+        if (MediaItemAspect.TryGetAttribute(mediaItem.Aspects, AudioAlbumAspect.ATTR_NUMTRACKS, out count))
+          TotalTracks = count.Value.ToString();
+        else
+          TotalTracks = "";
+
+        if (ShowVirtual)
+          Tracks = TotalTracks;
+        else
+          Tracks = AvailableTracks;
+      }
+
+      FireChange();
+    }
+
+    public string Album
+    {
+      get { return this[Consts.KEY_ALBUM]; }
+      set { SetLabel(Consts.KEY_ALBUM, value); }
+    }
+
+    public string Description
+    {
+      get { return this[Consts.KEY_DESCRIPTION]; }
+      set { SetLabel(Consts.KEY_DESCRIPTION, value); }
+    }
+
+    public string AvailableTracks
+    {
+      get { return this[Consts.KEY_AVAIL_TRACKS]; }
+      set { SetLabel(Consts.KEY_AVAIL_TRACKS, value); }
+    }
+
+    public string TotalTracks
+    {
+      get { return this[Consts.KEY_TOTAL_TRACKS]; }
+      set { SetLabel(Consts.KEY_TOTAL_TRACKS, value); }
+    }
+
+    public string Tracks
+    {
+      get { return this[Consts.KEY_NUM_TRACKS]; }
+      set { SetLabel(Consts.KEY_NUM_TRACKS, value); }
+    }
   }
 }

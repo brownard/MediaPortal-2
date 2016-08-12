@@ -22,6 +22,11 @@
 
 #endregion
 
+using MediaPortal.Common.MediaManagement;
+using MediaPortal.Common.MediaManagement.DefaultItemAspects;
+using MediaPortal.Common.MediaManagement.Helpers;
+using MediaPortal.UiComponents.Media.General;
+
 namespace MediaPortal.UiComponents.Media.Models.Navigation
 {
   /// <summary>
@@ -29,5 +34,60 @@ namespace MediaPortal.UiComponents.Media.Models.Navigation
   /// </summary>
   public class MovieFilterItem : FilterItem
   {
+    public override void Update(MediaItem mediaItem)
+    {
+      base.Update(mediaItem);
+
+      MovieCollectionInfo movieCollection = new MovieCollectionInfo();
+      if (!movieCollection.FromMetadata(mediaItem.Aspects))
+        return;
+
+      CollectionName = movieCollection.CollectionName.Text ?? "";
+
+      int? count;
+      if (mediaItem.Aspects.ContainsKey(MovieCollectionAspect.ASPECT_ID))
+      {
+        if (MediaItemAspect.TryGetAttribute(mediaItem.Aspects, MovieCollectionAspect.ATTR_AVAILABLE_MOVIES, out count))
+          AvailableMovies = count.Value.ToString();
+        else
+          AvailableMovies = "";
+
+        if (MediaItemAspect.TryGetAttribute(mediaItem.Aspects, MovieCollectionAspect.ATTR_NUM_MOVIES, out count))
+          TotalMovies = count.Value.ToString();
+        else
+          TotalMovies = "";
+
+        if (ShowVirtual)
+          Movies = TotalMovies;
+        else
+          Movies = AvailableMovies;
+      }
+
+      FireChange();
+    }
+
+    public string CollectionName
+    {
+      get { return this[Consts.KEY_MOVIE_COLLECTION]; }
+      set { SetLabel(Consts.KEY_MOVIE_COLLECTION, value); }
+    }
+
+    public string AvailableMovies
+    {
+      get { return this[Consts.KEY_AVAIL_MOVIES]; }
+      set { SetLabel(Consts.KEY_AVAIL_MOVIES, value); }
+    }
+
+    public string TotalMovies
+    {
+      get { return this[Consts.KEY_TOTAL_MOVIES]; }
+      set { SetLabel(Consts.KEY_TOTAL_MOVIES, value); }
+    }
+
+    public string Movies
+    {
+      get { return this[Consts.KEY_NUM_MOVIES]; }
+      set { SetLabel(Consts.KEY_NUM_MOVIES, value); }
+    }
   }
 }
