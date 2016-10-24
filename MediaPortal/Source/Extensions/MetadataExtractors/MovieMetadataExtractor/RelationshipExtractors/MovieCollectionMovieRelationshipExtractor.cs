@@ -120,7 +120,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         MediaItemAspect.SetAttribute(movieAspects, MediaAspect.ATTR_ISVIRTUAL, true);
 
         if (movieAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
-          extractedLinkedAspects.Add(new RelationshipItem(movieAspects, Guid.Empty));
+          extractedLinkedAspects.Add(new RelationshipItem(movieAspects, Guid.Empty, Role, LinkedRole));
       }
       return extractedLinkedAspects.Count > 0;
     }

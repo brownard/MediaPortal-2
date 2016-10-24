@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using MediaPortal.Common.ResourceAccess;
+using MediaPortal.Common.MediaManagement.MLQueries;
 
 namespace MediaPortal.Common.MediaManagement
 {
@@ -75,6 +76,8 @@ namespace MediaPortal.Common.MediaManagement
     /// </summary>
     /// <exception cref="DisconnectedException">If the connection to the media library was disconnected.</exception>
     void MarkUpdatableMediaItems();
+
+    IList<MediaItem> Search(MediaItemQuery query, bool filterOnlyOnline, Guid? userProfileId, bool includeVirtual);
 
     /// <summary>
     /// Loads the creation dates of all managed MIAs in the MediaLibrary

@@ -51,7 +51,7 @@ namespace MediaPortal.Mock
         extractedLinkedAspects = new List<RelationshipItem>();
         foreach (IDictionary<Guid, IList<MediaItemAspect>> data in Data)
         {
-          extractedLinkedAspects.Add(new RelationshipItem(data, Guid.Empty));
+          extractedLinkedAspects.Add(new RelationshipItem(data, Guid.Empty, Role, LinkedRole));
         }
         return true;
       }

@@ -129,9 +129,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
         {
           Guid existingId;
           if (TryGetIdFromCache(company, out existingId))
-            extractedLinkedAspects.Add(new RelationshipItem(companyAspects, existingId));
+            extractedLinkedAspects.Add(new RelationshipItem(companyAspects, existingId, Role, LinkedRole));
           else
-            extractedLinkedAspects.Add(new RelationshipItem(companyAspects, Guid.Empty));
+            extractedLinkedAspects.Add(new RelationshipItem(companyAspects, Guid.Empty, Role, LinkedRole));
         }
       }
       return extractedLinkedAspects.Count > 0;

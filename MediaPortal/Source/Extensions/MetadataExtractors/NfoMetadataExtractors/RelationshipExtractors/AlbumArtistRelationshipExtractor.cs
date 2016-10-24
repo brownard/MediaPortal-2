@@ -104,7 +104,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
 
         if (personAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
         {
-          extractedLinkedAspects.Add(new RelationshipItem(personAspects, Guid.Empty));
+          extractedLinkedAspects.Add(new RelationshipItem(personAspects, Guid.Empty, Role, LinkedRole));
         }
       }
       return extractedLinkedAspects.Count > 0;

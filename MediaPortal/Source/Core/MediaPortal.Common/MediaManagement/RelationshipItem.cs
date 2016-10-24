@@ -40,8 +40,8 @@ namespace MediaPortal.Common.MediaManagement
     /// </summary>
     /// <param name="aspects">The extracted aspects of the relationship item.</param>
     /// <param name="mediaItemId">The media item id of the relationship item.</param>
-    public RelationshipItem(IDictionary<Guid, IList<MediaItemAspect>> aspects, Guid mediaItemId)
-      : this(aspects, mediaItemId, mediaItemId == Guid.Empty)
+    public RelationshipItem(IDictionary<Guid, IList<MediaItemAspect>> aspects, Guid mediaItemId, Guid role, Guid linkedRole)
+      : this(aspects, mediaItemId, mediaItemId == Guid.Empty, role, linkedRole)
     { }
 
     /// <summary>
@@ -50,11 +50,13 @@ namespace MediaPortal.Common.MediaManagement
     /// <param name="aspects">The extracted aspects of the relationship item.</param>
     /// <param name="mediaItemId">The media item id of the relationship item.</param>
     /// <param name="hasChanged">Whether aspects have been added or updated.</param>
-    public RelationshipItem(IDictionary<Guid, IList<MediaItemAspect>> aspects, Guid mediaItemId, bool hasChanged)
+    public RelationshipItem(IDictionary<Guid, IList<MediaItemAspect>> aspects, Guid mediaItemId, bool hasChanged, Guid role, Guid linkedRole)
     {
       Aspects = aspects;
       MediaItemId = mediaItemId;
       HasChanged = hasChanged;
+      Role = role;
+      LinkedRole = linkedRole;
     }
 
     /// <summary>
@@ -71,5 +73,15 @@ namespace MediaPortal.Common.MediaManagement
     /// Whether aspects have been added or updated.
     /// </summary>
     public bool HasChanged { get; set; }
+
+    /// <summary>
+    /// The role of the item this relationship was extracted from.
+    /// </summary>
+    public Guid Role { get; set; }
+
+    /// <summary>
+    /// The role of this relationship.
+    /// </summary>
+    public Guid LinkedRole { get; set; }
   }
 }

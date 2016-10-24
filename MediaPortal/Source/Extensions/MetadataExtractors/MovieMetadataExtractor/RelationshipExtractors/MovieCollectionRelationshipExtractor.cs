@@ -117,7 +117,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         }
 
         if (collectionAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
-          extractedLinkedAspects.Add(new RelationshipItem(collectionAspects, collectionId));
+          extractedLinkedAspects.Add(new RelationshipItem(collectionAspects, collectionId, Role, LinkedRole));
       }
       else
       {
@@ -136,7 +136,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         }
 
         if (collectionAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
-          extractedLinkedAspects.Add(new RelationshipItem(collectionAspects, Guid.Empty));
+          extractedLinkedAspects.Add(new RelationshipItem(collectionAspects, Guid.Empty, Role, LinkedRole));
       }
 
       return extractedLinkedAspects.Count > 0;

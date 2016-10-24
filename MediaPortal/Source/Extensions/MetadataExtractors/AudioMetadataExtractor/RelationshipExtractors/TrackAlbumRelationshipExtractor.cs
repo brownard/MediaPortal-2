@@ -135,9 +135,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
         return false;
 
       if (albumId != Guid.Empty)
-        extractedLinkedAspects.Add(new RelationshipItem(albumAspects, albumId, albumInfo.HasChanged));
+        extractedLinkedAspects.Add(new RelationshipItem(albumAspects, albumId, albumInfo.HasChanged, Role, LinkedRole));
       else
-        extractedLinkedAspects.Add(new RelationshipItem(albumAspects, Guid.Empty));
+        extractedLinkedAspects.Add(new RelationshipItem(albumAspects, Guid.Empty, Role, LinkedRole));
       return true;
     }
 

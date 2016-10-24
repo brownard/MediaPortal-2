@@ -103,7 +103,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
       }
 
       if (collectionAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
-        extractedLinkedAspects.Add(new RelationshipItem(collectionAspects, Guid.Empty));
+        extractedLinkedAspects.Add(new RelationshipItem(collectionAspects, Guid.Empty, Role, LinkedRole));
 
       return extractedLinkedAspects.Count > 0;
     }

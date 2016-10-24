@@ -44,6 +44,7 @@ using UPnP.Infrastructure.CP;
 using RelocationMode = MediaPortal.Common.MediaManagement.RelocationMode;
 using System.Threading;
 using MediaPortal.Common.Services.MediaManagement;
+using MediaPortal.Common.MediaManagement.MLQueries;
 
 namespace MediaPortal.UI.Services.ServerCommunication
 {
@@ -182,6 +183,16 @@ namespace MediaPortal.UI.Services.ServerCommunication
 
       public void MarkUpdatableMediaItems()
       {
+      }
+
+      public IList<MediaItem> Search(MediaItemQuery query, bool filterOnlyOnline, Guid? userProfileId, bool includeVirtual)
+      {
+        throw new NotImplementedException();
+      }
+
+      public IList<MediaItem> ReconcileMediaItem(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems)
+      {
+        throw new NotImplementedException();
       }
 
       #endregion

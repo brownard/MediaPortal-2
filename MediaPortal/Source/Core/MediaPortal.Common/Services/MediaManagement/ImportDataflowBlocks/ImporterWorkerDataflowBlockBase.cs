@@ -32,6 +32,7 @@ using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.ResourceAccess;
+using MediaPortal.Common.MediaManagement.MLQueries;
 
 namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
 {
@@ -342,6 +343,25 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       }
     }
 
+    protected async Task<ICollection<MediaItem>> Search(MediaItemQuery query, bool filterOnlyOnline, Guid? userProfileId, bool includeVirtual)
+    {
+      while (true)
+      {
+        try
+        {
+          await Activated.WaitAsync();
+          // ReSharper disable PossibleMultipleEnumeration
+          return _mediaBrowsingCallback.Search(query, filterOnlyOnline, userProfileId, includeVirtual);
+          // ReSharper restore PossibleMultipleEnumeration
+        }
+        catch (DisconnectedException)
+        {
+          ServiceRegistration.Get<ILogger>().Info("ImporterWorker.{0}.{1}: MediaLibrary disconnected. Requesting suspension...", ParentImportJobController, _blockName);
+          ParentImportJobController.ParentImporterWorker.RequestAction(new ImporterWorkerAction(ImporterWorkerAction.ActionType.Suspend)).Wait();
+        }
+      }
+    }
+
     protected async Task<IDictionary<Guid, DateTime>> GetManagedMediaItemAspectCreationDates()
     {
       while (true)
@@ -404,6 +424,25 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
           await Activated.WaitAsync();
           // ReSharper disable PossibleMultipleEnumeration
           return _importResultHandler.UpdateMediaItem(parentDirectoryId, path, mediaItemId, updatedAspects, isRefresh, jobInfo.BasePath, cancelToken);
+          // ReSharper restore PossibleMultipleEnumeration
+        }
+        catch (DisconnectedException)
+        {
+          ServiceRegistration.Get<ILogger>().Info("ImporterWorker.{0}.{1}: MediaLibrary disconnected. Requesting suspension...", ParentImportJobController, _blockName);
+          ParentImportJobController.ParentImporterWorker.RequestAction(new ImporterWorkerAction(ImporterWorkerAction.ActionType.Suspend)).Wait();
+        }
+      }
+    }
+
+    protected async Task<ICollection<MediaItem>> ReconcileMediaItem(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems)
+    {
+      while (true)
+      {
+        try
+        {
+          await Activated.WaitAsync();
+          // ReSharper disable PossibleMultipleEnumeration
+          return _importResultHandler.ReconcileMediaItem(mediaItemId, mediaItemAspects, relationshipItems);
           // ReSharper restore PossibleMultipleEnumeration
         }
         catch (DisconnectedException)

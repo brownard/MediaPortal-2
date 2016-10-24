@@ -115,7 +115,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
       StorePersons(seriesAspects, seriesInfo.Actors, true);
       StoreCharacters(seriesAspects, seriesInfo.Characters, true);
 
-      extractedLinkedAspects.Add(new RelationshipItem(seriesAspects, Guid.Empty));
+      extractedLinkedAspects.Add(new RelationshipItem(seriesAspects, Guid.Empty, Role, LinkedRole));
       return true;
     }
 

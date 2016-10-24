@@ -129,9 +129,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
         {
           Guid existingId;
           if (TryGetIdFromCache(character, out existingId))
-            extractedLinkedAspects.Add(new RelationshipItem(characterAspects, existingId));
+            extractedLinkedAspects.Add(new RelationshipItem(characterAspects, existingId, Role, LinkedRole));
           else
-            extractedLinkedAspects.Add(new RelationshipItem(characterAspects, Guid.Empty));
+            extractedLinkedAspects.Add(new RelationshipItem(characterAspects, Guid.Empty, Role, LinkedRole));
         }
       }
       return extractedLinkedAspects.Count > 0;

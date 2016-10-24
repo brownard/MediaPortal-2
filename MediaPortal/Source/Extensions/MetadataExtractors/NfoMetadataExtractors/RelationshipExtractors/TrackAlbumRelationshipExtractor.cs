@@ -111,7 +111,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
 
       StoreArtists(albumAspects, albumInfo.Artists, true);
 
-      extractedLinkedAspects.Add(new RelationshipItem(albumAspects, Guid.Empty));
+      extractedLinkedAspects.Add(new RelationshipItem(albumAspects, Guid.Empty, Role, LinkedRole));
       return true;
     }
 

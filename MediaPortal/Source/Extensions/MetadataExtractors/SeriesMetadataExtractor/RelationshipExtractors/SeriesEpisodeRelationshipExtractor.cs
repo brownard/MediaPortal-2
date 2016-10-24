@@ -121,7 +121,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
         MediaItemAspect.SetAttribute(episodeAspects, MediaAspect.ATTR_ISVIRTUAL, true);
 
         if (episodeAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
-          extractedLinkedAspects.Add(new RelationshipItem(episodeAspects, Guid.Empty));
+          extractedLinkedAspects.Add(new RelationshipItem(episodeAspects, Guid.Empty, Role, LinkedRole));
       }
       return extractedLinkedAspects.Count > 0;
     }

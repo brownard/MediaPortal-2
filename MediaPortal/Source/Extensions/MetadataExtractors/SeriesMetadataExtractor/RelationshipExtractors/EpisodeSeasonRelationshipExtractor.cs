@@ -120,9 +120,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
         return false;
 
       if (seasonId != Guid.Empty)
-        extractedLinkedAspects.Add(new RelationshipItem(seasonAspects, seasonId));
+        extractedLinkedAspects.Add(new RelationshipItem(seasonAspects, seasonId, Role, LinkedRole));
       else
-        extractedLinkedAspects.Add(new RelationshipItem(seasonAspects, Guid.Empty));
+        extractedLinkedAspects.Add(new RelationshipItem(seasonAspects, Guid.Empty, Role, LinkedRole));
       return true;
     }
 
