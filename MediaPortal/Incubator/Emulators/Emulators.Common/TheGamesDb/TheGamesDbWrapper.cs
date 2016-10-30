@@ -132,11 +132,16 @@ namespace Emulators.Common.TheGamesDb
 
     public bool FindAndUpdateGame(GameInfo gameInfo)
     {
+      if (!Init())
+        return false;
+
       Game game;
       if (!TryGetBestMatch(gameInfo, out game))
         return false;
       gameInfo.GameName = game.GameTitle;
       gameInfo.GamesDbId = game.Id;
+      gameInfo.PlatformId = game.PlatformId.ToString();
+      gameInfo.Platform = game.Platform;
       gameInfo.MatcherId = MatcherId;
       gameInfo.OnlineId = game.Id.ToString();
       gameInfo.Certification = game.ESRB;

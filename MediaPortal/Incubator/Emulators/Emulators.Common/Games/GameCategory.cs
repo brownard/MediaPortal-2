@@ -12,7 +12,7 @@ namespace Emulators.Common.Games
 
     public static string CategoryNameToMimeType(string categoryName)
     {
-      categoryName = categoryName.Replace(' ', '-').ToLowerInvariant();
+      categoryName = categoryName != null ? categoryName.Replace(' ', '-').ToLowerInvariant() : string.Empty;
       return "game/" + categoryName;
     }
   }

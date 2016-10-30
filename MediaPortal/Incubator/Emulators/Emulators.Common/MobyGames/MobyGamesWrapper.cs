@@ -52,6 +52,9 @@ namespace Emulators.Common.MobyGames
 
     public bool FindAndUpdateGame(GameInfo gameInfo)
     {
+      if (!Init())
+        return false;
+
       MobyGamesResult result;
       if (TryGetFromStorage(gameInfo.GameName, gameInfo.Platform, out result))
       {

@@ -9,6 +9,7 @@
   <string name="Emulators.FilterByGenreMenuItem">Filter by genre</string>
   <string name="Emulators.FilterByDeveloperMenuItem">Filter by developer</string>
   <string name="Emulators.SortByRating">Sort by rating</string>
+  <string name="Emulators.GroupByRating">Group by rating</string>
   <string name="Emulators.Platform">Platform</string>
   <string name="Emulators.Developer">Developer</string>
 

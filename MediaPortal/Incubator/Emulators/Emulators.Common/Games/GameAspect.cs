@@ -14,70 +14,76 @@ namespace Emulators.Common.Games
     /// <summary>
     /// Contains the localized name of the game.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_GAME_NAME =
-        MediaItemAspectMetadata.CreateStringAttributeSpecification("GameName", 100, Cardinality.Inline, false);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_GAME_NAME =
+        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("GameName", 100, Cardinality.Inline, false);
 
     /// <summary>
     /// Contains the TGDB ID of the game.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_TGDB_ID =
-        MediaItemAspectMetadata.CreateAttributeSpecification("TGDBID", typeof(int), Cardinality.Inline, false);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_TGDB_ID =
+        MediaItemAspectMetadata.CreateSingleAttributeSpecification("TGDBID", typeof(int), Cardinality.Inline, false);
 
     /// <summary>
     /// Contains the id of the matcher that matched the game.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_MATCHER_ID =
-        MediaItemAspectMetadata.CreateAttributeSpecification("MatcherId", typeof(Guid), Cardinality.Inline, false);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_MATCHER_ID =
+        MediaItemAspectMetadata.CreateSingleAttributeSpecification("MatcherId", typeof(Guid), Cardinality.Inline, false);
 
     /// <summary>
     /// Contains the online id of the game.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_ONLINE_ID =
-        MediaItemAspectMetadata.CreateStringAttributeSpecification("OnlineId", 100, Cardinality.Inline, false);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_ONLINE_ID =
+        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("OnlineId", 100, Cardinality.Inline, false);
+
+    /// <summary>
+    /// Contains the release year of the game.
+    /// </summary>
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_PLATFORM_ID =
+        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("PlatformId", 100, Cardinality.Inline, false);
 
     /// <summary>
     /// Contains the platform of the game.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_PLATFORM =
-      MediaItemAspectMetadata.CreateStringAttributeSpecification("Platform", 100, Cardinality.Inline, false);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_PLATFORM =
+      MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("Platform", 100, Cardinality.Inline, true);
     
     /// <summary>
     /// Contains the release year of the game.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_YEAR =
-        MediaItemAspectMetadata.CreateAttributeSpecification("Year", typeof(int), Cardinality.Inline, false);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_YEAR =
+        MediaItemAspectMetadata.CreateSingleAttributeSpecification("Year", typeof(int), Cardinality.Inline, true);
 
     /// <summary>
     /// Contains the description of the game.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_DESCRIPTION =
-      MediaItemAspectMetadata.CreateStringAttributeSpecification("Description", 10000, Cardinality.Inline, false);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_DESCRIPTION =
+      MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("Description", 10000, Cardinality.Inline, false);
 
     /// <summary>
     /// Contains the certification.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_CERTIFICATION =
-        MediaItemAspectMetadata.CreateStringAttributeSpecification("Certification", 100, Cardinality.Inline, false);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_CERTIFICATION =
+        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("Certification", 100, Cardinality.Inline, false);
 
     /// <summary>
     /// Contains the developer of the game.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_DEVELOPER =
-        MediaItemAspectMetadata.CreateStringAttributeSpecification("Developer", 100, Cardinality.Inline, false);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_DEVELOPER =
+        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("Developer", 100, Cardinality.Inline, false);
 
     /// <summary>
     /// Contains the overall rating of the movie. Value ranges from 0 (very bad) to 10 (very good).
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_RATING =
-        MediaItemAspectMetadata.CreateAttributeSpecification("Rating", typeof(double), Cardinality.Inline, true);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_RATING =
+        MediaItemAspectMetadata.CreateSingleAttributeSpecification("Rating", typeof(double), Cardinality.Inline, true);
 
     /// <summary>
     /// Genre string.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_GENRES =
-        MediaItemAspectMetadata.CreateStringAttributeSpecification("Genres", 100, Cardinality.ManyToMany, true);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_GENRES =
+        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("Genres", 100, Cardinality.ManyToMany, true);
 
-    public static readonly MediaItemAspectMetadata Metadata = new MediaItemAspectMetadata(
+    public static readonly SingleMediaItemAspectMetadata Metadata = new SingleMediaItemAspectMetadata(
       // TODO: Localize name
       ASPECT_ID, "GameItem", new[] {
             ATTR_GAME_NAME,

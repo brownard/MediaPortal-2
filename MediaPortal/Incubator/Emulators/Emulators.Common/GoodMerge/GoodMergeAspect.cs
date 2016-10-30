@@ -14,16 +14,16 @@ namespace Emulators.Common.GoodMerge
     /// <summary>
     /// Contains the last played goodmerge item.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_LAST_PLAYED_ITEM =
-        MediaItemAspectMetadata.CreateStringAttributeSpecification("LastPlayedItem", 100, Cardinality.Inline, false);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_LAST_PLAYED_ITEM =
+        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("LastPlayedItem", 100, Cardinality.Inline, false);
 
     /// <summary>
     /// Goodmerge items.
     /// </summary>
-    public static readonly MediaItemAspectMetadata.AttributeSpecification ATTR_GOODMERGE_ITEMS =
-        MediaItemAspectMetadata.CreateStringAttributeSpecification("GoodMergeItems", 255, Cardinality.ManyToMany, false);
+    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_GOODMERGE_ITEMS =
+        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("GoodMergeItems", 255, Cardinality.ManyToMany, false);
 
-    public static readonly MediaItemAspectMetadata Metadata = new MediaItemAspectMetadata(
+    public static readonly SingleMediaItemAspectMetadata Metadata = new SingleMediaItemAspectMetadata(
       // TODO: Localize name
       ASPECT_ID, "GoodMergeItem", new[] {
             ATTR_LAST_PLAYED_ITEM,

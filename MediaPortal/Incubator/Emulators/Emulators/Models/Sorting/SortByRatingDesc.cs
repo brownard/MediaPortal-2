@@ -11,7 +11,7 @@ namespace Emulators.Models.Sorting
 {
   public class SortByRatingDesc : AbstractSortByComparableValueAttribute<double>
   {
-    public SortByRatingDesc() : base(EmulatorsConsts.RES_SORT_BY_RATING, GameAspect.ATTR_RATING) { }
+    public SortByRatingDesc() : base(EmulatorsConsts.RES_SORT_BY_RATING, EmulatorsConsts.RES_GROUP_BY_RATING, GameAspect.ATTR_RATING) { }
 
     public override int Compare(MediaItem x, MediaItem y)
     {

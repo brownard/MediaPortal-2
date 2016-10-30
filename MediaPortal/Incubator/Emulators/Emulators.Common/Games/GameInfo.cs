@@ -1,5 +1,6 @@
 ﻿using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
+using MediaPortal.Common.ResourceAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace Emulators.Common.Games
     public string OnlineId { get; set; }
     public int GamesDbId { get; set; }
     public string GameName { get; set; }
+    public string PlatformId { get; set; }
     public string Platform { get; set; }
     public DateTime? ReleaseDate { get; set; }
     public string Description { get; set; }
@@ -34,17 +36,19 @@ namespace Emulators.Common.Games
     /// Copies the contained movie information into MediaItemAspect.
     /// </summary>
     /// <param name="aspectData">Dictionary with extracted aspects.</param>
-    public bool SetMetadata(IDictionary<Guid, MediaItemAspect> aspectData)
+    public bool SetMetadata(IDictionary<Guid, IList<MediaItemAspect>> aspectData, ILocalFsResourceAccessor lfsra)
     {
+      MultipleMediaItemAspect providerResourceAspect = MediaItemAspect.CreateAspect(aspectData, ProviderResourceAspect.Metadata);
+      providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_INDEX, 0);
+      providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_PRIMARY, true);
+      providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_MIME_TYPE, GameCategory.CategoryNameToMimeType(Platform));
+      providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_SIZE, lfsra.Size);
+      providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, lfsra.CanonicalLocalResourcePath.Serialize());
+
       if (!string.IsNullOrEmpty(GameName))
       {
         MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_TITLE, GameName);
         MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_GAME_NAME, GameName);
-      }
-      if (!string.IsNullOrEmpty(Platform))
-      {
-        MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_MIME_TYPE, GameCategory.CategoryNameToMimeType(Platform));
-        MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_PLATFORM, Platform);
       }
       if (ReleaseDate.HasValue)
       {
@@ -52,6 +56,8 @@ namespace Emulators.Common.Games
         MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_YEAR, ReleaseDate.Value.Year);
       }
 
+      if (!string.IsNullOrEmpty(Platform)) MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_PLATFORM, Platform);
+      if (!string.IsNullOrEmpty(PlatformId)) MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_PLATFORM_ID, PlatformId);
       if (MatcherId != Guid.Empty) MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_MATCHER_ID, MatcherId);
       if (!string.IsNullOrEmpty(OnlineId)) MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_ONLINE_ID, OnlineId);
       if (GamesDbId > 0) MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_TGDB_ID, GamesDbId);

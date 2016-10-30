@@ -176,8 +176,8 @@ namespace Emulators.MediaExtensions
 
     public void Init(MediaItem mediaItem)
     {
-      MediaItemAspect aspect;
-      if (mediaItem == null || !mediaItem.Aspects.TryGetValue(GameAspect.ASPECT_ID, out aspect))
+      SingleMediaItemAspect aspect;
+      if (mediaItem == null || !MediaItemAspect.TryGetAspect(mediaItem.Aspects, GameAspect.Metadata, out aspect))
       {
         SetEmpty();
         return;

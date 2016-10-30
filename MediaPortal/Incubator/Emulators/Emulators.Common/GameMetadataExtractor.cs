@@ -70,13 +70,13 @@ namespace Emulators.Common
       get { return _metadata; }
     }
 
-    public bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, MediaItemAspect> extractedAspectData, bool forceQuickMode)
+    public bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       try
       {
         //Exclude mounted files contained within isos. The importer seems to try and import files in isos even if
         //we successfully import the iso file itself??
-        if (forceQuickMode || mediaItemAccessor.ParentProvider.Metadata.ResourceProviderId == ISORESOURCEPROVIDER_ID)
+        if (mediaItemAccessor.ParentProvider.Metadata.ResourceProviderId == ISORESOURCEPROVIDER_ID)
           return false;
         
         IFileSystemResourceAccessor fsra = mediaItemAccessor as IFileSystemResourceAccessor;
@@ -95,7 +95,7 @@ namespace Emulators.Common
       return false;
     }
 
-    static bool ExtractGameData(ILocalFsResourceAccessor lfsra, IDictionary<Guid, MediaItemAspect> extractedAspectData)
+    static bool ExtractGameData(ILocalFsResourceAccessor lfsra, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData)
     {
       var categories = ServiceRegistration.Get<IMediaCategoryHelper>().GetMediaCategories(lfsra.CanonicalLocalResourcePath);
       string platform = categories.FirstOrDefault(s => _platformCategories.ContainsKey(s));
@@ -123,7 +123,7 @@ namespace Emulators.Common
         Logger.Debug("GamesMetadataExtractor: No match found for game: '{0}', '{1}'", lfsra.LocalFileSystemPath, platform);
         gameInfo.GameName = name;
       }
-      gameInfo.SetMetadata(extractedAspectData);
+      gameInfo.SetMetadata(extractedAspectData, lfsra);
       return true;
     }
 

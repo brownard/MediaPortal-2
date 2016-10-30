@@ -32,6 +32,7 @@ namespace Emulators
     public const string RES_FILTER_BY_DEVELOPER_MENU_ITEM = "[Emulators.FilterByDeveloperMenuItem]";
 
     public const string RES_SORT_BY_RATING = "[Emulators.SortByRating]";
+    public const string RES_GROUP_BY_RATING = "[Emulators.GroupByRating]";
 
     public const string RES_ADD_EMULATOR_CONFIGURATION_TITLE = "[Emulators.Config.AddEmulatorConfiguration.Title]";
     public const string RES_EDIT_EMULATOR_CONFIGURATION_TITLE = "[Emulators.Config.EditEmulatorConfiguration.Title]";

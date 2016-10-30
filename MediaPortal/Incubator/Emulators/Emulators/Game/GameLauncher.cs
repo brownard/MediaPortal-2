@@ -115,12 +115,19 @@ namespace Emulators.Game
     protected bool TryGetConfiguration(MediaItem mediaItem, out EmulatorConfiguration configuration)
     {
       configuration = null;
+      List<string> mimeTypes;
       string mimeType;
-      if (mediaItem == null || !MediaItemAspect.TryGetAttribute(mediaItem.Aspects, MediaAspect.ATTR_MIME_TYPE, out mimeType))
+      if (mediaItem == null ||
+        !MediaItemAspect.TryGetAttribute(mediaItem.Aspects, ProviderResourceAspect.ATTR_MIME_TYPE, out mimeTypes) ||
+        string.IsNullOrEmpty(mimeType = mimeTypes.First()))
         return false;
+
+      List<string> paths;
       string path;
-      if (!MediaItemAspect.TryGetAttribute(mediaItem.Aspects, ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, out path))
+      if (!MediaItemAspect.TryGetAttribute(mediaItem.Aspects, ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, out paths) ||
+        string.IsNullOrEmpty(path = paths.First()))
         return false;
+
       ResourcePath rp = ResourcePath.Deserialize(path);
       string ext = ProviderPathHelper.GetExtension(rp.FileName);
       return ServiceRegistration.Get<IEmulatorManager>().TryGetConfiguration(mimeType, ext, out configuration);
@@ -146,7 +153,7 @@ namespace Emulators.Game
         ServiceRegistration.Get<IScreenControl>().Restore();
     }
 
-    protected void UpdateMediaItem<T>(MediaItem mediaItem, MediaItemAspectMetadata.AttributeSpecification attribute, T value)
+    protected void UpdateMediaItem<T>(MediaItem mediaItem, MediaItemAspectMetadata.SingleAttributeSpecification attribute, T value)
     {
       if (mediaItem == null)
         return;
@@ -154,11 +161,11 @@ namespace Emulators.Game
       if (cd == null)
         return;
       var rl = mediaItem.GetResourceLocator();
-      Guid parentDirectoryId;
-      if (!MediaItemAspect.TryGetAttribute(mediaItem.Aspects, ProviderResourceAspect.ATTR_PARENT_DIRECTORY_ID, out parentDirectoryId))
+      List<Guid> parentDirectoryIds;
+      if (!MediaItemAspect.TryGetAttribute(mediaItem.Aspects, ProviderResourceAspect.ATTR_PARENT_DIRECTORY_ID, out parentDirectoryIds))
         return;
       MediaItemAspect.SetAttribute(mediaItem.Aspects, attribute, value);
-      cd.AddOrUpdateMediaItem(parentDirectoryId, rl.NativeSystemId, rl.NativeResourcePath, mediaItem.Aspects.Values);
+      cd.AddOrUpdateMediaItem(parentDirectoryIds.First(), rl.NativeSystemId, rl.NativeResourcePath, MediaItemAspect.GetAspects(mediaItem.Aspects));
     }
 
     protected void ShowErrorDialog(string text)

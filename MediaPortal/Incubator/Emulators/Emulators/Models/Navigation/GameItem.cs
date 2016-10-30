@@ -33,8 +33,8 @@ namespace Emulators.Models.Navigation
       base.Update(mediaItem);
       SimpleTitle = Title;
 
-      MediaItemAspect aspect;
-      if (mediaItem.Aspects.TryGetValue(GameAspect.ASPECT_ID, out aspect))
+      SingleMediaItemAspect aspect;
+      if (MediaItemAspect.TryGetAspect(mediaItem.Aspects, GameAspect.Metadata, out aspect))
       {
         Platform = aspect.GetAttributeValue<string>(GameAspect.ATTR_PLATFORM);
         SetLabel(KEY_DESCRIPTION, aspect.GetAttributeValue<string>(GameAspect.ATTR_DESCRIPTION));

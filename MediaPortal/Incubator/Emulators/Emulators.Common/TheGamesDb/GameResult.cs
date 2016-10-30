@@ -21,6 +21,7 @@ namespace Emulators.Common.TheGamesDb
     [XmlElement("id")]
     public int Id { get; set; }
     public string GameTitle { get; set; }
+    public int PlatformId { get; set; }
     public string Platform { get; set; }
     public string ReleaseDate { get; set; }
     public string Overview { get; set; }
