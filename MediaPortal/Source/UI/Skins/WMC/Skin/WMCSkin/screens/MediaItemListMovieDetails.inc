@@ -23,7 +23,7 @@
     Width="190" Height="280">
     <Image.Source>
       <ImageSourceWrapper Delay="0.5" DelayInOut="true" Transition="transitions\dissolve" TransitionDuration="0.5"
-                     Source="{Binding Source={StaticResource FanArtBackgroundModel}, Path=ImageSource, Converter={StaticResource FanArtImageSourceConverter}, ConverterParameter=Poster;380;520;False}"/>
+                     Source="{Binding Source={StaticResource FanArtBackgroundModel}, Path=ImageSource, Converter={StaticResource FanArtImageSourceConverter}, ConverterParameter=Poster;380;520}"/>
     </Image.Source>
     <Image.OpacityMask>
       <VisualBrush>
@@ -34,10 +34,26 @@
     </Image.OpacityMask>
   </Image>
 
-  <Label x:Name="MediaItemDescription" Wrap="True" Grid.Column="0"  Grid.ColumnSpan="2" Grid.Row="1" Opacity="0.5" TextTrimming="WordEllipsis"
-        HorizontalAlignment="Stretch" FontSize="{ThemeResource SmallFontSize}"
+  <media:UserDataWrapper MediaItem="{Binding Source={StaticResource FanArtBackgroundModel},Path=MediaItem}" 
+                         Grid.Column="0" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+    <media:UserDataWrapper.Template>
+      <ControlTemplate>
+        <Grid DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+              IsVisible="{Binding Path=PlayPercentage,Converter={StaticResource ReferenceToBoolConverter}}">
+          <Image HorizontalAlignment="Right" VerticalAlignment="Center" Stretch="Fill" Width="95" Height="95" Margin="0,0,-10,0" >
+            <Image.Source>
+              <Binding Path="PlayPercentage" Converter="{StaticResource StringFormatConverter}" ConverterParameter="{}CircularBar\{0:F0}.png"/>
+            </Image.Source>
+          </Image>
+        </Grid>
+      </ControlTemplate>
+    </media:UserDataWrapper.Template>
+  </media:UserDataWrapper>
+
+  <Label x:Name="MediaItemDescription" Wrap="True" Grid.Column="0"  Grid.ColumnSpan="2" Grid.Row="1"  TextTrimming="WordEllipsis"
+        HorizontalAlignment="Stretch" FontSize="{ThemeResource SmallFontSize}" Color="{ThemeResource MenuTextBackground}" Opacity="1.3"
         Content="{Binding Source={StaticResource FanArtBackgroundModel}, Path=ItemDescription}"
-        Color="{ThemeResource TextColor}" Margin="0,30,10,10"/>
+        Margin="0,30,10,10"/>
 
   <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,10,0" VerticalAlignment="Stretch" Orientation="Vertical">
 
@@ -74,8 +90,8 @@
                     </TransformGroup>
                   </StarRatingPanel.LayoutTransform>
                 </StarRatingPanel>
-                <Label x:Name="RatingCountLabel" Color="{ThemeResource TextColor}"  Margin="15,2,5,1" VerticalAlignment="Center"
-                       FontSize="{ThemeResource SmallerFontSize}" Opacity="0.5"
+                <Label x:Name="RatingCountLabel" Opacity="1.3" Color="{ThemeResource MenuTextBackground}" Margin="15,2,5,1" 
+                       FontSize="{ThemeResource SmallerFontSize}" VerticalAlignment="Center"
                        IsVisible="{Binding Path=TotalRating,Converter={StaticResource ReferenceToBoolConverter}}">
                   <Label.Content>
                     <Binding Path="TotalRating" Converter="{StaticResource StringFormatConverter}" ConverterParameter="{}({0:F1})"/>
@@ -109,8 +125,8 @@
       <media:VideoAspectWrapper.Template>
         <ControlTemplate>
           <Grid DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}">
-            <Label x:Name="Genre" FontSize="{ThemeResource SmallFontSize}"
-                Content="{Binding Genres}" Color="{ThemeResource TextColor}" Opacity="0.5"/>
+            <Label x:Name="Genre" FontSize="{ThemeResource SmallFontSize}" TextTrimming="WordEllipsis"
+                Content="{Binding Genres}" Opacity="1.3" Color="{ThemeResource MenuTextBackground}"/>
           </Grid>
         </ControlTemplate>
       </media:VideoAspectWrapper.Template>
@@ -122,9 +138,11 @@
           <ControlTemplate>
             <Grid DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}">
               <StackPanel Orientation="Horizontal">
-                <Label x:Name="Duration" FontSize="{ThemeResource SmallFontSize}" Opacity="0.5"
-                       Content="{Binding Path=Runtime}" Color="{ThemeResource TextColor}"/>
-                <Label Content=" min." FontSize="{ThemeResource SmallFontSize}" Opacity="0.5" Color="{ThemeResource TextColor}" 
+                <Label x:Name="Duration" FontSize="{ThemeResource SmallFontSize}" Opacity="1.3" Color="{ThemeResource MenuTextBackground}"
+                       IsVisible="{Binding Path=Runtime,Converter={StaticResource ReferenceToBoolConverter}}"
+                       Content="{Binding Path=Runtime}"/>
+                <Label Content=" " IsVisible="{Binding Path=Runtime,Converter={StaticResource ReferenceToBoolConverter}}"/>
+                <Label Content="[Media.Minutes]" FontSize="{ThemeResource SmallFontSize}" Opacity="1.3" Color="{ThemeResource MenuTextBackground}"
                        IsVisible="{Binding Path=Runtime,Converter={StaticResource ReferenceToBoolConverter}}"/>
               </StackPanel>
             </Grid>
@@ -150,8 +168,5 @@
         </media:MediaAspectWrapper.Template>
       </media:MediaAspectWrapper>
     </StackPanel>
-
   </StackPanel>
-
-
 </Grid>

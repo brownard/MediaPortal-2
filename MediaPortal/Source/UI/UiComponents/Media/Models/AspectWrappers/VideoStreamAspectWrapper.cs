@@ -28,6 +28,7 @@ using MediaPortal.Common.General;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.UI.SkinEngine.Controls.Visuals;
+using MediaPortal.Utilities.DeepCopy;
 
 namespace MediaPortal.UiComponents.Media.Models.AspectWrappers
 {
@@ -50,6 +51,7 @@ protected AbstractProperty _streamIndexProperty;
 protected AbstractProperty _videoTypeProperty;
 protected AbstractProperty _partNumProperty;
 protected AbstractProperty _partSetNumProperty;
+protected AbstractProperty _partSetNameProperty;
 protected AbstractProperty _durationProperty;
 protected AbstractProperty _audioStreamCountProperty;
 protected AbstractProperty _videoEncodingProperty;
@@ -59,6 +61,8 @@ protected AbstractProperty _aspectHeightProperty;
 protected AbstractProperty _aspectRatioProperty;
 protected AbstractProperty _fPSProperty;
 protected AbstractProperty _mediaItemProperty;
+protected AbstractProperty _aspectIndexProperty;
+protected AbstractProperty _aspectCountProperty;
 
 #endregion
 
@@ -117,6 +121,17 @@ public int? PartSetNum
 {
   get { return (int?) _partSetNumProperty.GetValue(); }
   set { _partSetNumProperty.SetValue(value); }
+}
+
+public AbstractProperty PartSetNameProperty
+{
+  get{ return _partSetNameProperty; }
+}
+
+public string PartSetName
+{
+  get { return (string) _partSetNameProperty.GetValue(); }
+  set { _partSetNameProperty.SetValue(value); }
 }
 
 public AbstractProperty DurationProperty
@@ -218,6 +233,28 @@ public MediaItem MediaItem
   set { _mediaItemProperty.SetValue(value); }
 }
 
+public AbstractProperty AspectIndexProperty
+{
+  get{ return _aspectIndexProperty; }
+}
+
+public int AspectIndex
+{
+  get { return (int) _aspectIndexProperty.GetValue(); }
+  set { _aspectIndexProperty.SetValue(value); }
+}
+
+public AbstractProperty AspectCountProperty
+{
+  get{ return _aspectCountProperty; }
+}
+
+public int AspectCount
+{
+  get { return (int) _aspectCountProperty.GetValue(); }
+  set { _aspectCountProperty.SetValue(value); }
+}
+
 #endregion
 
 #region Constructor
@@ -229,6 +266,7 @@ public VideoStreamAspectWrapper()
   _videoTypeProperty = new SProperty(typeof(string));
   _partNumProperty = new SProperty(typeof(int?));
   _partSetNumProperty = new SProperty(typeof(int?));
+  _partSetNameProperty = new SProperty(typeof(string));
   _durationProperty = new SProperty(typeof(long?));
   _audioStreamCountProperty = new SProperty(typeof(int?));
   _videoEncodingProperty = new SProperty(typeof(string));
@@ -239,6 +277,9 @@ public VideoStreamAspectWrapper()
   _fPSProperty = new SProperty(typeof(float?));
   _mediaItemProperty = new SProperty(typeof(MediaItem));
   _mediaItemProperty.Attach(MediaItemChanged);
+  _aspectIndexProperty = new SProperty(typeof(int));
+  _aspectIndexProperty.Attach(AspectIndexChanged);
+  _aspectCountProperty = new SProperty(typeof(int));
 }
 
 #endregion
@@ -250,37 +291,66 @@ private void MediaItemChanged(AbstractProperty property, object oldvalue)
   Init(MediaItem);
 }
 
+private void AspectIndexChanged(AbstractProperty property, object oldvalue)
+{
+  Init(MediaItem);
+}
+
+public override void DeepCopy(IDeepCopyable source, ICopyManager copyManager)
+{
+  Detach();
+  base.DeepCopy(source, copyManager);
+  var aw = (VideoStreamAspectWrapper)source;
+  AspectIndex = aw.AspectIndex;
+  Attach();
+}
+
+private void Attach()
+{
+  _aspectIndexProperty.Attach(AspectIndexChanged);
+}
+
+private void Detach()
+{
+  _aspectIndexProperty.Detach(AspectIndexChanged);
+}
+
 public void Init(MediaItem mediaItem)
 {
   IList<MultipleMediaItemAspect> aspects;
-  if (mediaItem == null ||!MediaItemAspect.TryGetAspects(mediaItem.Aspects, VideoStreamAspect.Metadata, out aspects))
+  if (mediaItem == null || !MediaItemAspect.TryGetAspects(mediaItem.Aspects, VideoStreamAspect.Metadata, out aspects) ||
+      AspectIndex < 0 || AspectIndex >= aspects.Count)
   {
      SetEmpty();
      return;
   }
 
-  ResourceIndex = (int?) aspects[0][VideoStreamAspect.ATTR_RESOURCE_INDEX];
-  StreamIndex = (int?) aspects[0][VideoStreamAspect.ATTR_STREAM_INDEX];
-  VideoType = (string) aspects[0][VideoStreamAspect.ATTR_VIDEO_TYPE];
-  PartNum = (int?) aspects[0][VideoStreamAspect.ATTR_VIDEO_PART];
-  PartSetNum = (int?) aspects[0][VideoStreamAspect.ATTR_VIDEO_PART_SET];
-  Duration = (long?) aspects[0][VideoStreamAspect.ATTR_DURATION];
-  AudioStreamCount = (int?) aspects[0][VideoStreamAspect.ATTR_AUDIOSTREAMCOUNT];
-  VideoEncoding = (string) aspects[0][VideoStreamAspect.ATTR_VIDEOENCODING];
-  VideoBitRate = (long?) aspects[0][VideoStreamAspect.ATTR_VIDEOBITRATE];
-  AspectWidth = (int?) aspects[0][VideoStreamAspect.ATTR_WIDTH];
-  AspectHeight = (int?) aspects[0][VideoStreamAspect.ATTR_HEIGHT];
-  AspectRatio = (float?) aspects[0][VideoStreamAspect.ATTR_ASPECTRATIO];
-  FPS = (float?) aspects[0][VideoStreamAspect.ATTR_FPS];
+  AspectCount = aspects.Count;
+  ResourceIndex = (int?) aspects[AspectIndex][VideoStreamAspect.ATTR_RESOURCE_INDEX];
+  StreamIndex = (int?) aspects[AspectIndex][VideoStreamAspect.ATTR_STREAM_INDEX];
+  VideoType = (string) aspects[AspectIndex][VideoStreamAspect.ATTR_VIDEO_TYPE];
+  PartNum = (int?) aspects[AspectIndex][VideoStreamAspect.ATTR_VIDEO_PART];
+  PartSetNum = (int?) aspects[AspectIndex][VideoStreamAspect.ATTR_VIDEO_PART_SET];
+  PartSetName = (string) aspects[AspectIndex][VideoStreamAspect.ATTR_VIDEO_PART_SET_NAME];
+  Duration = (long?) aspects[AspectIndex][VideoStreamAspect.ATTR_DURATION];
+  AudioStreamCount = (int?) aspects[AspectIndex][VideoStreamAspect.ATTR_AUDIOSTREAMCOUNT];
+  VideoEncoding = (string) aspects[AspectIndex][VideoStreamAspect.ATTR_VIDEOENCODING];
+  VideoBitRate = (long?) aspects[AspectIndex][VideoStreamAspect.ATTR_VIDEOBITRATE];
+  AspectWidth = (int?) aspects[AspectIndex][VideoStreamAspect.ATTR_WIDTH];
+  AspectHeight = (int?) aspects[AspectIndex][VideoStreamAspect.ATTR_HEIGHT];
+  AspectRatio = (float?) aspects[AspectIndex][VideoStreamAspect.ATTR_ASPECTRATIO];
+  FPS = (float?) aspects[AspectIndex][VideoStreamAspect.ATTR_FPS];
 }
 
 public void SetEmpty()
 {
+  AspectCount = 0;
   ResourceIndex = null;
   StreamIndex = null;
   VideoType = null;
   PartNum = null;
   PartSetNum = null;
+  PartSetName = null;
   Duration = null;
   AudioStreamCount = null;
   VideoEncoding = null;

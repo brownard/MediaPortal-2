@@ -35,7 +35,7 @@ using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Extensions.MetadataExtractors.Aspects;
 using MediaPortal.Utilities;
-using MediaPortal.Extensions.OnlineLibraries.Matchers;
+using MediaPortal.Extensions.OnlineLibraries;
 
 namespace MediaPortal.Extensions.MetadataExtractors
 {
@@ -68,7 +68,12 @@ namespace MediaPortal.Extensions.MetadataExtractors
     public WTVRecordingSeriesMetadataExtractor()
     {
       _metadata = new MetadataExtractorMetadata(METADATAEXTRACTOR_ID, "WTV series recordings metadata extractor", MetadataExtractorPriority.Extended, false,
-          SERIES_MEDIA_CATEGORIES, new[] { EpisodeAspect.Metadata });
+          SERIES_MEDIA_CATEGORIES, new[]
+          {
+            MediaAspect.Metadata,
+            VideoAspect.Metadata,
+            EpisodeAspect.Metadata,
+          });
     }
 
     public EpisodeInfo GetSeriesFromTags(IDictionary metadata)
@@ -82,6 +87,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
       if (TryGet(metadata, TAG_EPISODENAME, out tmpString))
         episodeInfo.EpisodeName.Text = tmpString;
 
+      episodeInfo.HasChanged = true;
       return episodeInfo;
     }
 
@@ -107,15 +113,11 @@ namespace MediaPortal.Extensions.MetadataExtractors
 
       if (episodeInfo.IsBaseInfoPresent)
       {
-        SeriesTvDbMatcher.Instance.FindAndUpdateEpisode(episodeInfo, false); //Provides IMDBID and TVDBID
-        SeriesTheMovieDbMatcher.Instance.FindAndUpdateEpisode(episodeInfo, forceQuickMode); //Provides IMDBID, TMDBID and TVDBID
-        SeriesTvMazeMatcher.Instance.FindAndUpdateEpisode(episodeInfo, forceQuickMode); //Provides TvMazeID, IMDBID and TVDBID
-        SeriesOmDbMatcher.Instance.FindAndUpdateEpisode(episodeInfo, forceQuickMode); //Provides IMDBID
-        SeriesFanArtTvMatcher.Instance.FindAndUpdateEpisode(episodeInfo, false);
-
-        episodeInfo.SetMetadata(extractedAspectData);
+        OnlineMatcherService.Instance.FindAndUpdateEpisode(episodeInfo, forceQuickMode);
+        if (episodeInfo.IsBaseInfoPresent)
+          episodeInfo.SetMetadata(extractedAspectData);
       }
-      return episodeInfo.IsBaseInfoPresent;
+      return episodeInfo.IsBaseInfoPresent && episodeInfo.HasChanged;
     }
   }
 
@@ -175,9 +177,9 @@ namespace MediaPortal.Extensions.MetadataExtractors
           MEDIA_CATEGORIES, new MediaItemAspectMetadata[]
               {
                 MediaAspect.Metadata,
-                VideoStreamAspect.Metadata,
-                RecordingAspect.Metadata,
-                EpisodeAspect.Metadata
+                ProviderResourceAspect.Metadata,
+                VideoAspect.Metadata,
+                RecordingAspect.Metadata
               });
     }
 
@@ -216,6 +218,9 @@ namespace MediaPortal.Extensions.MetadataExtractors
       {
         if (!(mediaItemAccessor is IFileSystemResourceAccessor))
           return false;
+        if (extractedAspectData.ContainsKey(RecordingAspect.ASPECT_ID))
+          return false;
+
         using (LocalFsResourceAccessorHelper rah = new LocalFsResourceAccessorHelper(mediaItemAccessor))
           return ExtractMetadata(rah.LocalFsResourceAccessor, extractedAspectData, forceQuickMode);
 
@@ -248,6 +253,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         }
 
         MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_ISVIRTUAL, false);
+        MediaItemAspect.SetAttribute(extractedAspectData, VideoAspect.ATTR_ISDVD, false);
 
         string value;
         if (TryGet(tags, TAG_TITLE, out value) && !string.IsNullOrEmpty(value))
@@ -255,13 +261,13 @@ namespace MediaPortal.Extensions.MetadataExtractors
           MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_TITLE, value);
           MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_SORT_TITLE, BaseInfo.GetSortTitle(value));
         }
-        
+
         if (TryGet(tags, TAG_GENRE, out value))
-          MediaItemAspect.SetCollectionAttribute(extractedAspectData, RecordingAspect.ATTR_GENRES, new List<String>(value.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries)));
+          MediaItemAspect.SetCollectionAttribute(extractedAspectData, VideoAspect.ATTR_GENRES, new List<String>(value.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries)));
 
         if (TryGet(tags, TAG_PLOT, out value))
         {
-          MediaItemAspect.SetAttribute(extractedAspectData, RecordingAspect.ATTR_STORYPLOT, value);
+          MediaItemAspect.SetAttribute(extractedAspectData, VideoAspect.ATTR_STORYPLOT, value);
         }
 
         if (TryGet(tags, TAG_ORIGINAL_TIME, out value))

@@ -23,7 +23,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using MediaPortal.Common;
 using MediaPortal.Common.PathManager;
 using MediaPortal.Common.MediaManagement.Helpers;
@@ -46,14 +45,14 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
     #region Constants
 
     public static string CACHE_PATH = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\FreeDB\");
-    protected static TimeSpan MAX_MEMCACHE_DURATION = TimeSpan.FromMinutes(1);
+    protected static TimeSpan MAX_MEMCACHE_DURATION = TimeSpan.FromMinutes(10);
 
     #endregion
 
     #region Init
 
     public CDFreeDbMatcher() : 
-      base(CACHE_PATH, MAX_MEMCACHE_DURATION)
+      base(CACHE_PATH, MAX_MEMCACHE_DURATION, false)
     {
     }
 
@@ -71,6 +70,15 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
       catch (Exception ex)
       {
         ServiceRegistration.Get<ILogger>().Error("CDFreeDbMatcher: Error initializing wrapper", ex);
+      }
+      return false;
+    }
+
+    public override bool FindAndUpdateTrack(TrackInfo trackInfo, bool forceQuickMode)
+    {
+      if (!string.IsNullOrEmpty(trackInfo.AlbumCdDdId))
+      {
+        return base.FindAndUpdateTrack(trackInfo, forceQuickMode);
       }
       return false;
     }
@@ -118,12 +126,6 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
     #endregion
 
     #region FanArt
-
-    public override List<string> GetFanArtFiles<T>(T infoObject, string scope, string type)
-    {
-      // No fanart
-      return new List<string>();
-    }
 
     protected override void DownloadFanArt(string downloadId)
     {

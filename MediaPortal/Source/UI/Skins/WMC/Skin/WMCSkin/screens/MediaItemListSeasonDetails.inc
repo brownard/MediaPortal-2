@@ -12,18 +12,17 @@
   </Grid.Resources>
   <Grid.RowDefinitions>
     <RowDefinition Height="Auto"/>
-    <RowDefinition Height="Auto"/>
     <RowDefinition Height="*"/>
   </Grid.RowDefinitions>
   <Grid.ColumnDefinitions>
-    <ColumnDefinition Width="540"/>
+    <ColumnDefinition Width="620"/>
     <ColumnDefinition Width="*"/>
   </Grid.ColumnDefinitions>
 
-  <Image Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="UniformToFill" Margin="0,10,10,0" Height="210">
+  <Image Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Stretch="Fill" Margin="0,10,10,0" Height="280" Width="190">
     <Image.Source>
       <ImageSourceWrapper Delay="0.5" DelayInOut="true" Transition="transitions\dissolve" TransitionDuration="0.5"
-                          Source="{Binding Source={StaticResource FanArtBackgroundModel},Path=MediaItem}">
+                          Source="{Binding Source={StaticResource FanArtBackgroundModel}, Path=ImageSource, Converter={StaticResource FanArtImageSourceConverter}, ConverterParameter=Poster;380;520}">
       </ImageSourceWrapper>
     </Image.Source>
     <Image.OpacityMask>
@@ -34,6 +33,22 @@
       </VisualBrush>
     </Image.OpacityMask>
   </Image>
+
+  <media:UserDataWrapper MediaItem="{Binding Source={StaticResource FanArtBackgroundModel},Path=MediaItem}"
+                       Grid.Column="0" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+    <media:UserDataWrapper.Template>
+      <ControlTemplate>
+        <Grid DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+              IsVisible="{Binding Path=PlayPercentage,Converter={StaticResource ReferenceToBoolConverter}}">
+          <Image HorizontalAlignment="Right" VerticalAlignment="Center" Stretch="Fill" Width="95" Height="95" Margin="0,0,-10,0" >
+            <Image.Source>
+              <Binding Path="PlayPercentage" Converter="{StaticResource StringFormatConverter}" ConverterParameter="{}CircularBar\{0:F0}.png"/>
+            </Image.Source>
+          </Image>
+        </Grid>
+      </ControlTemplate>
+    </media:UserDataWrapper.Template>
+  </media:UserDataWrapper>
 
   <media:SeasonAspectWrapper MediaItem="{Binding Source={StaticResource FanArtBackgroundModel},Path=MediaItem}"
                               Grid.Column="0" Grid.Row="0" Margin="0,0,10,0">
@@ -52,10 +67,11 @@
                  DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}" Content="{Binding Season}"/>
           </StackPanel>
           <StackPanel Orientation="Horizontal" DataContext="{Binding Source={StaticResource FanArtBackgroundModel},Path=SelectedItem}">
-            <Label Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}" Content="{Binding AvailableEpisodes}"
-                   Margin="0,0,8,0" Opacity="0.5"/>
-            <Label Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}" Content="[Media.EpisodeItemsHeader]"
-                   Margin="0,0,8,0" Opacity="0.5"/>
+            <Label FontSize="{ThemeResource SmallFontSize}" Content="{Binding Episodes}"
+                   Margin="0,0,8,0" Opacity="1.3" Color="{ThemeResource MenuTextBackground}"/>
+            <Label FontSize="{ThemeResource SmallFontSize}" Content="[Media.EpisodeItemsHeader]"
+                   IsVisible="{Binding Path=Episodes,Converter={StaticResource ReferenceToBoolConverter}}"
+                   Margin="0,0,8,0" Opacity="1.3" Color="{ThemeResource MenuTextBackground}"/>
           </StackPanel>
         </StackPanel>
       </ControlTemplate>
@@ -85,9 +101,9 @@
             <RowDefinition Height="*"/>
           </Grid.RowDefinitions>
           <Label x:Name="Description" DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}" Grid.Row="1"
-                   Wrap="True" Opacity="0.5" TextTrimming="WordEllipsis" FontSize="{ThemeResource SmallFontSize}" Margin="0,5,5,0"
+                   Wrap="True" TextTrimming="WordEllipsis" FontSize="{ThemeResource SmallFontSize}" Margin="0,5,5,0"
                    HorizontalAlignment="Stretch" Content="{Binding Source={StaticResource FanArtBackgroundModel}, Path=Description}"
-                   Color="{ThemeResource TextColor}"/>
+                   Opacity="1.3" Color="{ThemeResource MenuTextBackground}"/>
         </Grid>
       </ControlTemplate>
     </media:SeasonAspectWrapper.Template>

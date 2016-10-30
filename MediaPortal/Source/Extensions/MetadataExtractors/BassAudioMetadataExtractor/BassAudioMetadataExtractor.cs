@@ -39,6 +39,7 @@ using MediaPortal.Utilities.Graphics;
 using Un4seen.Bass.AddOn.Tags;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Extensions.OnlineLibraries.Matchers;
+using MediaPortal.Extensions.OnlineLibraries;
 
 namespace MediaPortal.Extensions.MetadataExtractors.BassAudioMetadataExtractor
 {
@@ -178,7 +179,8 @@ namespace MediaPortal.Extensions.MetadataExtractors.BassAudioMetadataExtractor
           {
             trackInfo.Artists.Add(new PersonInfo()
             {
-              Name = artistName
+              Name = artistName,
+              Occupation = PersonAspect.OCCUPATION_ARTIST
             });
           }
 
@@ -189,18 +191,20 @@ namespace MediaPortal.Extensions.MetadataExtractors.BassAudioMetadataExtractor
           {
             trackInfo.AlbumArtists.Add(new PersonInfo()
             {
-              Name = artistName
+              Name = artistName,
+              Occupation = PersonAspect.OCCUPATION_ARTIST
             });
           }
 
           IEnumerable<string> composers = SplitTagEnum(tags.composer);
           composers = PatchID3v23Enumeration(composers);
           trackInfo.Composers = new List<PersonInfo>();
-          foreach (string artistName in ApplyAdditionalSeparator(composers))
+          foreach (string composerName in ApplyAdditionalSeparator(composers))
           {
             trackInfo.Composers.Add(new PersonInfo()
             {
-              Name = artistName
+              Name = composerName,
+              Occupation = PersonAspect.OCCUPATION_COMPOSER
             });
           }
 
@@ -217,48 +221,50 @@ namespace MediaPortal.Extensions.MetadataExtractors.BassAudioMetadataExtractor
               trackInfo.ReleaseDate = new DateTime(year, 1, 1);
           }
 
-          // The following code gets cover art images from file (embedded) or from windows explorer cache (supports folder.jpg).
-          if (tags.PictureCount > 0)
+          if (!trackInfo.HasThumbnail)
           {
-            try
+            // The following code gets cover art images from file (embedded) or from windows explorer cache (supports folder.jpg).
+            if (tags.PictureCount > 0)
             {
-              using (Image cover = tags.PictureGetImage(0))
-              using (MemoryStream result = new MemoryStream())
+              try
               {
-                cover.Save(result, ImageFormat.Jpeg);
-                trackInfo.Thumbnail = result.ToArray();
+                using (Image cover = tags.PictureGetImage(0))
+                using (MemoryStream result = new MemoryStream())
+                {
+                  cover.Save(result, ImageFormat.Jpeg);
+                  trackInfo.Thumbnail = result.ToArray();
+                  trackInfo.HasChanged = true;
+                }
+              }
+              // Decoding of invalid image data can fail, but main MediaItem is correct.
+              catch { }
+            }
+            else
+            {
+              // In quick mode only allow thumbs taken from cache.
+              bool cachedOnly = forceQuickMode;
+
+              // Thumbnail extraction
+              fileName = mediaItemAccessor.ResourcePathName;
+              IThumbnailGenerator generator = ServiceRegistration.Get<IThumbnailGenerator>();
+              byte[] thumbData;
+              ImageType imageType;
+              if (generator.GetThumbnail(fileName, cachedOnly, out thumbData, out imageType))
+              {
+                trackInfo.Thumbnail = thumbData;
+                trackInfo.HasChanged = true;
               }
             }
-            // Decoding of invalid image data can fail, but main MediaItem is correct.
-            catch { }
-          }
-          else
-          {
-            // In quick mode only allow thumbs taken from cache.
-            bool cachedOnly = forceQuickMode;
-
-            // Thumbnail extraction
-            fileName = mediaItemAccessor.ResourcePathName;
-            IThumbnailGenerator generator = ServiceRegistration.Get<IThumbnailGenerator>();
-            byte[] thumbData;
-            ImageType imageType;
-            if (generator.GetThumbnail(fileName, cachedOnly, out thumbData, out imageType))
-              trackInfo.Thumbnail = thumbData;
           }
         }
 
-        bool forceQuickModePrimary = forceQuickMode;
-        if (!trackInfo.IsBaseInfoPresent || !trackInfo.HasExternalId)
-        {
-          forceQuickModePrimary = false;
-        }
+        if(!SkipOnlineSearches)
+          OnlineMatcherService.Instance.FindAndUpdateTrack(trackInfo, forceQuickMode);
 
-        MusicTheAudioDbMatcher.Instance.FindAndUpdateTrack(trackInfo, forceQuickModePrimary);
-        //MusicBrainzMatcher.Instance.FindAndUpdateTrack(trackInfo, forceQuickMode);
-        MusicFanArtTvMatcher.Instance.FindAndUpdateTrack(trackInfo, forceQuickModePrimary);
+        if (!trackInfo.HasChanged && !forceQuickMode)
+          return false;
 
-        if (!_onlyFanArt)
-          trackInfo.SetMetadata(extractedAspectData);
+        trackInfo.SetMetadata(extractedAspectData);
 
         return trackInfo.IsBaseInfoPresent;
       }

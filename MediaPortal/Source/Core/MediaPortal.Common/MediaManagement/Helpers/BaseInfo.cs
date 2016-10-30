@@ -32,6 +32,8 @@ using System.Text.RegularExpressions;
 using DuoVia.FuzzyStrings;
 using MediaPortal.Common.Services.ResourceAccess.VirtualResourceProvider;
 using MediaPortal.Common.ResourceAccess;
+using System.Reflection;
+using System.Text;
 
 namespace MediaPortal.Common.MediaManagement.Helpers
 {
@@ -43,23 +45,43 @@ namespace MediaPortal.Common.MediaManagement.Helpers
     /// <summary>
     /// Maximum cover image width. Larger images will be scaled down to fit this dimension.
     /// </summary>
-    public const int MAX_COVER_WIDTH = 1000;
+    public const int MAX_COVER_WIDTH = 512;
 
     /// <summary>
     /// Maximum cover image height. Larger images will be scaled down to fit this dimension.
     /// </summary>
-    public const int MAX_COVER_HEIGHT = 1000;
+    public const int MAX_COVER_HEIGHT = 512;
 
     /// <summary>
     /// Binary data for the thumbnail image.
     /// </summary>
     public byte[] Thumbnail = null;
 
+    private bool _hasThumbnail = false;
+    private bool _hasChanged = false;
+    private DateTime? _lastChange = null;
+
+    public bool HasThumbnail
+    {
+      get { return _hasThumbnail || Thumbnail != null; }
+      set { _hasThumbnail = value; }
+    }
+
+    public bool HasChanged
+    {
+      get { return _hasChanged; }
+      set { _hasChanged = value; }
+    }
+
+    public DateTime? LastChanged
+    {
+      get { return _lastChange; }
+      set { _lastChange = value; }
+    }
+
     public abstract bool IsBaseInfoPresent { get; }
 
     public abstract bool HasExternalId { get; }
-
-    public string FanArtToken = null;
 
     /// <summary>
     /// Used to replace all "." and "_" that are not followed by a word character.
@@ -78,7 +100,7 @@ namespace MediaPortal.Common.MediaManagement.Helpers
     /// <param name="aspectData">Dictionary with extracted aspects.</param>
     public virtual bool SetThumbnailMetadata(IDictionary<Guid, IList<MediaItemAspect>> aspectData)
     {
-      if (Thumbnail == null)
+      if (Thumbnail == null || Thumbnail.Length == 0)
         return false;
 
       try
@@ -86,13 +108,17 @@ namespace MediaPortal.Common.MediaManagement.Helpers
         using (MemoryStream stream = new MemoryStream(Thumbnail))
         using (MemoryStream resized = (MemoryStream)ImageUtilities.ResizeImage(stream, ImageFormat.Jpeg, MAX_COVER_WIDTH, MAX_COVER_HEIGHT))
         {
+          if (resized == null)
+            return false;
           MediaItemAspect.SetAttribute(aspectData, ThumbnailLargeAspect.ATTR_THUMBNAIL, resized.ToArray());
         }
+        HasThumbnail = true;
+        Thumbnail = null;
         return true;
       }
       // Decoding of invalid image data can fail, but main MediaItem is correct.
       catch { }
-
+      Thumbnail = null;
       return false;
     }
 
@@ -141,9 +167,73 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       return true;
     }
 
+    public static bool HasRelationship(IDictionary<Guid, IList<MediaItemAspect>> aspectData, Guid linkedRole)
+    {
+      bool relationshipFound = false;
+      IList<MultipleMediaItemAspect> relationships;
+      if (MediaItemAspect.TryGetAspects(aspectData, RelationshipAspect.Metadata, out relationships))
+      {
+        foreach (MultipleMediaItemAspect relationship in relationships)
+        {
+          if (relationship.GetAttributeValue<Guid>(RelationshipAspect.ATTR_LINKED_ROLE) == linkedRole ||
+            relationship.GetAttributeValue<Guid>(RelationshipAspect.ATTR_ROLE) == linkedRole)
+          {
+            relationshipFound = true;
+            break;
+          }
+        }
+      }
+      return relationshipFound;
+    }
+
+    public static int CountRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspectData, Guid linkedRole)
+    {
+      int count = 0;
+      IList<MultipleMediaItemAspect> relationships;
+      if (MediaItemAspect.TryGetAspects(aspectData, RelationshipAspect.Metadata, out relationships))
+      {
+        foreach (MultipleMediaItemAspect relationship in relationships)
+        {
+          if (relationship.GetAttributeValue<Guid>(RelationshipAspect.ATTR_LINKED_ROLE) == linkedRole ||
+            relationship.GetAttributeValue<Guid>(RelationshipAspect.ATTR_ROLE) == linkedRole)
+          {
+            count++;
+          }
+        }
+      }
+      return count;
+    }
+
+    protected void GetMetadataChanged(IDictionary<Guid, IList<MediaItemAspect>> aspectData)
+    {
+      SingleMediaItemAspect importerAspect;
+      if (MediaItemAspect.TryGetAspect(aspectData, ImporterAspect.Metadata, out importerAspect))
+      {
+        _hasChanged = importerAspect.GetAttributeValue<bool>(ImporterAspect.ATTR_DIRTY);
+        _lastChange = importerAspect.GetAttributeValue<DateTime?>(ImporterAspect.ATTR_LAST_IMPORT_DATE);
+      }
+    }
+
+    protected void SetMetadataChanged(IDictionary<Guid, IList<MediaItemAspect>> aspectData)
+    {
+      SingleMediaItemAspect importerAspect;
+      if (MediaItemAspect.TryGetAspect(aspectData, ImporterAspect.Metadata, out importerAspect))
+      {
+        if (_hasChanged)
+        {
+          //Set to dirty to mark it as changed
+          importerAspect.SetAttribute(ImporterAspect.ATTR_DIRTY, _hasChanged);
+          //_lastChange = DateTime.Now;
+          //importerAspect.SetAttribute(ImporterAspect.ATTR_LAST_IMPORT_DATE, _lastChange);
+        }
+      }
+    }
+
     public abstract bool SetMetadata(IDictionary<Guid, IList<MediaItemAspect>> aspectData);
 
     public abstract bool FromMetadata(IDictionary<Guid, IList<MediaItemAspect>> aspectData);
+
+    public abstract void AssignNameId();
 
     public virtual bool FromString(string name)
     {
@@ -160,10 +250,58 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       return default(T);
     }
 
-    public virtual void InitFanArtToken()
+    protected string GetNameId(string name)
     {
-      if (string.IsNullOrEmpty(FanArtToken))
-        FanArtToken = Guid.NewGuid().ToString();
+      if (!string.IsNullOrEmpty(name))
+      {
+        string nameId = name.Trim();
+        nameId = CleanString(nameId);
+        nameId = CleanupWhiteSpaces(nameId);
+        byte[] tempBytes = Encoding.GetEncoding("ISO-8859-8").GetBytes(nameId);
+        nameId = Encoding.UTF8.GetString(tempBytes);
+        nameId = nameId.Replace("'", "");
+        nameId = nameId.Replace(" ", "").ToLowerInvariant();
+        return nameId;
+      }
+      return null;
+    }
+
+    protected T CloneProperties<T>(T obj)
+    {
+      if (obj == null)
+        return default(T);
+      Type type = obj.GetType();
+
+      if (type.IsValueType || type == typeof(string))
+      {
+        return obj;
+      }
+      else if (type.IsArray)
+      {
+        Type elementType = obj.GetType().GetElementType();
+        var array = obj as Array;
+        Array arrayCopy = Array.CreateInstance(elementType, array.Length);
+        for (int i = 0; i < array.Length; i++)
+        {
+          arrayCopy.SetValue(CloneProperties(array.GetValue(i)), i);
+        }
+        return (T)Convert.ChangeType(arrayCopy, obj.GetType());
+      }
+      else if (type.IsClass)
+      {
+        T newInstance = (T)Activator.CreateInstance(obj.GetType());
+        FieldInfo[] fields = type.GetFields(BindingFlags.Public |
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+        foreach (FieldInfo field in fields)
+        {
+          object fieldValue = field.GetValue(obj);
+          if (fieldValue == null)
+            continue;
+          field.SetValue(newInstance, CloneProperties(fieldValue));
+        }
+        return newInstance;
+      }
+      return default(T);
     }
 
     #endregion

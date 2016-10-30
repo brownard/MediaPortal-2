@@ -26,9 +26,6 @@ using System.Collections.Generic;
 using MediaPortal.UiComponents.Media.General;
 using MediaPortal.UiComponents.Media.Models.ScreenData;
 using MediaPortal.UiComponents.Media.Models.Sorting;
-using MediaPortal.Common.MediaManagement.DefaultItemAspects;
-using System.Linq;
-using MediaPortal.UiComponents.Media.Views;
 
 namespace MediaPortal.UiComponents.Media.Models.NavigationModel
 {
@@ -62,16 +59,18 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
         new SeriesEpisodeFilterByCharacterScreenData(),
         new SeriesFilterByCompanyScreenData(),
         new SeriesFilterByTvNetworkScreenData(),
-        new VideosFilterByGenreScreenData(),
+        new SeriesFilterByGenreScreenData(),
         new SeriesSimpleSearchScreenData(_genericPlayableItemCreatorDelegate),
       };
       _defaultSorting = new SeriesSortByEpisode();
       _availableSortings = new List<Sorting.Sorting>
       {
         _defaultSorting,
+        new SeriesSortByDVDEpisode(),
         new SortByTitle(),
         new SortByFirstAiredDate(),
         new SortByDate(),
+        new SortByAddedDate(),
         new SortBySystem(),
       };
       _defaultGrouping = null;
@@ -79,9 +78,11 @@ namespace MediaPortal.UiComponents.Media.Models.NavigationModel
       {
         //_defaultGrouping,
         new SeriesSortByEpisode(),
+        new SeriesSortByDVDEpisode(),
         new SortByTitle(),
         new SortByFirstAiredDate(),
         new SortByDate(),
+        new SortByAddedDate(),
         new SortBySystem(),
       };
     }

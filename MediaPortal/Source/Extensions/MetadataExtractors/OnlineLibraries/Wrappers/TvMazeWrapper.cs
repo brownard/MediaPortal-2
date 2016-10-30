@@ -29,15 +29,16 @@ using MediaPortal.Extensions.OnlineLibraries.Libraries.TvMazeV1;
 using MediaPortal.Extensions.OnlineLibraries.Libraries.TvMazeV1.Data;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
-using MediaPortal.Extensions.UserServices.FanArtService.Interfaces;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
+using MediaPortal.Common.FanArt;
 
 namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
 {
   class TvMazeWrapper : ApiWrapper<TvMazeImageCollection, string>
   {
     protected TvMazeApiV1 _tvMazeHandler;
+    protected TimeSpan _cacheTimeout = TimeSpan.FromHours(12);
 
     /// <summary>
     /// Initializes the library. Needs to be called at first.
@@ -61,6 +62,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
       {
         if (!SearchSeriesUniqueAndUpdate(seriesSearch, language))
           return false;
+        episodeSearch.CopyIdsFrom(seriesSearch);
       }
 
       if (episodeSearch.SeriesTvMazeId > 0 && episodeSearch.SeasonNumber.HasValue)
@@ -113,6 +115,10 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
     {
       series = null;
       List<TvMazeSeries> foundSeries = _tvMazeHandler.SearchSeries(seriesSearch.SeriesName.Text);
+      if (foundSeries == null && !string.IsNullOrEmpty(seriesSearch.OriginalName))
+        foundSeries = _tvMazeHandler.SearchSeries(seriesSearch.OriginalName);
+      if (foundSeries == null && !string.IsNullOrEmpty(seriesSearch.AlternateName))
+        foundSeries = _tvMazeHandler.SearchSeries(seriesSearch.AlternateName);
       if (foundSeries == null) return false;
       series = foundSeries.Select(s => new SeriesInfo()
       {
@@ -123,21 +129,6 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         SeriesName = new SimpleTitle(s.Name, true),
         FirstAired = s.Premiered,
       }).ToList();
-
-      if (series.Count == 0)
-      {
-        foundSeries = _tvMazeHandler.SearchSeries(seriesSearch.OriginalName);
-        if (foundSeries == null) return false;
-        series = foundSeries.Select(s => new SeriesInfo()
-        {
-          TvMazeId = s.Id,
-          ImdbId = s.Externals.ImDbId,
-          TvdbId = s.Externals.TvDbId ?? 0,
-          TvRageId = s.Externals.TvRageId ?? 0,
-          SeriesName = new SimpleTitle(s.Name, true),
-          FirstAired = s.Premiered,
-        }).ToList();
-      }
       return series.Count > 0;
     }
 
@@ -193,11 +184,22 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         }
         if(seriesDetail.Embedded.Episodes != null)
         {
-          series.TotalSeasons = seriesDetail.Embedded.Episodes.Select(e => e.SeasonNumber).Max();
-          series.TotalEpisodes = seriesDetail.Embedded.Episodes.Count;
-
           foreach (TvMazeEpisode episodeDetail in seriesDetail.Embedded.Episodes)
           {
+            SeasonInfo seasonInfo = new SeasonInfo()
+            {
+              SeriesTvMazeId = seriesDetail.Id,
+              SeriesImdbId = seriesDetail.Externals.ImDbId,
+              SeriesTvdbId = seriesDetail.Externals.TvDbId ?? 0,
+              SeriesTvRageId = seriesDetail.Externals.TvRageId ?? 0,
+              SeriesName = new SimpleTitle(seriesDetail.Name, true),
+              SeasonNumber = episodeDetail.SeasonNumber,
+              FirstAired = episodeDetail.AirDate,
+              TotalEpisodes = seriesDetail.Embedded.Episodes.FindAll(e => e.SeasonNumber == episodeDetail.SeasonNumber).Count
+            };
+            if (!series.Seasons.Contains(seasonInfo))
+              series.Seasons.Add(seasonInfo);
+
             EpisodeInfo info = new EpisodeInfo()
             {
               TvMazeId = episodeDetail.Id,
@@ -222,6 +224,9 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
 
             series.Episodes.Add(info);
           }
+
+          series.TotalSeasons = series.Seasons.Count;
+          series.TotalEpisodes = series.Episodes.Count;
 
           TvMazeEpisode nextEpisode = seriesDetail.Embedded.Episodes.Where(e => e.AirDate > DateTime.Now).FirstOrDefault();
           if (nextEpisode != null)
@@ -432,13 +437,13 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
 
     #region FanArt
 
-    public override bool GetFanArt<T>(T infoObject, string language, string scope, out ApiWrapperImageCollection<TvMazeImageCollection> images)
+    public override bool GetFanArt<T>(T infoObject, string language, string fanartMediaType, out ApiWrapperImageCollection<TvMazeImageCollection> images)
     {
       images = new ApiWrapperImageCollection<TvMazeImageCollection>();
 
       try
       {
-        if (scope == FanArtMediaTypes.Series)
+        if (fanartMediaType == FanArtMediaTypes.Series)
         {
           EpisodeInfo episode = infoObject as EpisodeInfo;
           SeasonInfo season = infoObject as SeasonInfo;
@@ -463,7 +468,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
             }
           }
         }
-        else if (scope == FanArtMediaTypes.Episode)
+        else if (fanartMediaType == FanArtMediaTypes.Episode)
         {
           EpisodeInfo episode = infoObject as EpisodeInfo;
           if (episode != null && episode.SeriesTvMazeId > 0 && episode.SeasonNumber.HasValue && episode.EpisodeNumbers.Count > 0)
@@ -478,7 +483,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
             }
           }
         }
-        else if (scope == FanArtMediaTypes.Actor)
+        else if (fanartMediaType == FanArtMediaTypes.Actor)
         {
           PersonInfo person = infoObject as PersonInfo;
           if (person != null && person.TvMazeId > 0)
@@ -493,7 +498,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
             }
           }
         }
-        else if (scope == FanArtMediaTypes.Character)
+        else if (fanartMediaType == FanArtMediaTypes.Character)
         {
           CharacterInfo character = infoObject as CharacterInfo;
           if (character != null && character.TvMazeId > 0)
@@ -520,35 +525,12 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
       return false;
     }
 
-    public override bool DownloadFanArt(string id, TvMazeImageCollection image, string scope, string type)
+    public override bool DownloadFanArt(string id, TvMazeImageCollection image, string folderPath)
     {
       int ID;
       if (int.TryParse(id, out ID))
       {
-        string category = string.Format(@"{0}\{1}", scope, type);
-        return _tvMazeHandler.DownloadImage(ID, image, category);
-      }
-      return false;
-    }
-
-    public override bool DownloadSeriesSeasonFanArt(string id, int seasonNo, TvMazeImageCollection image, string scope, string type)
-    {
-      int ID;
-      if (int.TryParse(id, out ID))
-      {
-        string category = string.Format(@"S{0:00} {1}\{2}", seasonNo, scope, type);
-        return _tvMazeHandler.DownloadImage(ID, image, category);
-      }
-      return false;
-    }
-
-    public override bool DownloadSeriesEpisodeFanArt(string id, int seasonNo, int episodeNo, TvMazeImageCollection image, string scope, string type)
-    {
-      int ID;
-      if (int.TryParse(id, out ID))
-      {
-        string category = string.Format(@"S{0:00}E{1:00} {2}\{3}", seasonNo, episodeNo, scope, type);
-        return _tvMazeHandler.DownloadImage(ID, image, category);
+        return _tvMazeHandler.DownloadImage(ID, image, folderPath);
       }
       return false;
     }
@@ -565,6 +547,9 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
     {
       try
       {
+        if (DateTime.Now - lastRefresh <= _cacheTimeout)
+          return false;
+
         List<int> changedItems = new List<int>();
         Dictionary<int, DateTime> seriesChangeDates = _tvMazeHandler.GetSeriesChangeDates();
         foreach (var change in seriesChangeDates)

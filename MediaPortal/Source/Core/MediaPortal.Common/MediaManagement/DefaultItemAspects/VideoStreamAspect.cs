@@ -34,10 +34,13 @@ namespace MediaPortal.Common.MediaManagement.DefaultItemAspects
     // TODO: Put this somewhere else?
     public static readonly string TYPE_SD = "SD";
     public static readonly string TYPE_HD = "HD";
+    public static readonly string TYPE_UHD = "UHD";
     public static readonly string TYPE_HSBS = "HSBS";
     public static readonly string TYPE_SBS = "SBS";
     public static readonly string TYPE_HTAB = "HTAB";
     public static readonly string TYPE_TAB = "TAB";
+    public static readonly string TYPE_MVC = "MVC";
+    public static readonly string TYPE_ANAGLYPH = "ANAGLYPH";
 
     /// <summary>
     /// Media item aspect id of the video aspect.
@@ -73,6 +76,12 @@ namespace MediaPortal.Common.MediaManagement.DefaultItemAspects
     /// </summary>
     public static readonly MediaItemAspectMetadata.MultipleAttributeSpecification ATTR_VIDEO_PART_SET =
         MediaItemAspectMetadata.CreateMultipleAttributeSpecification("PartSetNum", typeof(int), Cardinality.Inline, true);
+
+    /// <summary>
+    /// Contains the name of the set if any.
+    /// </summary>
+    public static readonly MediaItemAspectMetadata.MultipleAttributeSpecification ATTR_VIDEO_PART_SET_NAME =
+        MediaItemAspectMetadata.CreateMultipleStringAttributeSpecification("PartSetName", 100, Cardinality.Inline, false);
 
     /// <summary>
     /// Duration in seconds.
@@ -131,6 +140,7 @@ namespace MediaPortal.Common.MediaManagement.DefaultItemAspects
             ATTR_VIDEO_TYPE,
             ATTR_VIDEO_PART,
             ATTR_VIDEO_PART_SET,
+            ATTR_VIDEO_PART_SET_NAME,
             ATTR_DURATION,
             ATTR_AUDIOSTREAMCOUNT,
             ATTR_VIDEOENCODING,

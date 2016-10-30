@@ -86,7 +86,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         {
           foreach (OmDbSeasonEpisode episode in season.Episodes)
           {
-            if (episodeSearch.EpisodeNumbers.Contains(episode.EpisodeNumber) || episodeSearch.EpisodeNumbers.Count == 0)
+            if ((episode.EpisodeNumber.HasValue  && episodeSearch.EpisodeNumbers.Contains(episode.EpisodeNumber.Value)) || episodeSearch.EpisodeNumbers.Count == 0)
             {
               if (episodes == null)
                 episodes = new List<EpisodeInfo>();
@@ -98,7 +98,8 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
                 SeasonNumber = episodeSearch.SeasonNumber.Value,
                 EpisodeName = new SimpleTitle(episode.Title, false),
               };
-              info.EpisodeNumbers.Add(episode.EpisodeNumber);
+              if(episode.EpisodeNumber.HasValue)
+                info.EpisodeNumbers.Add(episode.EpisodeNumber.Value);
               info.CopyIdsFrom(episodeSearch.CloneBasicInstance<SeriesInfo>());
               episodes.Add(info);
             }
@@ -129,6 +130,13 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
       series = null;
       List<OmDbSearchItem> foundSeries = _omDbHandler.SearchSeries(seriesSearch.SeriesName.Text,
         seriesSearch.FirstAired.HasValue ? seriesSearch.FirstAired.Value.Year : 0);
+      if (foundSeries == null && !string.IsNullOrEmpty(seriesSearch.AlternateName))
+        foundSeries = _omDbHandler.SearchSeries(seriesSearch.AlternateName, 
+          seriesSearch.FirstAired.HasValue ? seriesSearch.FirstAired.Value.Year : 0);
+      if (foundSeries == null && seriesSearch.FirstAired.HasValue)
+        foundSeries = _omDbHandler.SearchSeries(seriesSearch.SeriesName.Text, 0);
+      if (foundSeries == null && seriesSearch.FirstAired.HasValue && !string.IsNullOrEmpty(seriesSearch.AlternateName))
+        foundSeries = _omDbHandler.SearchSeries(seriesSearch.AlternateName, 0);
       if (foundSeries == null) return false;
       series = foundSeries.Select(s => new SeriesInfo()
       {
@@ -255,13 +263,25 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
 
       //Episode listing is currently not optimal
       //OmDbSeason seasonDetails = null;
+      //OmDbSeasonEpisode nextEpisode = null;
       //int seasonNumber = 1;
-      //while(true)
+      //while (true)
       //{
       //  seasonDetails = _omDbHandler.GetSeriesSeason(series.ImdbId, seasonNumber, cacheOnly);
       //  if (seasonDetails != null)
       //  {
-      //    foreach(OmDbSeasonEpisode episodeDetail in seasonDetails.Episodes)
+      //    SeasonInfo seasonInfo = new SeasonInfo()
+      //    {
+      //      SeriesImdbId = seriesDetail.ImdbID,
+      //      SeriesName = new SimpleTitle(seriesDetail.Title, true),
+      //      SeasonNumber = seasonDetails.SeasonNumber,
+      //      FirstAired = seasonDetails.Episodes.First().Released,
+      //      TotalEpisodes = seasonDetails.Episodes.Count
+      //    };
+      //    if (!series.Seasons.Contains(seasonInfo))
+      //      series.Seasons.Add(seasonInfo);
+
+      //    foreach (OmDbSeasonEpisode episodeDetail in seasonDetails.Episodes)
       //    {
       //      if (episodeDetail.EpisodeNumber <= 0) continue;
 
@@ -280,24 +300,24 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
       //      };
 
       //      series.Episodes.Add(info);
-      //    }
 
-      //    OmDbSeasonEpisode episodeDetails = seasonDetails.Episodes.Where(e => e.Released > DateTime.Now).FirstOrDefault();
-      //    if (episodeDetails == null)
-      //    {
-      //      seasonNumber++;
-      //      continue;
+      //      if (nextEpisode == null && episodeDetail.Released > DateTime.Now)
+      //      {
+      //        series.NextEpisodeName = new SimpleTitle(episodeDetail.Title, true);
+      //        series.NextEpisodeAirDate = episodeDetail.Released;
+      //        series.NextEpisodeSeasonNumber = seasonDetails.SeasonNumber;
+      //        series.NextEpisodeNumber = episodeDetail.EpisodeNumber;
+      //      }
       //    }
-      //    if (episodeDetails != null)
-      //    {
-      //      series.NextEpisodeName = new SimpleTitle(episodeDetails.Title, true);
-      //      series.NextEpisodeAirDate = episodeDetails.Released;
-      //      series.NextEpisodeSeasonNumber = seasonDetails.SeasonNumber;
-      //      series.NextEpisodeNumber = episodeDetails.EpisodeNumber;
-      //    }
+      //    seasonNumber++;
       //  }
-      //  break;
+      //  else
+      //  {
+      //    break;
+      //  }
       //}
+      series.TotalSeasons = series.Seasons.Count;
+      series.TotalEpisodes = series.Episodes.Count;
 
       return true;
     }
@@ -342,7 +362,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
               seasonDetail.Episodes[0].Released : default(DateTime?),
 
             SeasonNumber = episodeDetail.SeasonNumber,
-            EpisodeNumbers = new List<int>(new int[] { episodeDetail.EpisodeNumber }),
+            EpisodeNumbers = episodeDetail.EpisodeNumber.HasValue ? new List<int>(new int[] { episodeDetail.EpisodeNumber.Value }) : null,
             FirstAired = episodeDetail.Released,
             EpisodeName = new SimpleTitle(episodeDetail.Title, true),
             Summary = new SimpleTitle(episodeDetail.Plot, true),

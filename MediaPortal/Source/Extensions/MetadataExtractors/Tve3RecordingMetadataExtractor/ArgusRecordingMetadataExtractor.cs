@@ -69,7 +69,12 @@ namespace MediaPortal.Extensions.MetadataExtractors
     public ArgusRecordingSeriesMetadataExtractor()
     {
       _metadata = new MetadataExtractorMetadata(METADATAEXTRACTOR_ID, "Argus recordings series metadata extractor", MetadataExtractorPriority.Extended, false,
-        SERIES_MEDIA_CATEGORIES, new[] { SeriesAspect.Metadata });
+        SERIES_MEDIA_CATEGORIES, new[]
+        {
+          MediaAspect.Metadata,
+          VideoAspect.Metadata,
+          EpisodeAspect.Metadata,
+        });
     }
 
     public override bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
@@ -77,7 +82,8 @@ namespace MediaPortal.Extensions.MetadataExtractors
       try
       {
         IResourceAccessor metaFileAccessor;
-        if (!CanExtract(mediaItemAccessor, extractedAspectData, out metaFileAccessor)) return false;
+        if (!CanExtract(mediaItemAccessor, extractedAspectData, out metaFileAccessor))
+          return false;
 
         // Handle series information
         EpisodeInfo episodeInfo = new EpisodeInfo();
@@ -98,15 +104,11 @@ namespace MediaPortal.Extensions.MetadataExtractors
 
         if (episodeInfo.IsBaseInfoPresent)
         {
-          SeriesTvDbMatcher.Instance.FindAndUpdateEpisode(episodeInfo, false); //Provides IMDBID and TVDBID
-          SeriesTheMovieDbMatcher.Instance.FindAndUpdateEpisode(episodeInfo, forceQuickMode); //Provides IMDBID, TMDBID and TVDBID
-          SeriesTvMazeMatcher.Instance.FindAndUpdateEpisode(episodeInfo, forceQuickMode); //Provides TvMazeID, IMDBID and TVDBID
-          SeriesOmDbMatcher.Instance.FindAndUpdateEpisode(episodeInfo, forceQuickMode); //Provides IMDBID
-          SeriesFanArtTvMatcher.Instance.FindAndUpdateEpisode(episodeInfo, false);
-
-          episodeInfo.SetMetadata(extractedAspectData);
+          OnlineMatcherService.Instance.FindAndUpdateEpisode(episodeInfo, forceQuickMode);
+          if (episodeInfo.IsBaseInfoPresent)
+            episodeInfo.SetMetadata(extractedAspectData);
         }
-        return true;
+        return episodeInfo.IsBaseInfoPresent && episodeInfo.HasChanged;
       }
       catch (Exception e)
       {
@@ -206,6 +208,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
           }
         }
       }
+      episodeInfo.HasChanged = true;
       return episodeInfo;
     }
 
@@ -221,7 +224,10 @@ namespace MediaPortal.Extensions.MetadataExtractors
       try
       {
         IResourceAccessor metaFileAccessor;
-        if (!CanExtract(mediaItemAccessor, extractedAspectData, out metaFileAccessor)) return false;
+        if (!CanExtract(mediaItemAccessor, extractedAspectData, out metaFileAccessor))
+          return false;
+        if (extractedAspectData.ContainsKey(RecordingAspect.ASPECT_ID))
+          return false;
 
         Argus.Recording recording;
         using (metaFileAccessor)
@@ -230,7 +236,19 @@ namespace MediaPortal.Extensions.MetadataExtractors
             recording = (Argus.Recording)GetTagsXmlSerializer().Deserialize(metaStream);
         }
 
+        // Force MimeType
+        IList<MultipleMediaItemAspect> providerAspects;
+        MediaItemAspect.TryGetAspects(extractedAspectData, ProviderResourceAspect.Metadata, out providerAspects);
+        foreach (MultipleMediaItemAspect aspect in providerAspects)
+        {
+          aspect.SetAttribute(ProviderResourceAspect.ATTR_MIME_TYPE, "slimtv/arg");
+        }
+
+        MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_ISVIRTUAL, false);
+        MediaItemAspect.SetAttribute(extractedAspectData, VideoAspect.ATTR_ISDVD, false);
+
         MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_TITLE, recording.Title);
+        MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_SORT_TITLE, BaseInfo.GetSortTitle(recording.Title));
 
         MediaItemAspect.SetCollectionAttribute(extractedAspectData, VideoAspect.ATTR_GENRES, new[] { recording.Category });
 

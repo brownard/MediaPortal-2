@@ -28,11 +28,11 @@ using MediaPortal.UiComponents.Media.Models.Navigation;
 
 namespace MediaPortal.UiComponents.Media.Models.ScreenData
 {
-  public class AudioFilterByAlbumLabelScreenData : AbstractAudioFilterScreenData<CompanyFilterItem>
+  public class AudioFilterByAlbumLabelScreenData : AbstractAlbumFilterScreenData<CompanyFilterItem>
   {
     public AudioFilterByAlbumLabelScreenData() :
       base(Consts.SCREEN_AUDIO_FILTER_BY_ALBUM_LABEL, Consts.RES_FILTER_BY_ALBUM_LABEL_MENU_ITEM,
-      Consts.RES_FILTER_ALBUM_LABEL_NAVBAR_DISPLAY_LABEL, new FilterByAlbumLabelCriterion())
+      Consts.RES_FILTER_ALBUM_LABEL_NAVBAR_DISPLAY_LABEL, new FilterByMusicLabelCriterion())
     {
     }
 

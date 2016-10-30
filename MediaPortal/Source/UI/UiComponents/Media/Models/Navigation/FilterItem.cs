@@ -22,11 +22,12 @@
 
 #endregion
 
-using MediaPortal.Common;
 using MediaPortal.Common.MediaManagement;
-using MediaPortal.Common.Settings;
+using MediaPortal.Common.MediaManagement.DefaultItemAspects;
+using MediaPortal.Common.Services.Settings;
 using MediaPortal.UiComponents.Media.General;
 using MediaPortal.UiComponents.Media.Settings;
+using System;
 
 namespace MediaPortal.UiComponents.Media.Models.Navigation
 {
@@ -35,14 +36,14 @@ namespace MediaPortal.UiComponents.Media.Models.Navigation
   /// </summary>
   public class FilterItem : ContainerItem
   {
+    protected SettingsChangeWatcher<ViewSettings> _settingsWatcher;
+    protected bool _showVirtual = false; 
+
     public bool ShowVirtual
     {
       get
       {
-        //TODO: Decide whether the value should be cached to avoid reading from disk or leave like this so
-        //if it is changed the new value is loaded
-        ViewSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<ViewSettings>();
-        return settings.ShowVirtual;
+        return _showVirtual;
       }
     }
 
@@ -50,10 +51,25 @@ namespace MediaPortal.UiComponents.Media.Models.Navigation
       : base(numItems)
     {
       SimpleTitle = name;
+      InitSettingWatcher();
+    }
+
+    private void SettingsChanged(object sender, EventArgs e)
+    {
+      _showVirtual = _settingsWatcher.Settings.ShowVirtual;
     }
 
     public FilterItem()
-    { }
+    {
+      InitSettingWatcher();
+    }
+
+    private void InitSettingWatcher()
+    {
+      _settingsWatcher = new SettingsChangeWatcher<ViewSettings>();
+      _settingsWatcher.SettingsChanged += SettingsChanged;
+      _showVirtual = _settingsWatcher.Settings.ShowVirtual;
+    }
 
     public MediaItem MediaItem
     {
@@ -71,6 +87,16 @@ namespace MediaPortal.UiComponents.Media.Models.Navigation
     }
 
     public virtual void Update(MediaItem mediaItem)
-    { }
+    {
+      if (mediaItem != null)
+      {
+        SingleMediaItemAspect mediaAspect;
+        if (MediaItemAspect.TryGetAspect(mediaItem.Aspects, MediaAspect.Metadata, out mediaAspect))
+        {
+          SimpleTitle = (string)mediaAspect[MediaAspect.ATTR_TITLE];
+          SortString = (string)mediaAspect[MediaAspect.ATTR_SORT_TITLE];
+        }
+      }
+    }
   }
 }

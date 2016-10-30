@@ -29,9 +29,9 @@ using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Extensions.OnlineLibraries.Libraries.AudioDbV1;
 using MediaPortal.Extensions.OnlineLibraries.Libraries.AudioDbV1.Data;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
-using MediaPortal.Extensions.UserServices.FanArtService.Interfaces;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common;
+using MediaPortal.Common.FanArt;
 
 namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
 {
@@ -65,7 +65,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         if (foundTracks != null)
           break;
       }
-      if (foundTracks == null)
+      if (foundTracks == null && trackSearch.AlbumArtists.Count > 0)
       {
         foreach (PersonInfo person in trackSearch.AlbumArtists)
         {
@@ -301,7 +301,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
       track.DiscNum = trackDetail.CD.HasValue ? trackDetail.CD.Value : 1;
       track.Rating = new SimpleRating(trackDetail.Rating, trackDetail.RatingCount);
       track.TrackLyrics = trackDetail.TrackLyrics;
-      track.Duration = trackDetail.Duration ?? 0;
+      track.Duration = trackDetail.Duration.HasValue ? trackDetail.Duration.Value / 1000 : 0;
 
       if (trackDetail.ArtistID.HasValue)
       {
@@ -388,7 +388,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
           track.DiscNum = trackDetail.CD.HasValue ? trackDetail.CD.Value : 1;
           track.Rating = new SimpleRating(trackDetail.Rating, trackDetail.RatingCount);
           track.TrackLyrics = trackDetail.TrackLyrics;
-          track.Duration = trackDetail.Duration ?? 0;
+          track.Duration = trackDetail.Duration.HasValue ? trackDetail.Duration.Value / 1000 : 0;
 
           if (trackDetail.ArtistID.HasValue)
           {
@@ -439,13 +439,13 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
 
     #region FanArt
 
-    public override bool GetFanArt<T>(T infoObject, string language, string scope, out ApiWrapperImageCollection<string> images)
+    public override bool GetFanArt<T>(T infoObject, string language, string fanartMediaType, out ApiWrapperImageCollection<string> images)
     {
       images = new ApiWrapperImageCollection<string>();
 
       try
       {
-        if (scope == FanArtMediaTypes.Album)
+        if (fanartMediaType == FanArtMediaTypes.Album)
         {
           TrackInfo track = infoObject as TrackInfo;
           AlbumInfo album = infoObject as AlbumInfo;
@@ -465,7 +465,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
             }
           }
         }
-        else if (scope == FanArtMediaTypes.Artist)
+        else if (fanartMediaType == FanArtMediaTypes.Artist)
         {
           PersonInfo person = infoObject as PersonInfo;
           if (person != null && person.AudioDbId > 0)
@@ -496,13 +496,12 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
       return false;
     }
 
-    public override bool DownloadFanArt(string id, string image, string scope, string type)
+    public override bool DownloadFanArt(string id, string image, string folderPath)
     {
       int ID;
       if (int.TryParse(id, out ID))
       {
-        string category = string.Format(@"{0}\{1}", scope, type);
-        return _audioDbHandler.DownloadImage(ID, image, category);
+        return _audioDbHandler.DownloadImage(ID, image, folderPath);
       }
       return false;
     }

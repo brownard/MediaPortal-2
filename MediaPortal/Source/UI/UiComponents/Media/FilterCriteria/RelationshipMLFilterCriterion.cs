@@ -47,15 +47,6 @@ namespace MediaPortal.UiComponents.Media.FilterCriteria
     protected IEnumerable<Guid> _optionalMIATypeIds;
     protected SortInformation _sortInformation;
 
-    public RelationshipMLFilterCriterion(Guid role, Guid linkedRole, IEnumerable<Guid> necessaryMIATypeIds, SortInformation sortInformation)
-    {
-      _role = role;
-      _linkedRole = linkedRole;
-      _necessaryMIATypeIds = necessaryMIATypeIds;
-      _optionalMIATypeIds = null;
-      _sortInformation = sortInformation;
-    }
-
     public RelationshipMLFilterCriterion(Guid role, Guid linkedRole, IEnumerable<Guid> necessaryMIATypeIds, IEnumerable<Guid> optionalMIATypeIds, SortInformation sortInformation)
     {
       _role = role;
@@ -80,7 +71,11 @@ namespace MediaPortal.UiComponents.Media.FilterCriteria
 
       IEnumerable<Guid> mias = _necessaryMIATypeIds ?? necessaryMIATypeIds;
       IEnumerable<Guid> optMias = _optionalMIATypeIds != null ? _optionalMIATypeIds.Except(mias) : null;
-      IFilter queryFilter = filter != null ? new RelationshipFilter(filter, _linkedRole, _role) : null;
+      IFilter queryFilter;
+      if (filter != null)
+        queryFilter = new FilteredRelationshipFilter(_role, filter);
+      else
+        queryFilter = new RelationshipFilter(_role, _linkedRole, Guid.Empty);
       MediaItemQuery query = new MediaItemQuery(mias, optMias, queryFilter);
       if (_sortInformation != null)
         query.SortInformation = new List<SortInformation> { _sortInformation };
@@ -91,7 +86,7 @@ namespace MediaPortal.UiComponents.Media.FilterCriteria
         string name;
         MediaItemAspect.TryGetAttribute(item.Aspects, MediaAspect.ATTR_TITLE, out name);
         result.Add(new FilterValue(name,
-          new RelationshipFilter(item.MediaItemId, _role, _linkedRole),
+          new RelationshipFilter(_linkedRole, _role, item.MediaItemId),
           null,
           item,
           this));

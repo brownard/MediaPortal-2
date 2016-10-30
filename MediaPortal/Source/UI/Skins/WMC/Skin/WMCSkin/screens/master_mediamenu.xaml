@@ -58,11 +58,11 @@ Parameters which have to be accessible by a DynamicResource lookup:
       <ControlTemplate.Resources>
         <fanart:FanArtImageSourceConverter x:Key="FanArtImageSourceConverter"/>
         <Model x:Key="FanArtBackgroundModel" Id="8F42C8E9-E8A3-475C-A50A-99E1E644DC91"/>
-        <Model x:Key="SkinSettingsModel" Id="B074D623-D161-4F15-BE18-D73DD580B1BB"/>
+        <Model x:Key="SkinSettingsModel" Id="13961014-16C4-4361-9751-8E2C585EFD44"/>
       </ControlTemplate.Resources>
       <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Image x:Name="FanArtImageBackground" Stretch="UniformToFill"
-                     IsVisible="{Binding Source={StaticResource SkinSettingsModel}, Path=EnableFanart}">
+                     IsVisible="{Binding Source={StaticResource SkinSettingsModel}, Path=[WMC].EnableFanart}">
           <Image.Source>
             <ImageSourceWrapper Delay="0.5" DelayInOut="true" Transition="transitions\dissolve" TransitionDuration="0.5"
                    Source="{Binding Source={StaticResource FanArtBackgroundModel}, Path=ImageSource, Converter={StaticResource FanArtImageSourceConverter}, ConverterParameter=FanArt;1920;1080;False}"/>
@@ -87,8 +87,8 @@ Parameters which have to be accessible by a DynamicResource lookup:
         <DockPanel.Resources>
           <Model x:Key="MenuModel" Id="9E9D0CD9-4FDB-4c0f-A0C4-F356E151BDE0"/>
         </DockPanel.Resources>
-        <ListView x:Name="TopMenu" DockPanel.Dock="Top" Margin="10,0,300,10" Style="{ThemeResource TopMenuListViewStyle}" Height="90"
-            VerticalAlignment="Top" HorizontalAlignment="Stretch" SetFocusPrio="Fallback"
+        <ListView x:Name="TopMenu" DockPanel.Dock="Top" Margin="10,0,20,10" Style="{ThemeResource TopMenuListViewStyle}" Height="90"
+            VerticalAlignment="Top" HorizontalAlignment="Stretch" SetFocusPrio="Fallback" RestoreFocus="True"
             ItemsSource="{Binding Source={StaticResource MenuModel},Path=MenuItems,Mode=OneTime,Converter={StaticResource ExcludeItemsListActionFilter},ConverterParameter={StaticResource ActionIdFilter}}">
           <ListView.Resources>
             <CommandBridge x:Key="Menu_Command" Command="{Binding Path=Command,Mode=OneTime}"/>
@@ -196,7 +196,7 @@ Parameters which have to be accessible by a DynamicResource lookup:
               </Border.Background>
             </Border>
             <ListView x:Name="MainMenu" Grid.Column="0" Style="{ThemeResource SlideMenuListViewStyle}" Margin="20,30,90,30"
-              HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SetFocusPrio="Default"
+              HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SetFocusPrio="Default" RestoreFocus="True"
               ItemsSource="{Binding Source={StaticResource MenuModel},Path=MenuItems,Mode=OneTime}"
               IsEnabled="{Binding Source={StaticResource MenuModel},Path=IsMenuOpen}">
               <ListView.Resources>
@@ -209,7 +209,104 @@ Parameters which have to be accessible by a DynamicResource lookup:
                   Command="{Command Source={StaticResource MenuModel}, Path=ToggleMenu}">
               <Image Source="Right_Menu.png" Stretch="Uniform" Margin="0,0,0,0"/>
             </Button>
-          </Grid>          
+          </Grid>
+
+          <!--Grid x:Name="OthersPanel" Margin="0,-850,0,0" VerticalAlignment="Top"
+              Width="650" Height="650" HorizontalAlignment="Center">
+            <Grid.IsVisible>
+              <Binding Source="{StaticResource ViewModeModel}" Path="LayoutType"
+                       Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} != {LayoutType}.{ListLayout}"/>
+            </Grid.IsVisible>
+            <Grid.Resources>
+              <Storyboard x:Key="SlideDownStoryboard" FillBehavior="HoldEnd">
+                <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" FillBehavior="HoldEnd" Storyboard.TargetName="OthersPanel" Storyboard.TargetProperty="RenderTransform.Y">
+                  <SplineDoubleKeyFrame KeyTime="00:00:00" Value="0"/>
+                  <SplineDoubleKeyFrame KeyTime="00:00:00.35" Value="650"/>
+                </DoubleAnimationUsingKeyFrames>
+              </Storyboard>
+              <Storyboard x:Key="SlideUpStoryboard" FillBehavior="HoldEnd">
+                <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" FillBehavior="HoldEnd" Storyboard.TargetName="OthersPanel" Storyboard.TargetProperty="RenderTransform.Y">
+                  <SplineDoubleKeyFrame KeyTime="00:00:00" Value="650"/>
+                  <SplineDoubleKeyFrame KeyTime="00:00:00.35" Value="0"/>
+                </DoubleAnimationUsingKeyFrames>
+              </Storyboard>
+            </Grid.Resources>
+            <Grid.Triggers>
+              <MultiTrigger>
+                <MultiTrigger.Conditions>
+                  <Condition Property="IsKeyboardFocusWithin" Value="False" />
+                  <Condition Property="IsMouseOver" Value="False" />
+                </MultiTrigger.Conditions>
+                <MultiTrigger.EnterActions>
+                  <TriggerCommand Command="{Command Source={StaticResource MenuModel}, Path=CloseMenu}"/>
+                </MultiTrigger.EnterActions>
+                <MultiTrigger.ExitActions>
+                  <TriggerCommand Command="{Command Source={StaticResource MenuModel}, Path=OpenMenu}"/>
+                </MultiTrigger.ExitActions>
+              </MultiTrigger>
+              <EventTrigger RoutedEvent="Screen.Show">
+                <TriggerCommand Command="{Command Source={StaticResource MenuModel}, Path=CloseMenu}"/>
+              </EventTrigger>
+              <DataTrigger Binding="{Binding Source={StaticResource MenuModel},Path=IsMenuOpen}" Value="True">
+                <DataTrigger.EnterActions>
+                  <BeginStoryboard x:Name="SlideDown_BeginStoryboard" Storyboard="{ThemeResource SlideDownStoryboard}"/>
+                </DataTrigger.EnterActions>
+                <DataTrigger.ExitActions>
+                  <BeginStoryboard x:Name="SlideUp_BeginStoryboard" Storyboard="{ThemeResource SlideUpStoryboard}"/>
+                  <StopStoryboard BeginStoryboardName="SlideDown_BeginStoryboard"/>
+                </DataTrigger.ExitActions>
+                <Setter TargetName="OthersMenu" Property="SetFocusPrio" Value="Highest" />
+                <Setter TargetName="OthersMenu" Property="SetFocus" Value="True" />
+                <Setter Property="Grid.ZIndex" Value="1000.0"/>
+              </DataTrigger>
+            </Grid.Triggers>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="100"/>
+              <RowDefinition Height="550"/>
+            </Grid.RowDefinitions>
+            <Grid.RenderTransform>
+              <TranslateTransform Y="0"/>
+            </Grid.RenderTransform>
+            <Border Grid.Row="1" Grid.Column="0" Margin="10,0,67,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" CornerRadius="4" BorderThickness="3">
+              <Border.BorderBrush>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0.02,1.4">
+                  <GradientStop Color="#8CFFFFFF" Offset="0"/>
+                  <GradientStop Color="#8CFFFFFF" Offset="0.7"/>
+                  <GradientStop Color="#8CFFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+              </Border.BorderBrush>
+              <Rectangle VerticalAlignment="Stretch" HorizontalAlignment="Stretch" RadiusX="4" RadiusY="4" Margin="-1">
+                <Rectangle.Fill>
+                  <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
+                    <GradientStop Color="#F2447da7" Offset="0"/>
+                    <GradientStop Color="#F2124273" Offset="1"/>
+                  </LinearGradientBrush>
+                </Rectangle.Fill>
+              </Rectangle>
+            </Border>
+            <ListView x:Name="OthersMenu" Grid.Row="1" Style="{ThemeResource SlideMenuListViewStyle}" Margin="20,30,90,30"
+              HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SetFocusPrio="Default"
+              ItemsSource="{Binding Source={StaticResource MenuModel},Path=MenuItems,Mode=OneTime,Converter={StaticResource IncludeItemsListActionFilter},ConverterParameter={StaticResource ActionIdFilter}}"
+              IsEnabled="{Binding Source={StaticResource MenuModel},Path=IsMenuOpen}">
+              <ListView.Resources>
+                <CommandBridge x:Key="Menu_Command" Command="{Binding Path=Command,Mode=OneTime}"/>
+              </ListView.Resources>
+            </ListView>
+            <Button x:Name="OtherMenuShowButton" Content="Menu" Style="{ThemeResource ButtonWideStyle}"
+                  Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Bottom" Height="50" Margin="0,0,0,-40"
+                  IsEnabled="{Binding Source={StaticResource MenuModel},Path=!IsMenuOpen}"
+                  Command="{Command Source={StaticResource MenuModel}, Path=ToggleMenu}">
+              <Button.IsVisible>
+                <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} > 0">
+                  <Binding ElementName="OthersMenu" Path="ItemsCount"/>
+                </MultiBinding>
+              </Button.IsVisible>
+              <Image Source="Top_Menu.png" Stretch="Uniform" Margin="0,0,57,0"/>
+            </Button>
+          </-->
         </Grid>
       </DockPanel>
     </ControlTemplate>

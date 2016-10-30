@@ -349,7 +349,9 @@ namespace MediaPortal.UiComponents.Media.General
     public const string RES_SORT_BY_ASPECT_RATIO = "[Media.SortByAspectRatio]";
     public const string RES_SORT_BY_FIRST_AIRED_DATE = "[Media.SortByFirstAiredDate]";
     public const string RES_SORT_BY_DATE = "[Media.SortByDate]";
+    public const string RES_SORT_BY_ADDED_DATE = "[Media.SortByAddedDate]";
     public const string RES_SORT_BY_EPISODE = "[Media.SortByEpisode]";
+    public const string RES_SORT_BY_DVD_EPISODE = "[Media.SortByDVDEpisode]";
     public const string RES_SORTING_BROWSE_DEFAULT = "[Media.SortingBrowseDefault]";
 
     public const string RES_NO_GROUPING = "[Media.NoGrouping]";
@@ -370,6 +372,7 @@ namespace MediaPortal.UiComponents.Media.General
     public const string RES_GROUP_BY_FIRST_AIRED_DATE = "[Media.GroupByFirstAiredDate]";
     public const string RES_GROUP_BY_DATE = "[Media.GroupByDate]";
     public const string RES_GROUP_BY_EPISODE = "[Media.GroupByEpisode]";
+    public const string RES_GROUP_BY_DVD_EPISODE = "[Media.GroupByDVDEpisode]";
     public const string RES_GROUPING_BROWSE_DEFAULT = "[Media.GroupingBrowseDefault]";
 
     // Image and video size thresholds
@@ -493,6 +496,18 @@ namespace MediaPortal.UiComponents.Media.General
     public const string KEY_MIMETYPE = "MimeType";
     public const string KEY_RATING = "Rating";
     public const string KEY_PLAYCOUNT = "PlayCount";
+    public const string KEY_FORMAT = "Format";
+    public const string KEY_LANGUAGE = "Language";
+    public const string KEY_DEFAULT = "Default";
+    public const string KEY_FORCED = "Forced";
+    public const string KEY_PARTS = "Parts";
+    public const string KEY_SET = "Set";
+    public const string KEY_SET_NAME = "SetName";
+    public const string KEY_BITRATE = "BitRate";
+    public const string KEY_ASPECTRATIO = "AspctRatio";
+    public const string KEY_FPS = "FPS";
+    public const string KEY_CHANNELS = "Channels";
+    public const string KEY_SAMPLERATE = "SampleRate";
 
     public const string KEY_MEDIA_ITEM = "MediaItem";
     public const string KEY_MEDIA_ITEM_ACTION = "MediaItemAction";
@@ -514,6 +529,7 @@ namespace MediaPortal.UiComponents.Media.General
     public const string KEY_SERIES_NAME = "SeriesName";
     public const string KEY_SERIES_SEASON = "SeriesSeason";
     public const string KEY_SERIES_EPISODE_NUM = "SeriesEpisodeNum";
+    public const string KEY_SERIES_DVD_EPISODE_NUM = "SeriesDVDEpisodeNum";
     public const string KEY_SERIES_EPISODE_NAME = "SeriesEpisodeName";
     public const string KEY_NUM_EPISODES = "NumEpisodes";
     public const string KEY_NUM_SEASONS = "NumSeasons";
@@ -581,6 +597,8 @@ namespace MediaPortal.UiComponents.Media.General
           ImageAspect.ASPECT_ID,
           VideoStreamAspect.ASPECT_ID,
           VideoAudioStreamAspect.ASPECT_ID,
+          SubtitleAspect.ASPECT_ID,
+          ImporterAspect.ASPECT_ID
       };
 
     public static readonly Guid[] OPTIONAL_MEDIA_LIBRARY_BROWSING_MIAS = new Guid[]
@@ -592,6 +610,7 @@ namespace MediaPortal.UiComponents.Media.General
           ImageAspect.ASPECT_ID,
           VideoStreamAspect.ASPECT_ID,
           VideoAudioStreamAspect.ASPECT_ID,
+          SubtitleAspect.ASPECT_ID
       };
 
     public static readonly Guid[] NECESSARY_VIDEO_MIAS = new Guid[]
@@ -599,12 +618,14 @@ namespace MediaPortal.UiComponents.Media.General
           ProviderResourceAspect.ASPECT_ID,
           MediaAspect.ASPECT_ID,
           VideoAspect.ASPECT_ID,
+          ImporterAspect.ASPECT_ID,
       };
 
     public static readonly Guid[] OPTIONAL_VIDEO_MIAS = new Guid[]
       {
           VideoStreamAspect.ASPECT_ID,
-          VideoAudioStreamAspect.ASPECT_ID
+          VideoAudioStreamAspect.ASPECT_ID,
+          SubtitleAspect.ASPECT_ID
       };
 
     public static readonly Guid[] NECESSARY_SERIES_MIAS = new Guid[]
@@ -631,12 +652,14 @@ namespace MediaPortal.UiComponents.Media.General
           MediaAspect.ASPECT_ID,
           VideoAspect.ASPECT_ID,
           EpisodeAspect.ASPECT_ID,
+          ImporterAspect.ASPECT_ID,
       };
 
     public static readonly Guid[] OPTIONAL_EPISODE_MIAS = new Guid[]
       {
           VideoStreamAspect.ASPECT_ID,
-          VideoAudioStreamAspect.ASPECT_ID
+          VideoAudioStreamAspect.ASPECT_ID,
+          SubtitleAspect.ASPECT_ID
       };
 
     public static readonly Guid[] NECESSARY_MOVIE_COLLECTION_MIAS = new Guid[]
@@ -654,12 +677,14 @@ namespace MediaPortal.UiComponents.Media.General
           MediaAspect.ASPECT_ID,
           VideoAspect.ASPECT_ID,
           MovieAspect.ASPECT_ID,
+          ImporterAspect.ASPECT_ID,
       };
 
     public static readonly Guid[] OPTIONAL_MOVIES_MIAS = new Guid[]
       {
           VideoStreamAspect.ASPECT_ID,
-          VideoAudioStreamAspect.ASPECT_ID
+          VideoAudioStreamAspect.ASPECT_ID,
+          SubtitleAspect.ASPECT_ID
       };
 
     public static readonly Guid[] NECESSARY_ALBUM_MIAS = new Guid[]
@@ -676,6 +701,7 @@ namespace MediaPortal.UiComponents.Media.General
           ProviderResourceAspect.ASPECT_ID,
           MediaAspect.ASPECT_ID,
           AudioAspect.ASPECT_ID,
+          ImporterAspect.ASPECT_ID,
       };
 
     public static readonly Guid[] OPTIONAL_AUDIO_MIAS = null;
@@ -685,6 +711,7 @@ namespace MediaPortal.UiComponents.Media.General
           ProviderResourceAspect.ASPECT_ID,
           MediaAspect.ASPECT_ID,
           ImageAspect.ASPECT_ID,
+          ImporterAspect.ASPECT_ID,
       };
 
     public static readonly Guid[] OPTIONAL_IMAGE_MIAS = null;

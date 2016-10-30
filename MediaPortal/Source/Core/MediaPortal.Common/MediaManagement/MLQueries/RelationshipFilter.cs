@@ -30,38 +30,23 @@ namespace MediaPortal.Common.MediaManagement.MLQueries
   /// <summary>
   /// Filter which filters based on the relationship
   /// </summary>
-  public class RelationshipFilter : IFilter
+  public class RelationshipFilter : AbstractRelationshipFilter
   {
-    protected IFilter _filter;
-    protected Guid _role;
     protected Guid _linkedRole;
+    protected Guid _linkedMediaItemId;
 
-    public RelationshipFilter(Guid itemId, Guid role, Guid linkedRole)
+    public RelationshipFilter(Guid role, Guid linkedRole, Guid linkedMediaItemId) :
+      base(role)
     {
-      _filter = new MediaItemIdFilter(itemId);
-      _role = role;
       _linkedRole = linkedRole;
-    }
-
-    public RelationshipFilter(IFilter filter, Guid role, Guid linkedRole)
-    {
-      _filter = filter;
-      _role = role;
-      _linkedRole = linkedRole;
+      _linkedMediaItemId = linkedMediaItemId;
     }
 
     [XmlIgnore]
-    public IFilter Filter
+    public Guid LinkedMediaItemId
     {
-      get { return _filter; }
-      set { _filter = value; }
-    }
-
-    [XmlIgnore]
-    public Guid Role
-    {
-      get { return _role; }
-      set { _role = value; }
+      get { return _linkedMediaItemId; }
+      set { _linkedMediaItemId = value; }
     }
 
     [XmlIgnore]
@@ -73,7 +58,7 @@ namespace MediaPortal.Common.MediaManagement.MLQueries
 
     public override string ToString()
     {
-      return "(ITEM_ID IN (" + _filter + ") AND ROLE='" + _role + "' AND LINKED_ROLE='" + _linkedRole + "')";
+      return "(LINKED_ID = '" + _linkedMediaItemId + "'" + (_role != Guid.Empty ? " AND ROLE='" + _role + "'" : "") + " AND LINKED_ROLE='" + _linkedRole + "')";
     }
 
     #region Additional members for the XML serialization
@@ -83,32 +68,10 @@ namespace MediaPortal.Common.MediaManagement.MLQueries
     /// <summary>
     /// For internal use of the XML serialization system only.
     /// </summary>
-    [XmlElement("Between", typeof(BetweenFilter))]
-    [XmlElement("BooleanCombination", typeof(BooleanCombinationFilter))]
-    [XmlElement("In", typeof(InFilter))]
-    [XmlElement("Like", typeof(LikeFilter))]
-    [XmlElement("Not", typeof(NotFilter))]
-    [XmlElement("Relational", typeof(RelationalFilter))]
-    [XmlElement("Empty", typeof(EmptyFilter))]
-    [XmlElement("RelationalUserData", typeof(RelationalUserDataFilter))]
-    [XmlElement("EmptyUserData", typeof(EmptyUserDataFilter))]
-    [XmlElement("False", typeof(FalseFilter))]
-    [XmlElement("MediaItemIds", typeof(MediaItemIdFilter))]
-    [XmlElement("Relationship", typeof(RelationshipFilter))]
-    public object XML_Filter
+    public Guid XML_LinkedId
     {
-      get { return _filter; }
-      set { _filter = value as IFilter; }
-    }
-
-    /// <summary>
-    /// For internal use of the XML serialization system only.
-    /// </summary>
-    [XmlAttribute("Role")]
-    public Guid XML_Role
-    {
-      get { return _role; }
-      set { _role = value; }
+      get { return _linkedMediaItemId; }
+      set { _linkedMediaItemId = value; }
     }
 
     /// <summary>

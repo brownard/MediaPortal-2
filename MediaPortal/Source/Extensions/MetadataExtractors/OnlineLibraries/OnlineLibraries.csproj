@@ -15,7 +15,6 @@
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -71,6 +70,7 @@
       <Link>Properties\VersionInfo.cs</Link>
     </Compile>
     <Compile Include="Libraries\Common\Data\DownloadData.cs" />
+    <Compile Include="Libraries\IOnlineMatcherService.cs" />
     <Compile Include="Libraries\MovieDbV3\Data\ChangeCollection.cs" />
     <Compile Include="Libraries\MovieDbV3\Data\Change.cs" />
     <Compile Include="Libraries\MovieDbV3\Data\Network.cs" />
@@ -295,17 +295,23 @@
     <Compile Include="Libraries\TvMazeV1\Data\TvMazeSeriesSeasonSearch.cs" />
     <Compile Include="Libraries\TvMazeV1\Data\TvMazeSeriesSearchResult.cs" />
     <Compile Include="Libraries\TvMazeV1\TvMazeApiV1.cs" />
+    <Compile Include="Libraries\IMovieMatcher.cs" />
+    <Compile Include="Libraries\ISeriesMatcher.cs" />
+    <Compile Include="Libraries\IMusicMatcher.cs" />
     <Compile Include="Matchers\MusicMatcher.cs" />
+    <Compile Include="Matchers\IdMapper.cs" />
     <Compile Include="Matchers\SimpleNameMatcher.cs" />
     <Compile Include="Matchers\SeriesMatcher.cs" />
     <Compile Include="Matchers\MovieMatcher.cs" />
     <Compile Include="Matchers\MovieFanArtTvMatcher.cs" />
     <Compile Include="Matchers\MovieOmDbMatcher.cs" />
     <Compile Include="Matches\BaseMatch.cs" />
+    <Compile Include="Matches\IdMatch.cs" />
     <Compile Include="Matches\SimpleNameMatch.cs" />
     <Compile Include="OnlineMatcherService.cs" />
     <Compile Include="MetadataUpdater.cs" />
     <Compile Include="SerializableRegex.cs" />
+    <Compile Include="Settings\MatcherSetting.cs" />
     <Compile Include="Settings\OnlineLibrarySettings.cs" />
     <Compile Include="Wrappers\ApiWrapperImageCollection.cs" />
     <Compile Include="Wrappers\OmDbWrapper.cs" />
@@ -473,10 +479,6 @@
       <Project>{4FE7B8AE-1330-424A-91A1-C68D7ABF9CB8}</Project>
       <Name>MediaPortal.Utilities</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\UI\FanArt\FanArtService.Interfaces\FanArtService.Interfaces.csproj">
-      <Project>{587b806e-9afc-47d7-a024-1cec38c4d1d3}</Project>
-      <Name>FanArtService.Interfaces</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="plugin.xml" />
@@ -489,11 +491,4 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="build.targets" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
-  </Target>
 </Project>

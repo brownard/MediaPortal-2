@@ -26,8 +26,8 @@ using System;
 using System.Collections.Generic;
 using MediaPortal.Common.General;
 using MediaPortal.Common.MediaManagement;
-using MediaPortal.UI.SkinEngine.Controls.Visuals;
 using MediaPortal.Extensions.MetadataExtractors.Aspects;
+using MediaPortal.UI.SkinEngine.Controls.Visuals;
 
 namespace MediaPortal.Plugins.SlimTv.Client.Models.AspectWrappers
 {
@@ -48,8 +48,6 @@ public static readonly ICollection<string> EMPTY_STRING_COLLECTION = new List<st
 protected AbstractProperty _channelProperty;
 protected AbstractProperty _startTimeProperty;
 protected AbstractProperty _endTimeProperty;
-protected AbstractProperty _genresProperty;
-protected AbstractProperty _storyPlotProperty;
 protected AbstractProperty _mediaItemProperty;
 
 #endregion
@@ -89,28 +87,6 @@ public DateTime? EndTime
   set { _endTimeProperty.SetValue(value); }
 }
 
-public AbstractProperty GenresProperty
-{
-  get{ return _genresProperty; }
-}
-
-public IEnumerable<string> Genres
-{
-  get { return (IEnumerable<string>) _genresProperty.GetValue(); }
-  set { _genresProperty.SetValue(value); }
-}
-
-public AbstractProperty StoryPlotProperty
-{
-  get{ return _storyPlotProperty; }
-}
-
-public string StoryPlot
-{
-  get { return (string) _storyPlotProperty.GetValue(); }
-  set { _storyPlotProperty.SetValue(value); }
-}
-
 public AbstractProperty MediaItemProperty
 {
   get{ return _mediaItemProperty; }
@@ -131,8 +107,6 @@ public RecordingAspectWrapper()
   _channelProperty = new SProperty(typeof(string));
   _startTimeProperty = new SProperty(typeof(DateTime?));
   _endTimeProperty = new SProperty(typeof(DateTime?));
-  _genresProperty = new SProperty(typeof(IEnumerable<string>));
-  _storyPlotProperty = new SProperty(typeof(string));
   _mediaItemProperty = new SProperty(typeof(MediaItem));
   _mediaItemProperty.Attach(MediaItemChanged);
 }
@@ -158,8 +132,6 @@ public void Init(MediaItem mediaItem)
   Channel = (string) aspect[RecordingAspect.ATTR_CHANNEL];
   StartTime = (DateTime?) aspect[RecordingAspect.ATTR_STARTTIME];
   EndTime = (DateTime?) aspect[RecordingAspect.ATTR_ENDTIME];
-  Genres = (IEnumerable<string>) aspect[RecordingAspect.ATTR_GENRES] ?? EMPTY_STRING_COLLECTION;
-  StoryPlot = (string) aspect[RecordingAspect.ATTR_STORYPLOT];
 }
 
 public void SetEmpty()
@@ -167,8 +139,6 @@ public void SetEmpty()
   Channel = null;
   StartTime = null;
   EndTime = null;
-  Genres = EMPTY_STRING_COLLECTION;
-  StoryPlot = null;
 }
 
 

@@ -64,10 +64,10 @@ namespace MediaPortal.Extensions.MetadataExtractors
     public RadioRecordingMetadataExtractor()
     {
       _metadata = new MetadataExtractorMetadata(METADATAEXTRACTOR_ID, "Radio recording metadata extractor", MetadataExtractorPriority.Core, false,
-          MEDIA_CATEGORIES, new[]
+          MEDIA_CATEGORIES, new MediaItemAspectMetadata[]
               {
                 MediaAspect.Metadata,
-                VideoAspect.Metadata,
+                ProviderResourceAspect.Metadata,
                 AudioAspect.Metadata,
               });
     }
@@ -84,6 +84,9 @@ namespace MediaPortal.Extensions.MetadataExtractors
         var extension = DosPathHelper.GetExtension(fsra.ResourceName).ToLowerInvariant();
         if (extension != ".ts")
           return false;
+        if (extractedAspectData.ContainsKey(AudioAspect.ASPECT_ID))
+          return false;
+
         using (MediaInfoWrapper mediaInfo = ReadMediaInfo(fsra))
         {
           // Before we start evaluating the file, check if it is not a video file (
@@ -97,7 +100,13 @@ namespace MediaPortal.Extensions.MetadataExtractors
 
           var audioBitrate = mediaInfo.GetAudioBitrate(0);
           if (audioBitrate.HasValue)
-            MediaItemAspect.SetAttribute(extractedAspectData, AudioAspect.ATTR_BITRATE, (int)(audioBitrate.Value / 1024)); // We store kbit/s;
+            MediaItemAspect.SetAttribute(extractedAspectData, AudioAspect.ATTR_BITRATE, (int)(audioBitrate.Value / 1000)); // We store kbit/s;
+          var audioChannels = mediaInfo.GetAudioChannels(0);
+          if (audioChannels.HasValue)
+            MediaItemAspect.SetAttribute(extractedAspectData, AudioAspect.ATTR_CHANNELS, audioChannels.Value);
+          var audioSampleRate = mediaInfo.GetAudioSampleRate(0);
+          if (audioSampleRate.HasValue)
+            MediaItemAspect.SetAttribute(extractedAspectData, AudioAspect.ATTR_SAMPLERATE, audioSampleRate.Value);
 
           MediaItemAspect.SetAttribute(extractedAspectData, AudioAspect.ATTR_ENCODING, mediaInfo.GetAudioCodec(0));
           // MediaInfo returns milliseconds, we need seconds

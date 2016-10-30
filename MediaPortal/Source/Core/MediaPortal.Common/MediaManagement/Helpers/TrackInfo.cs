@@ -67,6 +67,7 @@ namespace MediaPortal.Common.MediaManagement.Helpers
     public string MusicIpId = null;
     public long LyricId = 0;
     public long MvDbId = 0;
+    public string NameId = null;
 
     public string Album = null;
     public string AlbumMusicBrainzId = null;
@@ -77,6 +78,7 @@ namespace MediaPortal.Common.MediaManagement.Helpers
     public long AlbumAudioDbId = 0;
     public string AlbumAmazonId = null;
     public string AlbumItunesId = null;
+    public string AlbumNameId = null;
 
     public string TrackName = null;
     public string TrackLyrics = null;
@@ -88,7 +90,12 @@ namespace MediaPortal.Common.MediaManagement.Helpers
     public SimpleRating Rating = new SimpleRating();
     public bool Compilation = false;
     public int BitRate = 0;
+    public long SampleRate = 0;
+    public int Channels = 0;
     public long Duration = 0;
+    public string Encoding = null;
+    public bool AlbumHasOnlineCover = false;
+    public bool AlbumHasBarcode = false;
 
     public List<PersonInfo> Artists = new List<PersonInfo>();
     public List<PersonInfo> AlbumArtists = new List<PersonInfo>();
@@ -101,10 +108,6 @@ namespace MediaPortal.Common.MediaManagement.Helpers
     {
       get
       {
-        if (Artists.Count == 0)
-          return false;
-        if (string.IsNullOrEmpty(Album))
-          return false;
         if (string.IsNullOrEmpty(TrackName))
           return false;
 
@@ -141,9 +144,44 @@ namespace MediaPortal.Common.MediaManagement.Helpers
           return true;
         if (!string.IsNullOrEmpty(AlbumAmazonId))
           return true;
+        if (!string.IsNullOrEmpty(AlbumItunesId))
+          return true;
 
         return false;
       }
+    }
+
+    public override void AssignNameId()
+    {
+      if (!string.IsNullOrEmpty(Album))
+      {
+        if (AlbumArtists.Count > 0)
+          AlbumNameId = AlbumArtists[0].Name + ":" + Album;
+        else
+          AlbumNameId = Album;
+        AlbumNameId = GetNameId(AlbumNameId);
+
+        if (!string.IsNullOrEmpty(TrackName))
+        {
+          NameId = Album + ":" + TrackName;
+          NameId = GetNameId(NameId);
+        }
+      }
+      else
+      {
+        if (!string.IsNullOrEmpty(TrackName))
+        {
+          NameId = TrackName;
+          if (TrackNum > 0)
+            NameId = TrackNum.ToString() + "_" + NameId;
+          NameId = GetNameId(NameId);
+        }
+      }
+    }
+
+    public TrackInfo Clone()
+    {
+      return CloneProperties(this);
     }
 
     #region Members
@@ -155,6 +193,8 @@ namespace MediaPortal.Common.MediaManagement.Helpers
     public override bool SetMetadata(IDictionary<Guid, IList<MediaItemAspect>> aspectData)
     {
       if (string.IsNullOrEmpty(TrackName)) return false;
+
+      SetMetadataChanged(aspectData);
 
       MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_TITLE, ToString());
       MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_SORT_TITLE, GetSortTitle(TrackName));
@@ -174,11 +214,15 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       if (AudioDbId > 0) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_AUDIODB, ExternalIdentifierAspect.TYPE_TRACK, AudioDbId.ToString());
       if (LyricId > 0) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_LYRIC, ExternalIdentifierAspect.TYPE_TRACK, LyricId.ToString());
       if (MvDbId > 0) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_MVDB, ExternalIdentifierAspect.TYPE_TRACK, MvDbId.ToString());
+      if (!string.IsNullOrEmpty(NameId)) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_NAME, ExternalIdentifierAspect.TYPE_TRACK, NameId);
 
       if (!string.IsNullOrEmpty(Album)) MediaItemAspect.SetAttribute(aspectData, AudioAspect.ATTR_ALBUM, Album);
       if (DiscNum > 0) MediaItemAspect.SetAttribute(aspectData, AudioAspect.ATTR_DISCID, DiscNum);
       if (TotalDiscs > 0) MediaItemAspect.SetAttribute(aspectData, AudioAspect.ATTR_NUMDISCS, TotalDiscs);
       if (BitRate > 0) MediaItemAspect.SetAttribute(aspectData, AudioAspect.ATTR_BITRATE, BitRate);
+      if (Channels > 0) MediaItemAspect.SetAttribute(aspectData, AudioAspect.ATTR_CHANNELS, Channels);
+      if (SampleRate > 0) MediaItemAspect.SetAttribute(aspectData, AudioAspect.ATTR_SAMPLERATE, SampleRate);
+      if (!string.IsNullOrEmpty(Encoding)) MediaItemAspect.SetAttribute(aspectData, AudioAspect.ATTR_ENCODING, Encoding);
 
       if (!Rating.IsEmpty)
       {
@@ -193,6 +237,7 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       if (AlbumAudioDbId > 0) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_AUDIODB, ExternalIdentifierAspect.TYPE_ALBUM, AlbumAudioDbId.ToString());
       if (!string.IsNullOrEmpty(AlbumAmazonId)) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_AMAZON, ExternalIdentifierAspect.TYPE_ALBUM, AlbumAmazonId);
       if (!string.IsNullOrEmpty(AlbumItunesId)) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_ITUNES, ExternalIdentifierAspect.TYPE_ALBUM, AlbumItunesId);
+      if (!string.IsNullOrEmpty(AlbumNameId)) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_NAME, ExternalIdentifierAspect.TYPE_ALBUM, AlbumNameId);
 
       if (Artists.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, AudioAspect.ATTR_ARTISTS, Artists.Where(p => !string.IsNullOrEmpty(p.Name)).Select(p => p.Name).ToList<object>());
       if (AlbumArtists.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, AudioAspect.ATTR_ALBUMARTISTS, AlbumArtists.Where(p => !string.IsNullOrEmpty(p.Name)).Select(p => p.Name).ToList<object>());
@@ -210,6 +255,8 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       if (!aspectData.ContainsKey(AudioAspect.ASPECT_ID))
         return false;
 
+      GetMetadataChanged(aspectData);
+
       MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_TRACKNAME, out TrackName);
       MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_LYRICS, out TrackLyrics);
       MediaItemAspect.TryGetAttribute(aspectData, MediaAspect.ATTR_RECORDINGTIME, out ReleaseDate);
@@ -217,10 +264,13 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_NUMTRACKS, out TotalTracks);
       MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_COMPILATION, out Compilation);
       MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_BITRATE, out BitRate);
+      MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_SAMPLERATE, out SampleRate);
+      MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_CHANNELS, out Channels);
       MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_ALBUM, out Album);
       MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_DISCID, out DiscNum);
       MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_NUMDISCS, out TotalDiscs);
       MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_DURATION, out Duration);
+      MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_ENCODING, out Encoding);
 
       double? rating;
       MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_TOTAL_RATING, out rating);
@@ -238,6 +288,7 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_MUSICBRAINZ, ExternalIdentifierAspect.TYPE_TRACK, out MusicBrainzId);
       MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_ISRC, ExternalIdentifierAspect.TYPE_TRACK, out IsrcId);
       MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_MUSIC_IP, ExternalIdentifierAspect.TYPE_TRACK, out MusicIpId);
+      MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_NAME, ExternalIdentifierAspect.TYPE_TRACK, out NameId);
 
       if (MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_AUDIODB, ExternalIdentifierAspect.TYPE_ALBUM, out id))
         AlbumAudioDbId = Convert.ToInt64(id);
@@ -247,6 +298,7 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_UPCEAN, ExternalIdentifierAspect.TYPE_ALBUM, out AlbumUpcEanId);
       MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_AMAZON, ExternalIdentifierAspect.TYPE_ALBUM, out AlbumAmazonId);
       MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_ITUNES, ExternalIdentifierAspect.TYPE_ALBUM, out AlbumItunesId);
+      MediaItemAspect.TryGetExternalAttribute(aspectData, ExternalIdentifierAspect.SOURCE_NAME, ExternalIdentifierAspect.TYPE_ALBUM, out AlbumNameId);
 
       //Brownard 17.06.2016
       //The returned type of the collection differs on the server and client.
@@ -271,7 +323,7 @@ namespace MediaPortal.Common.MediaManagement.Helpers
 
       byte[] data;
       if (MediaItemAspect.TryGetAttribute(aspectData, ThumbnailLargeAspect.ATTR_THUMBNAIL, out data))
-        Thumbnail = data;
+        HasThumbnail = true;
 
       return true;
     }
@@ -320,12 +372,14 @@ namespace MediaPortal.Common.MediaManagement.Helpers
         AlbumMusicBrainzId = otherTrack.AlbumMusicBrainzId;
         AlbumAmazonId = otherTrack.AlbumAmazonId;
         AlbumItunesId = otherTrack.AlbumItunesId;
+        AlbumNameId = otherTrack.AlbumNameId;
 
         AudioDbId = otherTrack.AudioDbId;
         MusicBrainzId = otherTrack.MusicBrainzId;
         MusicIpId = otherTrack.MusicIpId;
         MvDbId = otherTrack.MvDbId;
         LyricId = otherTrack.LyricId;
+        NameId = otherTrack.NameId;
         return true;
       }
       return false;
@@ -343,12 +397,15 @@ namespace MediaPortal.Common.MediaManagement.Helpers
         info.MusicBrainzId = AlbumMusicBrainzId;
         info.AmazonId = AlbumAmazonId;
         info.ItunesId = AlbumItunesId;
+        info.NameId = AlbumNameId;
 
         info.Album = Album;
         info.DiscNum = DiscNum;
         info.TotalDiscs = TotalDiscs;
         info.TotalTracks = TotalTracks;
         info.Compilation = Compilation;
+        info.Languages.AddRange(Languages);
+        info.Artists.AddRange(AlbumArtists);
         return (T)(object)info;
       }
       return default(T);
@@ -387,6 +444,8 @@ namespace MediaPortal.Common.MediaManagement.Helpers
         return string.Equals(MusicIpId, other.MusicIpId, StringComparison.InvariantCultureIgnoreCase);
       if (!string.IsNullOrEmpty(IsrcId) && !string.IsNullOrEmpty(other.IsrcId))
         return string.Equals(IsrcId, other.IsrcId, StringComparison.InvariantCultureIgnoreCase);
+      if (!string.IsNullOrEmpty(NameId) && !string.IsNullOrEmpty(other.NameId))
+        return string.Equals(NameId, other.NameId, StringComparison.InvariantCultureIgnoreCase);
 
       if (TrackNum > 0 && other.TrackNum > 0 && TrackNum == other.TrackNum)
       {
@@ -404,12 +463,17 @@ namespace MediaPortal.Common.MediaManagement.Helpers
           return string.Equals(AlbumAmazonId, other.AlbumAmazonId, StringComparison.InvariantCultureIgnoreCase);
         if (!string.IsNullOrEmpty(AlbumItunesId) && !string.IsNullOrEmpty(other.AlbumItunesId))
           return string.Equals(AlbumItunesId, other.AlbumItunesId, StringComparison.InvariantCultureIgnoreCase);
-        if (!string.IsNullOrEmpty(Album) && !string.IsNullOrEmpty(other.Album) && 
+        if (!string.IsNullOrEmpty(AlbumNameId) && !string.IsNullOrEmpty(other.AlbumNameId))
+          return string.Equals(AlbumNameId, other.AlbumNameId, StringComparison.InvariantCultureIgnoreCase);
+
+        if (!string.IsNullOrEmpty(Album) && !string.IsNullOrEmpty(other.Album) &&
           ReleaseDate.HasValue && other.ReleaseDate.HasValue)
           return Album == other.Album && ReleaseDate.Value == other.ReleaseDate.Value;
       }
+      if ((!string.IsNullOrEmpty(Album) || !string.IsNullOrEmpty(other.Album)) && Album != other.Album)
+        return false;
 
-      if(!string.IsNullOrEmpty(TrackName) && !string.IsNullOrEmpty(other.TrackName) && MatchNames(TrackName, other.TrackName))
+      if (!string.IsNullOrEmpty(TrackName) && !string.IsNullOrEmpty(other.TrackName) && MatchNames(TrackName, other.TrackName))
       {
         if (Artists.Count > 0 && other.Artists.Count > 0 && ReleaseDate.HasValue && other.ReleaseDate.HasValue)
           return Artists.SequenceEqual(other.Artists) && ReleaseDate.Value == other.ReleaseDate.Value;
@@ -421,7 +485,7 @@ namespace MediaPortal.Common.MediaManagement.Helpers
           return AlbumArtists.SequenceEqual(other.AlbumArtists);
         if (ReleaseDate.HasValue && other.ReleaseDate.HasValue)
           return ReleaseDate.Value == other.ReleaseDate.Value;
-      }   
+      }
 
       return false;
     }

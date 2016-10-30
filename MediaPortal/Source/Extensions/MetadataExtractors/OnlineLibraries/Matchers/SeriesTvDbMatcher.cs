@@ -34,7 +34,9 @@ using MediaPortal.Common.PathManager;
 using MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib.Data;
 using MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib.Data.Banner;
 using MediaPortal.Extensions.OnlineLibraries.Wrappers;
-using MediaPortal.Extensions.UserServices.FanArtService.Interfaces;
+using MediaPortal.Extensions.OnlineLibraries.Libraries.TvdbLib;
+using MediaPortal.Extensions.OnlineLibraries.Libraries.Common;
+using MediaPortal.Common.FanArt;
 
 namespace MediaPortal.Extensions.OnlineLibraries.Matchers
 {
@@ -55,7 +57,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
     #region Constants
 
     public static string CACHE_PATH = ServiceRegistration.Get<IPathManager>().GetPath(@"<DATA>\TvDB\");
-    protected static TimeSpan MAX_MEMCACHE_DURATION = TimeSpan.FromMinutes(1);
+    protected static TimeSpan MAX_MEMCACHE_DURATION = TimeSpan.FromMinutes(10);
 
     #endregion
 
@@ -69,8 +71,9 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
     #region Init
 
     public SeriesTvDbMatcher() :
-      base(CACHE_PATH, MAX_MEMCACHE_DURATION)
+      base(CACHE_PATH, MAX_MEMCACHE_DURATION, true)
     {
+      Primary = true;
     }
 
     public override bool InitWrapper(bool useHttps)
@@ -182,123 +185,56 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
 
     #endregion
 
+    #region Metadata update helpers
+
+    protected override TvdbLanguage FindBestMatchingLanguage(List<string> mediaLanguages)
+    {
+      TvdbLanguage returnVal;
+
+      CultureInfo mpLocal = ServiceRegistration.Get<ILocalization>().CurrentCulture;
+      // If we don't have movie languages available, or the MP2 setting language is available, prefer it.
+      if (mediaLanguages.Count == 0 || mediaLanguages.Contains(mpLocal.TwoLetterISOLanguageName))
+      {
+        returnVal = TvDbUtils.ParseLanguage(mpLocal.TwoLetterISOLanguageName);
+        if (returnVal.Id != Util.NO_VALUE)
+          return returnVal;
+      }
+
+      // If there is only one language available, use this one.
+      if (mediaLanguages.Count == 1)
+      {
+        returnVal = TvDbUtils.ParseLanguage(mediaLanguages[0]);
+        if (returnVal.Id != Util.NO_VALUE)
+          return returnVal;
+      }
+
+      // If there are multiple languages, that are different to MP2 setting, we cannot guess which one is the "best".
+      // By returning null we allow fallback to the default language of the online source (en).
+      return TvdbLanguage.DefaultLanguage;
+    }
+
+    protected override TvdbLanguage FindMatchingLanguage(string shortLanguageString)
+    {
+      TvdbLanguage returnVal = TvDbUtils.ParseLanguage(shortLanguageString);
+      if (returnVal.Id != Util.NO_VALUE)
+        return returnVal;
+
+      return TvdbLanguage.DefaultLanguage;
+    }
+
+    #endregion
+
     #region FanArt
 
-    public override List<string> GetFanArtFiles<T>(T infoObject, string scope, string type)
-    {
-      List<string> fanartFiles = new List<string>();
-      if (scope == FanArtMediaTypes.Series)
-      {
-        SeriesInfo series = infoObject as SeriesInfo;
-        if (series != null && series.TvdbId > 0)
-        {
-          string path = Path.Combine(CACHE_PATH, series.TvdbId.ToString());
-          if (Directory.Exists(path))
-          {
-            if (type == FanArtTypes.Banner)
-            {
-              fanartFiles.AddRange(Directory.GetFiles(path, "img_graphical_*.jpg"));
-              fanartFiles.AddRange(Directory.GetFiles(path, "img_text_*.jpg"));
-            }
-            else if (type == FanArtTypes.Poster)
-            {
-              fanartFiles.AddRange(Directory.GetFiles(path, "img_posters_*.jpg"));
-            }
-            else if (type == FanArtTypes.FanArt)
-            {
-              fanartFiles.AddRange(Directory.GetFiles(path, "img_fan-*.jpg"));
-            }
-          }
-        }
-      }
-      else if (scope == FanArtMediaTypes.SeriesSeason)
-      {
-        SeasonInfo season = infoObject as SeasonInfo;
-        if (season != null && season.SeriesTvdbId > 0 && season.SeasonNumber.HasValue)
-        {
-          string path = Path.Combine(CACHE_PATH, season.SeriesTvdbId.ToString());
-          if (Directory.Exists(path))
-          {
-            if (type == FanArtTypes.Banner)
-            {
-              fanartFiles.AddRange(Directory.GetFiles(path, string.Format("img_seasonswide_{0}-{1}*.jpg", season.SeriesTvdbId, season.SeasonNumber.Value)));
-            }
-            else if (type == FanArtTypes.Poster)
-            {
-              fanartFiles.AddRange(Directory.GetFiles(path, string.Format("img_seasons_{0}-{1}*.jpg", season.SeriesTvdbId, season.SeasonNumber.Value)));
-            }
-            else if (type == FanArtTypes.FanArt)
-            {
-              fanartFiles.AddRange(Directory.GetFiles(path, "img_fan-*.jpg"));
-            }
-          }
-        }
-      }
-      else if (scope == FanArtMediaTypes.Episode)
-      {
-        EpisodeInfo episode = infoObject as EpisodeInfo;
-        if (episode != null && episode.TvdbId > 0 && episode.SeriesTvdbId > 0)
-        {
-          string path = Path.Combine(CACHE_PATH, episode.SeriesTvdbId.ToString());
-          if (Directory.Exists(path))
-          {
-            if (type == FanArtTypes.Thumbnail)
-            {
-              string file = Path.Combine(path, string.Format("img_episodes_{0}-{1}.jpg", episode.SeriesTvdbId, episode.TvdbId));
-              if (File.Exists(file))
-                fanartFiles.Add(file);
-            }
-            else if (type == FanArtTypes.FanArt)
-            {
-              fanartFiles.AddRange(Directory.GetFiles(path, "img_fan-*.jpg"));
-            }
-          }
-        }
-      }
-      else if (scope == FanArtMediaTypes.Actor)
-      {
-        PersonInfo person = infoObject as PersonInfo;
-        if (person != null && person.TvdbId > 0)
-        {
-          string path = Path.Combine(CACHE_PATH, person.TvdbId.ToString());
-          if (Directory.Exists(path))
-          {
-            if (type == FanArtTypes.Thumbnail)
-            {
-              if (Directory.Exists(path))
-                fanartFiles.AddRange(Directory.GetFiles(path, string.Format(@"img_actors_{0}.jpg", person.TvdbId), SearchOption.AllDirectories));
-            }
-          }
-        }
-      }
-      return fanartFiles;
-    }
-
-    protected override int SaveFanArtImages(string fanArtToken, string id, IEnumerable<TvdbBanner> images, string scope, string type)
+    protected override int SaveFanArtImages(string id, IEnumerable<TvdbBanner> images, string mediaItemId, string name, string fanartType)
     {
       if (images == null)
         return 0;
 
-      return SaveBanners(fanArtToken, images, _wrapper.PreferredLanguage, type);
+      return SaveBanners(images, _wrapper.PreferredLanguage, mediaItemId, name, fanartType);
     }
 
-    protected override int SaveSeriesSeasonFanArtImages(string fanArtToken, string id, int seasonNo, IEnumerable<TvdbBanner> images, string scope, string type)
-    {
-      if (images == null)
-        return 0;
-
-      return SaveBanners(fanArtToken, images, _wrapper.PreferredLanguage, type);
-    }
-
-    protected override int SaveSeriesEpisodeFanArtImages(string fanArtToken, string id, int seasonNo, int episodeNo, IEnumerable<TvdbBanner> images, string scope, string type)
-    {
-      if (images == null)
-        return 0;
-
-      return SaveBanners(fanArtToken, images, _wrapper.PreferredLanguage, type);
-    }
-
-    private int SaveBanners(string fanArtToken, IEnumerable<TvdbBanner> banners, TvdbLanguage language, string type)
+    private int SaveBanners(IEnumerable<TvdbBanner> banners, TvdbLanguage language, string mediaItemId, string name, string fanartType)
     {
       int idx = 0;
       foreach (TvdbBanner tvdbBanner in banners)
@@ -306,32 +242,42 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
         if (tvdbBanner.Language != language && language != null && tvdbBanner.Language != null)
           continue;
 
-        int externalFanArtCount = GetFanArtCount(fanArtToken, type);
-        if (externalFanArtCount >= MAX_FANART_IMAGES)
-          break;
-
-        if (idx >= MAX_FANART_IMAGES)
-          break;
-
-        if (!tvdbBanner.IsLoaded)
+        using (FanArtCache.FanArtCountLock countLock = FanArtCache.GetFanArtCountLock(mediaItemId, fanartType))
         {
-          // We need the image only loaded once, later we will access the cache directly
-          try
+          if (countLock.Count >= FanArtCache.MAX_FANART_IMAGES[fanartType])
+            break;
+
+          if (idx >= FanArtCache.MAX_FANART_IMAGES[fanartType])
+            break;
+
+          if (fanartType == FanArtTypes.Banner)
           {
-            tvdbBanner.LoadBanner();
-            tvdbBanner.UnloadBanner();
-            idx++;
-            AddFanArtCount(fanArtToken, type, 1);
+            if (!tvdbBanner.BannerPath.Contains("wide") && !tvdbBanner.BannerPath.Contains("graphical"))
+              continue;
           }
-          catch (Exception ex)
+
+          if (!tvdbBanner.IsLoaded)
           {
-            ServiceRegistration.Get<ILogger>().Warn("SeriesTvDbMatcher: Exception saving FanArt image", ex);
+            // We need the image only loaded once, later we will access the cache directly
+            try
+            {
+              FanArtCache.InitFanArtCache(mediaItemId, name);
+              tvdbBanner.CachePath = Path.Combine(FANART_CACHE_PATH, mediaItemId, fanartType);
+              tvdbBanner.LoadBanner();
+              tvdbBanner.UnloadBanner(true);
+              idx++;
+              countLock.Count++;
+            }
+            catch (Exception ex)
+            {
+              Logger.Debug(GetType().Name + " Download: Exception saving images for ID {0} [{1} ({2})]", ex, tvdbBanner.Id, mediaItemId, name);
+            }
           }
         }
       }
       if (idx > 0)
       {
-        ServiceRegistration.Get<ILogger>().Debug(@"SeriesTvDbMatcher Download: Saved {0} banners", idx);
+        Logger.Debug(GetType().Name + @" Download: Saved {0} for media item {1} ({2}) of type {3}", idx, mediaItemId, name, fanartType);
         return idx;
       }
 
@@ -340,14 +286,14 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
       {
         if (_useUniversalLanguage)
         {
-          idx = SaveBanners(fanArtToken, banners, TvdbLanguage.UniversalLanguage, type);
+          idx = SaveBanners(banners, TvdbLanguage.UniversalLanguage, mediaItemId, name, fanartType);
           if (idx > 0)
             return idx;
         }
 
-        idx = SaveBanners(fanArtToken, banners, TvdbLanguage.DefaultLanguage, type);
+        idx = SaveBanners(banners, TvdbLanguage.DefaultLanguage, mediaItemId, name, fanartType);
       }
-      ServiceRegistration.Get<ILogger>().Debug(@"SeriesTvDbMatcher Download: Saved {0} banners", idx);
+      Logger.Debug(GetType().Name + @" Download: Saved {0} for media item {1} ({2}) of type {3}", idx, mediaItemId, name, fanartType);
       return idx;
     }
 

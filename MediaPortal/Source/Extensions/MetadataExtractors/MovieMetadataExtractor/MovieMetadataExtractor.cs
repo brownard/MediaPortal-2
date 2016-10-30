@@ -31,10 +31,10 @@ using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.ResourceAccess;
-using MediaPortal.Common.Settings;
 using MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor.Matchers;
-using MediaPortal.Extensions.OnlineLibraries.Matchers;
 using MediaPortal.Extensions.OnlineLibraries;
+using System.IO;
+using MediaPortal.Common.Services.Settings;
 
 namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
 {
@@ -56,7 +56,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
     public static Guid METADATAEXTRACTOR_ID = new Guid(METADATAEXTRACTOR_ID_STR);
 
     protected const string MEDIA_CATEGORY_NAME_MOVIE = "Movie";
-    public const  double MINIMUM_HOUR_AGE_BEFORE_UPDATE = 1;
+    public const  double MINIMUM_HOUR_AGE_BEFORE_UPDATE = 0.5;
 
     #endregion
 
@@ -64,7 +64,8 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
 
     protected static ICollection<MediaCategory> MEDIA_CATEGORIES = new List<MediaCategory>();
     protected MetadataExtractorMetadata _metadata;
-    protected bool _onlyFanArt;
+    protected SettingsChangeWatcher<MovieMetadataExtractorSettings> _settingWatcher;
+    private static readonly ICollection<String> IMG_EXTENSIONS = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) { ".jpg", ".png", ".tbn" };
 
     #endregion
 
@@ -87,7 +88,42 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
                 MediaAspect.Metadata,
                 MovieAspect.Metadata
               });
-      _onlyFanArt = ServiceRegistration.Get<ISettingsManager>().Load<MovieMetadataExtractorSettings>().OnlyFanArt;
+      _settingWatcher = new SettingsChangeWatcher<MovieMetadataExtractorSettings>();
+      _settingWatcher.SettingsChanged += SettingsChanged;
+
+      LoadSettings();
+    }
+
+    #endregion
+
+    #region Settings
+
+    public static bool SkipOnlineSearches { get; private set; }
+    public static bool SkipFanArtDownload { get; private set; }
+    public static bool CacheOfflineFanArt { get; private set; }
+    public static bool IncludeActorDetails { get; private set; }
+    public static bool IncludeCharacterDetails { get; private set; }
+    public static bool IncludeDirectorDetails { get; private set; }
+    public static bool IncludeProductionCompanyDetails { get; private set; }
+    public static bool IncludeWriterDetails { get; private set; }
+    public static bool OnlyLocalMedia { get; private set; }
+
+    private void LoadSettings()
+    {
+      SkipOnlineSearches = _settingWatcher.Settings.SkipOnlineSearches;
+      SkipFanArtDownload = _settingWatcher.Settings.SkipFanArtDownload;
+      CacheOfflineFanArt = _settingWatcher.Settings.CacheOfflineFanArt;
+      IncludeActorDetails = _settingWatcher.Settings.IncludeActorDetails;
+      IncludeCharacterDetails = _settingWatcher.Settings.IncludeCharacterDetails;
+      IncludeDirectorDetails = _settingWatcher.Settings.IncludeDirectorDetails;
+      IncludeProductionCompanyDetails = _settingWatcher.Settings.IncludeProductionCompanyDetails;
+      IncludeWriterDetails = _settingWatcher.Settings.IncludeWriterDetails;
+      OnlyLocalMedia = _settingWatcher.Settings.OnlyLocalMedia;
+    }
+
+    private void SettingsChanged(object sender, EventArgs e)
+    {
+      LoadSettings();
     }
 
     #endregion
@@ -103,8 +139,12 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
       if (!extractedAspectData.ContainsKey(VideoStreamAspect.ASPECT_ID) && !extractedAspectData.ContainsKey(SubtitleAspect.ASPECT_ID))
         return false;
 
-      MovieInfo movieInfo = new MovieInfo();
+      bool refresh = false;
       if (extractedAspectData.ContainsKey(MovieAspect.ASPECT_ID))
+        refresh = true;
+
+      MovieInfo movieInfo = new MovieInfo();
+      if (refresh)
       {
         movieInfo.FromMetadata(extractedAspectData);
       }
@@ -165,23 +205,124 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         }
       }
 
-      if (!movieInfo.IsBaseInfoPresent || !movieInfo.HasExternalId)
+      if (!refresh)
       {
-        //Reset string to prefer online texts
-        movieInfo.CollectionName.DefaultLanguage = true;
-        movieInfo.MovieName.DefaultLanguage = true;
-        movieInfo.Summary.DefaultLanguage = true;
+        MatroskaMatcher.ExtractFromTags(lfsra, movieInfo);
+        MP4Matcher.ExtractFromTags(lfsra, movieInfo);
       }
 
-      MatroskaMatcher.ExtractFromTags(lfsra, movieInfo);
-      MP4Matcher.ExtractFromTags(lfsra, movieInfo);
+      if (SkipOnlineSearches && !SkipFanArtDownload)
+      {
+        MovieInfo tempInfo = movieInfo.Clone();
+        OnlineMatcherService.Instance.FindAndUpdateMovie(tempInfo, forceQuickMode);
+        movieInfo.CopyIdsFrom(tempInfo);
+        movieInfo.HasChanged = tempInfo.HasChanged;
+      }
+      else if (!SkipOnlineSearches)
+      {
+        OnlineMatcherService.Instance.FindAndUpdateMovie(movieInfo, forceQuickMode);
+      }
 
-      OnlineMatcherService.FindAndUpdateMovie(movieInfo, forceQuickMode);
+      if (!SkipOnlineSearches && !movieInfo.HasExternalId)
+        return false;
 
-      if (!_onlyFanArt)
-        movieInfo.SetMetadata(extractedAspectData);
+      if (!refresh)
+      {
+        //Create custom collection (overrides online collection)
+        MovieCollectionInfo collectionInfo = movieInfo.CloneBasicInstance<MovieCollectionInfo>();
+        string collectionName;
+        if (string.IsNullOrEmpty(collectionInfo.NameId) && CollectionFolderHasFanArt(lfsra, out collectionName))
+        {
+          collectionInfo = new MovieCollectionInfo();
+          collectionInfo.CollectionName = collectionName;
+          if (!collectionInfo.CollectionName.IsEmpty)
+          {
+            movieInfo.CollectionName = collectionInfo.CollectionName;
+            movieInfo.CopyIdsFrom(collectionInfo); //Reset ID's
+            movieInfo.HasChanged = true;
+          }
+        }
+      }
+      movieInfo.AssignNameId();
+
+      if (refresh)
+      {
+        if ((!BaseInfo.HasRelationship(extractedAspectData, PersonAspect.ASPECT_ID) && movieInfo.Characters.Count > 0) ||
+          (!BaseInfo.HasRelationship(extractedAspectData, CharacterAspect.ASPECT_ID) && movieInfo.Actors.Count > 0) ||
+          (!BaseInfo.HasRelationship(extractedAspectData, CompanyAspect.ASPECT_ID) && movieInfo.ProductionCompanies.Count > 0))
+        {
+          movieInfo.HasChanged = true;
+        }
+      }
+
+      if (!movieInfo.HasChanged && !forceQuickMode)
+        return false;
+
+      movieInfo.SetMetadata(extractedAspectData);
 
       return movieInfo.IsBaseInfoPresent;
+    }
+
+    private bool CollectionFolderHasFanArt(ILocalFsResourceAccessor lfsra, out string collectionName)
+    {
+      collectionName = null;
+
+      // File based access
+      try
+      {
+        using (lfsra.EnsureLocalFileSystemAccess())
+        {
+          string collectionMediaItemDirectoryPath;
+          if (Directory.GetParent(lfsra.LocalFileSystemPath) != null && Directory.GetParent(Directory.GetParent(lfsra.LocalFileSystemPath).FullName) != null)
+          {
+            DirectoryInfo dir = Directory.GetParent(Directory.GetParent(lfsra.LocalFileSystemPath).FullName);
+            collectionMediaItemDirectoryPath = dir.FullName;
+            collectionName = dir.Name;
+          }
+          else
+            return false;
+
+          var potentialFanArtFiles = GetPotentialFanArtFiles(collectionMediaItemDirectoryPath);
+
+          if ((from potentialFanArtFile in potentialFanArtFiles
+               let potentialFanArtFileNameWithoutExtension = Path.GetFileNameWithoutExtension(potentialFanArtFile.ToString()).ToLowerInvariant()
+               where potentialFanArtFileNameWithoutExtension == "poster" || potentialFanArtFileNameWithoutExtension == "folder"
+               select potentialFanArtFile).Count() > 0)
+            return true;
+
+          if ((from potentialFanArtFile in potentialFanArtFiles
+               let potentialFanArtFileNameWithoutExtension = Path.GetFileNameWithoutExtension(potentialFanArtFile.ToString()).ToLowerInvariant()
+               where potentialFanArtFileNameWithoutExtension == "banner"
+               select potentialFanArtFile).Count() > 0)
+            return true;
+
+          if ((from potentialFanArtFile in potentialFanArtFiles
+               let potentialFanArtFileNameWithoutExtension = Path.GetFileNameWithoutExtension(potentialFanArtFile.ToString()).ToLowerInvariant()
+               where potentialFanArtFileNameWithoutExtension == "backdrop" || potentialFanArtFileNameWithoutExtension == "fanart"
+               select potentialFanArtFile).Count() > 0)
+            return true;
+
+          string fanArtFolder = Path.Combine(collectionMediaItemDirectoryPath, "ExtraFanArt");
+          if (Directory.Exists(fanArtFolder))
+            if (GetPotentialFanArtFiles(fanArtFolder).Count() > 0)
+              return true;
+        }
+      }
+      catch
+      {
+      }
+      return false;
+    }
+
+    private List<string> GetPotentialFanArtFiles(string folderName)
+    {
+      var result = new List<string>();
+      if (!Directory.Exists(folderName))
+        return result;
+      foreach (var file in Directory.GetFiles(folderName))
+        if (IMG_EXTENSIONS.Contains(Path.GetExtension(file)))
+          result.Add(file);
+      return result;
     }
 
     #endregion

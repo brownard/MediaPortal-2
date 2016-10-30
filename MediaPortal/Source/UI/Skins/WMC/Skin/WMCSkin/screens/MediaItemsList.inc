@@ -22,7 +22,7 @@
     </Grid.ColumnDefinitions>
 
     <ListView x:Name="MediaItemsList" Style="{ThemeResource MediaItemsListListViewStyle}" ItemsSource="{Binding Items}"
-        HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsVisible="{Binding ShowList}"
+        HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsVisible="{Binding ShowList}" RestoreFocus="True"
               GroupingValueProvider="{Binding Source={Model 4CDD601F-E280-43b9-AD0A-6D7B2403C856},Path=NavigationData}">
       <ListView.Resources>
         <ResourceWrapper x:Key="VerticalScrollbarRenderTransform">
@@ -73,10 +73,8 @@
           </MultiBinding>
         </Label.Content>
       </Label>
-      <Label Color="{ThemeResource TextColor}" Content="| " FontSize="{ThemeResource SmallerFontSize}"
-             Opacity="0.4"/>
-      <Label Color="{ThemeResource TextColor}" Content="{Binding NumItems}" FontSize="{ThemeResource SmallerFontSize}"
-             Opacity="0.4"/>
+      <Label Content="| " FontSize="{ThemeResource SmallerFontSize}" Opacity="1.3" Color="{ThemeResource MenuTextBackground}"/>
+      <Label Content="{Binding NumItems}" FontSize="{ThemeResource SmallerFontSize}" Opacity="1.3" Color="{ThemeResource MenuTextBackground}"/>
       <StackPanel.IsVisible>
         <Binding Source="{StaticResource ViewModeModel}" Path="LayoutType"
                  Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutType}.{ListLayout}"/>
