@@ -30,7 +30,6 @@ using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
-using MediaPortal.Common.General;
 using MediaPortal.Extensions.OnlineLibraries;
 using MediaPortal.Common.MediaManagement.MLQueries;
 
@@ -116,7 +115,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         if (characterAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
         {
           Guid existingId;
-          if (TryGetIdFromCharacterCache(character, out existingId))
+          if (TryGetIdFromCache(character, out existingId))
             extractedLinkedAspects.Add(characterAspects, existingId);
           else
             extractedLinkedAspects.Add(characterAspects, Guid.Empty);
@@ -166,7 +165,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
     {
       CharacterInfo character = new CharacterInfo();
       character.FromMetadata(extractedAspects);
-      AddToCharacterCache(extractedItemId, character);
+      AddToCache(extractedItemId, character);
     }
 
     internal static ILogger Logger

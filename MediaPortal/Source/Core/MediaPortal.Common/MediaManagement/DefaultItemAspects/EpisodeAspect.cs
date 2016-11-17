@@ -53,7 +53,7 @@ namespace MediaPortal.Common.MediaManagement.DefaultItemAspects
     /// This name must be built in form "{0} S{1}", using SeriesName and Season.
     /// </summary>
     public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_SERIES_SEASON =
-        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("SeriesSeasonName", 200, Cardinality.Inline, false);
+        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("SeasonName", 200, Cardinality.Inline, false);
 
     /// <summary>
     /// Contains the number(s) of the episode(s). If a file contains multiple episodes, all episode numbers are added separately.
@@ -76,12 +76,6 @@ namespace MediaPortal.Common.MediaManagement.DefaultItemAspects
         MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("EpisodeName", 300, Cardinality.Inline, false);
 
     /// <summary>
-    /// First aired date of episode.
-    /// </summary>
-    public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_FIRSTAIRED =
-        MediaItemAspectMetadata.CreateSingleAttributeSpecification("FirstAired", typeof(DateTime), Cardinality.Inline, false);
-
-    /// <summary>
     /// Contains the overall rating of the episode. Value ranges from 0 (very bad) to 10 (very good).
     /// </summary>
     public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_TOTAL_RATING =
@@ -101,7 +95,6 @@ namespace MediaPortal.Common.MediaManagement.DefaultItemAspects
             ATTR_EPISODE,
             ATTR_DVDEPISODE,
             ATTR_EPISODE_NAME,
-            ATTR_FIRSTAIRED,
             ATTR_TOTAL_RATING,
             ATTR_RATING_COUNT,
         });

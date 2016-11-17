@@ -30,7 +30,6 @@ using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
-using MediaPortal.Common.General;
 using MediaPortal.Extensions.OnlineLibraries;
 using MediaPortal.Common.MediaManagement.MLQueries;
 
@@ -85,6 +84,8 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       if (CheckCacheContains(albumInfo))
         return false;
 
+      UpdatePersons(aspects, albumInfo.Artists, true);
+
       if (!AudioMetadataExtractor.SkipOnlineSearches)
         OnlineMatcherService.Instance.UpdateAlbumPersons(albumInfo, PersonAspect.OCCUPATION_ARTIST, forceQuickMode);
 
@@ -110,7 +111,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
         if (personAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
         {
           Guid existingId;
-          if (TryGetIdFromArtistCache(person, out existingId))
+          if (TryGetIdFromCache(person, out existingId))
             extractedLinkedAspects.Add(personAspects, existingId);
           else
             extractedLinkedAspects.Add(personAspects, Guid.Empty);
@@ -160,7 +161,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
     {
       PersonInfo person = new PersonInfo();
       person.FromMetadata(extractedAspects);
-      AddToArtistCache(extractedItemId, person);
+      AddToCache(extractedItemId, person);
     }
 
     internal static ILogger Logger

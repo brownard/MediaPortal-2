@@ -4,8 +4,14 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:fanart="clr-namespace:MediaPortal.Extensions.UserServices.FanArtService.Client;assembly=FanArtService.Client"
   xmlns:media="clr-namespace:MediaPortal.UiComponents.Media.Models.AspectWrappers;assembly=Media"
-  Grid.Column="0" Grid.Row="0" x:Name="MediaItemDetails"
-  HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+  xmlns:aspect="clr-namespace:MediaPortal.Common.MediaManagement.DefaultItemAspects;assembly=MediaPortal.Common"
+  x:Name="MediaItemDetails" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+
+  <Grid.Resources>
+    <fanart:FanArtImageSourceConverter x:Key="FanArtImageSourceConverter"/>
+    <MultiAspectAttributeConverter x:Key="MultiAspectAttributeConverter"/>
+  </Grid.Resources>
+  
   <Grid.RowDefinitions>
     <RowDefinition Height="190"/>
   </Grid.RowDefinitions>
@@ -13,7 +19,6 @@
     <ColumnDefinition Width="1650"/>
     <ColumnDefinition Width="100"/>
   </Grid.ColumnDefinitions>
-
   
   <WrapPanel Orientation="Vertical" Grid.Column="0" Grid.Row="0">
 
@@ -130,8 +135,15 @@
             </Grid.ColumnDefinitions>            
             <Label x:Name="GenresLabel" Grid.Row="0" Grid.Column="0"
                 Content="[Media.AudioGenresLabel]" Color="{ThemeResource TextColor}" Opacity="0.6"/>
-            <Label x:Name="Genres" Grid.Row="0" Grid.Column="1"
-                Content="{Binding Genres}" Color="{ThemeResource TextColor}"/>
+            <Label x:Name="Genre" TextTrimming="WordEllipsis" Color="{ThemeResource TextColor}"
+                   Grid.Row="0" Grid.Column="1">
+              <Label.Content>
+                <MultiBinding Converter="{StaticResource MultiAspectAttributeConverter}">
+                  <Binding Source="{StaticResource FanArtBackgroundModel}" Path="MediaItem"/>
+                  <Binding Source="{x:Static aspect:GenreAspect.ATTR_GENRE}" />
+                </MultiBinding>
+              </Label.Content>
+            </Label>
           </Grid>
         </ControlTemplate>
       </media:AudioAspectWrapper.Template>

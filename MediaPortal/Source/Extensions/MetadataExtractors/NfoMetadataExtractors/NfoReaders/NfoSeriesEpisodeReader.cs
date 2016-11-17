@@ -1006,7 +1006,15 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors.NfoRea
     {
       if (_useSeriesStubs && _seriesStubs[0].Genres != null && _seriesStubs[0].Genres.Any())
       {
-        MediaItemAspect.SetCollectionAttribute(extractedAspectData, VideoAspect.ATTR_GENRES, _seriesStubs[0].Genres.ToList());
+        List<GenreInfo> genres = _seriesStubs[0].Genres.Select(s => new GenreInfo { Name = s }).ToList();
+        OnlineMatcherService.Instance.AssignMissingSeriesGenreIds(genres);
+        foreach(GenreInfo genre in genres)
+        {
+          MultipleMediaItemAspect genreAspect = MediaItemAspect.CreateAspect(extractedAspectData, GenreAspect.Metadata);
+          genreAspect.SetAttribute(GenreAspect.ATTR_ID, genre.Id);
+          genreAspect.SetAttribute(GenreAspect.ATTR_GENRE, genre.Name);
+        }
+
         return true;
       }
       return false;
@@ -1025,21 +1033,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors.NfoRea
       {
         foreach (PersonStub person in _stubs[0].Actors)
         {
-          if (!string.IsNullOrEmpty(person.ImdbId) && !string.IsNullOrEmpty(person.Name))
+          if (!string.IsNullOrEmpty(person.Name))
           {
-            PersonInfo info = new PersonInfo()
-            {
-              ImdbId = person.ImdbId,
-              Name = person.Name,
-              Biography = person.Biography,
-              DateOfBirth = person.Birthdate,
-              DateOfDeath = person.Deathdate,
-              Orign = person.Birthplace,
-              Occupation = PersonAspect.OCCUPATION_ACTOR,
-              Thumbnail = person.Thumb,
-              Order = person.Order
-            };
-            OnlineMatcherService.Instance.StoreSeriesPersonMatch(info);
+            INfoRelationshipExtractor.StorePersonAndCharacter(extractedAspectData, person, PersonAspect.OCCUPATION_ACTOR, false);
           }
         }
 
@@ -1052,21 +1048,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors.NfoRea
       {
         foreach (PersonStub person in _seriesStubs[0].Actors)
         {
-          if (!string.IsNullOrEmpty(person.ImdbId) && !string.IsNullOrEmpty(person.Name))
+          if (!string.IsNullOrEmpty(person.Name))
           {
-            PersonInfo info = new PersonInfo()
-            {
-              ImdbId = person.ImdbId,
-              Name = person.Name,
-              Biography = person.Biography,
-              DateOfBirth = person.Birthdate,
-              DateOfDeath = person.Deathdate,
-              Orign = person.Birthplace,
-              Occupation = PersonAspect.OCCUPATION_ACTOR,
-              Thumbnail = person.Thumb,
-              Order = person.Order
-            };
-            OnlineMatcherService.Instance.StoreSeriesPersonMatch(info);
+            INfoRelationshipExtractor.StorePersonAndCharacter(extractedAspectData, person, PersonAspect.OCCUPATION_ACTOR, false);
           }
         }
 

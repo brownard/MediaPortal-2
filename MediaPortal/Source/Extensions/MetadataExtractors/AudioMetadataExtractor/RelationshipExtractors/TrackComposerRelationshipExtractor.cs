@@ -90,6 +90,8 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       if (CheckCacheContains(trackInfo))
         return false;
 
+      UpdatePersons(aspects, trackInfo.Composers, false);
+
       if (!AudioMetadataExtractor.SkipOnlineSearches)
         OnlineMatcherService.Instance.UpdateTrackPersons(trackInfo, PersonAspect.OCCUPATION_COMPOSER, forceQuickMode);
 
@@ -115,7 +117,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
         if (personAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
         {
           Guid existingId;
-          if (TryGetIdFromComposerCache(person, out existingId))
+          if (TryGetIdFromCache(person, out existingId))
             extractedLinkedAspects.Add(personAspects, existingId);
           else
             extractedLinkedAspects.Add(personAspects, Guid.Empty);
@@ -165,7 +167,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
     {
       PersonInfo person = new PersonInfo();
       person.FromMetadata(extractedAspects);
-      AddToComposerCache(extractedItemId, person);
+      AddToCache(extractedItemId, person);
     }
 
     internal static ILogger Logger

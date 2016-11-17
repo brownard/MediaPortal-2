@@ -18,7 +18,6 @@
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -52,6 +51,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.24.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\..\Packages\Microsoft.Tpl.Dataflow.4.5.24\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
@@ -68,6 +68,10 @@
     <Compile Include="FanArt\FanArtCache.cs" />
     <Compile Include="FanArt\FanArtConstants.cs" />
     <Compile Include="FanArt\FanArtSettings.cs" />
+    <Compile Include="Genres\SeriesGenre.cs" />
+    <Compile Include="Genres\MovieGenre.cs" />
+    <Compile Include="Genres\MusicGenre.cs" />
+    <Compile Include="MediaManagement\DefaultItemAspects\GenreAspect.cs" />
     <Compile Include="MediaManagement\DefaultItemAspects\SelectionMarkerAspect.cs" />
     <Compile Include="MediaManagement\DefaultItemAspects\AudioAlbumAspect.cs" />
     <Compile Include="MediaManagement\DefaultItemAspects\MovieCollectionAspect.cs" />
@@ -80,7 +84,9 @@
     <Compile Include="MediaManagement\DefaultItemAspects\SubtitleAspect.cs" />
     <Compile Include="MediaManagement\DefaultItemAspects\VideoStreamAspect.cs" />
     <Compile Include="MediaManagement\DefaultItemAspects\VideoAudioStreamAspect.cs" />
+    <Compile Include="MediaManagement\Helpers\GenreInfo.cs" />
     <Compile Include="MediaManagement\Helpers\BaseInfo.cs" />
+    <Compile Include="MediaManagement\Helpers\RelationshipCache.cs" />
     <Compile Include="MediaManagement\Helpers\SimpleRating.cs" />
     <Compile Include="MediaManagement\Helpers\SimpleTitle.cs" />
     <Compile Include="MediaManagement\Helpers\MovieCollectionInfo.cs" />
@@ -103,6 +109,7 @@
     <Compile Include="MediaManagement\MLQueries\IUserDataFilter.cs" />
     <Compile Include="MediaManagement\MLQueries\RelationalUserDataFilter.cs" />
     <Compile Include="MediaManagement\RelationshipExtractorMetadata.cs" />
+    <Compile Include="MediaManagement\RelationshipHierarchy.cs" />
     <Compile Include="MediaManagement\MLQueries\FilteredRelationshipFilter.cs" />
     <Compile Include="ResourceAccess\IUncachableResource.cs" />
     <Compile Include="ResourceAccess\IImpersonationService.cs" />
@@ -153,7 +160,6 @@
     <Compile Include="Services\ResourceAccess\VirtualResourceProvider\VirtualResourceProvider.cs" />
     <Compile Include="Services\ResourceAccess\RawUrlResourceProvider\RawUrlResourceProvider.cs" />
     <Compile Include="Services\ResourceAccess\RawUrlResourceProvider\RawUrlResourceAccessor.cs" />
-    <Compile Include="Services\ResourceAccess\Settings\AvailableDriveLettersSettings.cs" />
     <Compile Include="Services\Runtime\PowerEventHandler.cs" />
     <Compile Include="Services\ServerCommunication\UPnPServerWatcher.cs" />
     <Compile Include="Services\Settings\SettingsChangeWatcher.cs" />
@@ -347,7 +353,6 @@
     <Compile Include="Services\Logging\CrashLoggerBase.cs" />
     <Compile Include="Services\Logging\DefaultLogger.cs" />
     <Compile Include="Services\Logging\FileLogger.cs" />
-    <Compile Include="Services\ResourceAccess\Settings\ResourceMountingSettings.cs" />
     <Compile Include="Services\ResourceAccess\ResourceMountingService.cs" />
     <Compile Include="Services\ResourceAccess\ResourceServer.cs" />
     <Compile Include="Services\ResourceAccess\Settings\ServerSettings.cs" />

@@ -251,7 +251,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
           {
             if (SetMovieId(movieMatch, match.Id))
             {
-              if (movieInfo.LastChanged > _lastCacheRefresh)
+              if (movieInfo.LastChanged.HasValue && _lastCacheRefresh.HasValue && movieInfo.LastChanged > _lastCacheRefresh)
                 return true;
 
               //If Id was found in cache the online movie info is probably also in the cache
@@ -317,18 +317,24 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
 
           movieInfo.HasChanged |= MetadataUpdater.SetOrUpdateRatings(ref movieInfo.Rating, movieMatch.Rating);
           if (movieInfo.Genres.Count == 0)
+          {
             movieInfo.HasChanged |= MetadataUpdater.SetOrUpdateList(movieInfo.Genres, movieMatch.Genres, true);
+          }
+          if (movieInfo.Genres.Count > 0)
+          {
+            movieInfo.HasChanged |= OnlineMatcherService.Instance.AssignMissingMovieGenreIds(movieInfo.Genres);
+          }
           movieInfo.HasChanged |= MetadataUpdater.SetOrUpdateList(movieInfo.Awards, movieMatch.Awards, true);
 
           //Limit the number of persons
           if(movieMatch.Actors.Count > MAX_PERSONS)
             movieMatch.Actors.RemoveRange(MAX_PERSONS, movieMatch.Actors.Count - MAX_PERSONS);
           if (movieMatch.Characters.Count > MAX_PERSONS)
-            movieMatch.Actors.RemoveRange(MAX_PERSONS, movieMatch.Characters.Count - MAX_PERSONS);
+            movieMatch.Characters.RemoveRange(MAX_PERSONS, movieMatch.Characters.Count - MAX_PERSONS);
           if (movieMatch.Directors.Count > MAX_PERSONS)
-            movieMatch.Actors.RemoveRange(MAX_PERSONS, movieMatch.Directors.Count - MAX_PERSONS);
+            movieMatch.Directors.RemoveRange(MAX_PERSONS, movieMatch.Directors.Count - MAX_PERSONS);
           if (movieMatch.Writers.Count > MAX_PERSONS)
-            movieMatch.Actors.RemoveRange(MAX_PERSONS, movieMatch.Writers.Count - MAX_PERSONS);
+            movieMatch.Writers.RemoveRange(MAX_PERSONS, movieMatch.Writers.Count - MAX_PERSONS);
 
           //These lists contain Ids and other properties that are not persisted, so they will always appear changed.
           //So changes to these lists will only be stored if something else has changed.
@@ -1102,16 +1108,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
       return false;
     }
 
-    protected override void DownloadFanArt(string downloadId)
+    protected override void DownloadFanArt(FanartDownload<string> fanartDownload)
     {
-      string name = downloadId;
+      string name = fanartDownload.DownloadId;
       try
       {
-        if (string.IsNullOrEmpty(downloadId))
+        if (string.IsNullOrEmpty(fanartDownload.DownloadId))
           return;
 
         DownloadData data = new DownloadData();
-        if (!data.Deserialize(downloadId))
+        if (!data.Deserialize(fanartDownload.DownloadId))
           return;
 
         name = string.Format("{0} ({1})", data.MediaItemId, data.Name);
@@ -1240,7 +1246,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
         finally
         {
           // Remember we are finished
-          FinishDownloadFanArt(downloadId);
+          FinishDownloadFanArt(fanartDownload);
         }
       }
       catch (Exception ex)

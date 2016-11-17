@@ -230,7 +230,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
       series.Description = new SimpleTitle(seriesDetail.Overview, false);
       series.Certification = seriesDetail.ContentRating;
       series.Rating = new SimpleRating(seriesDetail.Rating, seriesDetail.RatingCount);
-      series.Genres = seriesDetail.Genre;
+      series.Genres = seriesDetail.Genre.Select(s => new GenreInfo { Name = s }).ToList();
       series.Networks = ConvertToCompanies(seriesDetail.NetworkID, seriesDetail.Network, CompanyAspect.COMPANY_TV_NETWORK);
       if (seriesDetail.Status.IndexOf("Ended", StringComparison.InvariantCultureIgnoreCase) >= 0)
       {
@@ -274,7 +274,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
           FirstAired = episodeDetail.FirstAired,
           EpisodeName = new SimpleTitle(episodeDetail.EpisodeName, false),
           Summary = new SimpleTitle(episodeDetail.Overview, false),
-          Genres = seriesDetail.Genre,
+          Genres = seriesDetail.Genre.Select(s => new GenreInfo { Name = s }).ToList(),
           Rating = new SimpleRating(episodeDetail.Rating, episodeDetail.RatingCount),
         };
 
@@ -376,7 +376,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         {
           episodeDetail = seriesDetail.Episodes.Where(e => e.EpisodeNumber == episodeNumber &&
           e.SeasonNumber == episode.SeasonNumber.Value).OrderByDescending(e => e.Id).FirstOrDefault();
-          if (episodeDetail == null) return false;
+          if (episodeDetail == null) continue;
 
           EpisodeInfo info = new EpisodeInfo()
           {
@@ -393,7 +393,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
             FirstAired = episodeDetail.FirstAired,
             EpisodeName = new SimpleTitle(episodeDetail.EpisodeName, false),
             Summary = new SimpleTitle(episodeDetail.Overview, false),
-            Genres = seriesDetail.Genre,
+            Genres = seriesDetail.Genre.Select(s => new GenreInfo { Name = s }).ToList(),
             Rating = new SimpleRating(episodeDetail.Rating, episodeDetail.RatingCount),
           };
 

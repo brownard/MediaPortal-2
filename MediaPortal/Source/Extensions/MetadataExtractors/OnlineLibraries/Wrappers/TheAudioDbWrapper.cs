@@ -308,7 +308,9 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         track.Artists = ConvertToPersons(trackDetail.ArtistID.Value, trackDetail.MusicBrainzArtistID, trackDetail.Artist, PersonAspect.OCCUPATION_ARTIST);
         track.AlbumArtists = ConvertToPersons(trackDetail.ArtistID.Value, trackDetail.MusicBrainzArtistID, trackDetail.Artist, PersonAspect.OCCUPATION_ARTIST);
       }
-      track.Genres = new List<string>(new string[] { trackDetail.Genre });
+
+      if (!string.IsNullOrEmpty(trackDetail.Genre))
+        track.Genres.Add(new GenreInfo { Name = trackDetail.Genre });
 
       if (trackDetail.AlbumID.HasValue)
       {
@@ -350,7 +352,10 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
 
       album.Album = albumDetail.Album;
       album.Description = new SimpleTitle(albumDetail.Description, !languageSet);
-      album.Genres = new List<string>(new string[] { albumDetail.Genre });
+
+      if (!string.IsNullOrEmpty(albumDetail.Genre))
+        album.Genres.Add(new GenreInfo { Name = albumDetail.Genre });
+
       album.Sales = albumDetail.Sales ?? 0;
       album.ReleaseDate = albumDetail.Year.HasValue && albumDetail.Year.Value > 1900 ? new DateTime(albumDetail.Year.Value, 1, 1) : default(DateTime?);
       album.Rating = new SimpleRating(albumDetail.Rating, albumDetail.RatingCount);
@@ -368,7 +373,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
       {
         album.TotalTracks = albumTracks.Count;
 
-        foreach(AudioDbTrack trackDetail in albumTracks)
+        foreach (AudioDbTrack trackDetail in albumTracks)
         {
           trackDetail.SetLanguage(language);
 
@@ -391,10 +396,10 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
           track.Duration = trackDetail.Duration.HasValue ? trackDetail.Duration.Value / 1000 : 0;
 
           if (trackDetail.ArtistID.HasValue)
-          {
             track.Artists = ConvertToPersons(trackDetail.ArtistID.Value, trackDetail.MusicBrainzArtistID, trackDetail.Artist, PersonAspect.OCCUPATION_ARTIST);
-          }
-          track.Genres = new List<string>(new string[] { trackDetail.Genre });
+
+          if (!string.IsNullOrEmpty(trackDetail.Genre))
+            track.Genres.Add(new GenreInfo { Name = trackDetail.Genre });
 
           track.AlbumArtists = album.Artists;
           track.MusicLabels = album.MusicLabels;

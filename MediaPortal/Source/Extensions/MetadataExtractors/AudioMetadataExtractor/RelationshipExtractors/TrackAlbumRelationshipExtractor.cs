@@ -29,6 +29,7 @@ using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Extensions.OnlineLibraries;
 using MediaPortal.Common.MediaManagement.MLQueries;
+using System.Linq;
 
 namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
 {
@@ -78,10 +79,12 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       if (CheckCacheContains(trackInfo))
         return false;
 
+      AlbumInfo cachedAlbum;
       Guid albumId;
       AlbumInfo albumInfo = trackInfo.CloneBasicInstance<AlbumInfo>();
-      if (TryGetIdFromAlbumCache(albumInfo, out albumId))
-        albumInfo = GetFromAlbumCache(albumId);
+      UpdatePersons(aspects, albumInfo.Artists, true);
+      if (TryGetInfoFromCache(albumInfo, out cachedAlbum, out albumId))
+        albumInfo = cachedAlbum;
       else if (!AudioMetadataExtractor.SkipOnlineSearches)
         OnlineMatcherService.Instance.UpdateAlbum(albumInfo, false, forceQuickMode);
 
@@ -110,10 +113,13 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
         MediaItemAspect.SetAttribute(albumAspects, ThumbnailLargeAspect.ATTR_THUMBNAIL, data);
       }
 
+      if (forceQuickMode)
+        StorePersons(albumAspects, albumInfo.Artists, true);
+
       if (!albumAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
         return false;
 
-      if(albumId != Guid.Empty)
+      if (albumId != Guid.Empty)
         extractedLinkedAspects.Add(albumAspects, albumId);
       else
         extractedLinkedAspects.Add(albumAspects, Guid.Empty);
@@ -146,7 +152,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
     {
       AlbumInfo album = new AlbumInfo();
       album.FromMetadata(extractedAspects);
-      AddToAlbumCache(extractedItemId, album);
+      AddToCache(extractedItemId, album, false);
     }
   }
 }

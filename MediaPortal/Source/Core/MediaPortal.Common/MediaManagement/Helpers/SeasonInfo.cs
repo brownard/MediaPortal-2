@@ -189,9 +189,6 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       if (SeriesTvRageId > 0) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_TVRAGE, ExternalIdentifierAspect.TYPE_SERIES, SeriesTvRageId.ToString());
       if (!string.IsNullOrEmpty(SeriesNameId)) MediaItemAspect.AddOrUpdateExternalIdentifier(aspectData, ExternalIdentifierAspect.SOURCE_NAME, ExternalIdentifierAspect.TYPE_SERIES, SeriesNameId);
 
-      // Construct a "Series Season" string, which will be used for filtering and season banner retrieval.
-      MediaItemAspect.SetAttribute(aspectData, SeasonAspect.ATTR_SERIES_SEASON, ToString());
-
       SetThumbnailMetadata(aspectData);
 
       return true;
@@ -364,6 +361,14 @@ namespace MediaPortal.Common.MediaManagement.Helpers
 
         info.SeriesName = new SimpleTitle(SeriesName.Text, SeriesName.DefaultLanguage);
         info.SearchSeason = SeasonNumber;
+        return (T)(object)info;
+      }
+      else if (typeof(T) == typeof(SeasonInfo))
+      {
+        SeasonInfo info = new SeasonInfo();
+        info.CopyIdsFrom(this);
+        info.SeriesName = SeriesName;
+        info.SeasonNumber = SeasonNumber;
         return (T)(object)info;
       }
       return default(T);
