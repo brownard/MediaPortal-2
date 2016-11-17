@@ -157,6 +157,14 @@ namespace Emulators.Game
     {
       if (mediaItem == null)
         return;
+
+      T oldValue;
+      if (MediaItemAspect.TryGetAttribute(mediaItem.Aspects, attribute, out oldValue))
+      {
+        if ((oldValue == null && value == null) || (oldValue != null && oldValue.Equals(value)))
+          return;
+      }
+
       IContentDirectory cd = ServiceRegistration.Get<IServerConnectionManager>().ContentDirectory;
       if (cd == null)
         return;
