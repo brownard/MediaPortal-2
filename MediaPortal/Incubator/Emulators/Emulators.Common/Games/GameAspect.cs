@@ -36,7 +36,7 @@ namespace Emulators.Common.Games
         MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("OnlineId", 100, Cardinality.Inline, false);
 
     /// <summary>
-    /// Contains the release year of the game.
+    /// Contains the online id of the platform.
     /// </summary>
     public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_PLATFORM_ID =
         MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("PlatformId", 100, Cardinality.Inline, false);
@@ -90,6 +90,7 @@ namespace Emulators.Common.Games
             ATTR_TGDB_ID,
             ATTR_MATCHER_ID,
             ATTR_ONLINE_ID,
+            ATTR_PLATFORM_ID,
             ATTR_PLATFORM,
             ATTR_YEAR,
             ATTR_DESCRIPTION,
