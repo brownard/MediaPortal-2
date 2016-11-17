@@ -316,13 +316,9 @@ namespace Emulators.Common.TheGamesDb
       return result != null && result.Games != null && result.Games.Length > 0;
     }
 
-    protected override void DownloadFanArt(string downloadId)
+    protected override void DownloadFanArt(FanartDownload<int> fanartDownload)
     {
-      DownloadFanArt(Convert.ToInt32(downloadId));
-    }
-
-    protected void DownloadFanArt(int itemId)
-    {
+      int itemId = fanartDownload.Id;
       GameResult result;
       if (!Get(itemId, out result))
         return;
@@ -337,7 +333,7 @@ namespace Emulators.Common.TheGamesDb
       DownloadImages(itemId, images.ClearLogo, baseUrl, CLEARLOGO_DIRECTORY);
       DownloadImages(itemId, images.Screenshot, baseUrl, SCREENSHOT_DIRECTORY);
       ServiceRegistration.Get<ILogger>().Debug("GameTheGamesDbWrapper Download: Finished saving images for IDd{0}", itemId);
-      FinishDownloadFanArt(itemId);
+      FinishDownloadFanArt(fanartDownload);
     }
 
     protected void DownloadImages(int id, IEnumerable<GameImageBoxart> images, string baseUrl, string category)

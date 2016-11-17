@@ -103,8 +103,9 @@ namespace Emulators.Common.MobyGames
       }
     }
 
-    protected override void DownloadFanArt(string itemId)
+    protected override void DownloadFanArt(FanartDownload<string> fanartDownload)
     {
+      string itemId = fanartDownload.Id;
       string cache = CreateAndGetCacheName(itemId, "covers");
       string url = string.Format("{0}/{1}/{2}/{3}", BASE_URL, GET_PATH, itemId, COVER_PATH);
       MobyGamesCoverArt result = _downloader.Download<MobyGamesCoverArt>(url, cache);
@@ -113,6 +114,7 @@ namespace Emulators.Common.MobyGames
         DownloadCover(result.Front, itemId, COVERS_FRONT);
         DownloadCover(result.Back, itemId, COVERS_BACK);
       }
+      FinishDownloadFanArt(fanartDownload);
     }
 
     protected void DownloadCover(string url, string id, string side)
