@@ -1,5 +1,6 @@
 ﻿using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
+using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.ResourceAccess;
 using System;
 using System.Collections.Generic;
@@ -38,17 +39,20 @@ namespace Emulators.Common.Games
     /// <param name="aspectData">Dictionary with extracted aspects.</param>
     public bool SetMetadata(IDictionary<Guid, IList<MediaItemAspect>> aspectData, ILocalFsResourceAccessor lfsra)
     {
+      MediaItemAspect.GetOrCreateAspect(aspectData, GameAspect.Metadata);
       MultipleMediaItemAspect providerResourceAspect = MediaItemAspect.CreateAspect(aspectData, ProviderResourceAspect.Metadata);
       providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_INDEX, 0);
       providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_PRIMARY, true);
       providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_MIME_TYPE, GameCategory.CategoryNameToMimeType(Platform));
       providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_SIZE, lfsra.Size);
       providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, lfsra.CanonicalLocalResourcePath.Serialize());
+      MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_ISVIRTUAL, false);
 
       if (!string.IsNullOrEmpty(GameName))
       {
         MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_TITLE, GameName);
         MediaItemAspect.SetAttribute(aspectData, GameAspect.ATTR_GAME_NAME, GameName);
+        MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_SORT_TITLE, BaseInfo.GetSortTitle(GameName));
       }
       if (ReleaseDate.HasValue)
       {
