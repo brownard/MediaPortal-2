@@ -3,6 +3,7 @@ using Emulators.Common.Games;
 using Emulators.Common.Matchers;
 using MediaPortal.Backend.MediaLibrary;
 using MediaPortal.Common;
+using MediaPortal.Common.FanArt;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.MLQueries;
@@ -99,7 +100,7 @@ namespace Emulators.Server
       if (mediaLibrary == null)
         return false;
       IFilter filter = new MediaItemIdFilter(mediaItemId);
-      IList<MediaItem> items = mediaLibrary.Search(new MediaItemQuery(NECESSARY_MIAS, filter), false);
+      IList<MediaItem> items = mediaLibrary.Search(new MediaItemQuery(NECESSARY_MIAS, filter), false, null, true);
       if (items == null || items.Count == 0)
         return false;
       mediaItem = items.First();

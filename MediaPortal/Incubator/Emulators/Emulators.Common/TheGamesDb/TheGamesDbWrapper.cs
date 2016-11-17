@@ -154,7 +154,7 @@ namespace Emulators.Common.TheGamesDb
       if (DateTime.TryParse(game.ReleaseDate, DATE_CULTURE, DateTimeStyles.None, out releaseDate))
         gameInfo.ReleaseDate = releaseDate;
       if (game.Id > 0)
-        ScheduleDownload(game.Id);
+        ScheduleDownload(game.Id, game.Id.ToString());
       return true;
     }
 
@@ -316,7 +316,12 @@ namespace Emulators.Common.TheGamesDb
       return result != null && result.Games != null && result.Games.Length > 0;
     }
 
-    protected override void DownloadFanArt(int itemId)
+    protected override void DownloadFanArt(string downloadId)
+    {
+      DownloadFanArt(Convert.ToInt32(downloadId));
+    }
+
+    protected void DownloadFanArt(int itemId)
     {
       GameResult result;
       if (!Get(itemId, out result))

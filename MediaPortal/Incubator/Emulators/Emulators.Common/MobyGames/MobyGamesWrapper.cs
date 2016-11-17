@@ -159,7 +159,7 @@ namespace Emulators.Common.MobyGames
       DateTime releaseDate;
       if (DateTime.TryParse(game.ReleaseDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out releaseDate))
         gameInfo.ReleaseDate = releaseDate;
-      ScheduleDownload(game.Id);
+      ScheduleDownload(game.Id, game.Id.ToString());
     }
 
     protected void AddToStorage(string searchTerm, string platform, string id)
