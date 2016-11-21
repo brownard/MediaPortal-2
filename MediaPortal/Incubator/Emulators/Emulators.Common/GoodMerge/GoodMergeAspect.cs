@@ -15,7 +15,7 @@ namespace Emulators.Common.GoodMerge
     /// Contains the last played goodmerge item.
     /// </summary>
     public static readonly MediaItemAspectMetadata.SingleAttributeSpecification ATTR_LAST_PLAYED_ITEM =
-        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("LastPlayedItem", 100, Cardinality.Inline, false);
+        MediaItemAspectMetadata.CreateSingleStringAttributeSpecification("LastPlayedItem", 255, Cardinality.Inline, false);
 
     /// <summary>
     /// Goodmerge items.
