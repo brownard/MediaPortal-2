@@ -74,6 +74,16 @@ namespace Emulators.LibRetro
       ChaptersAvailable = true;
     }
 
+    public override void PrevChapter()
+    {
+
+    }
+
+    public override void NextChapter()
+    {
+
+    }
+
     public override void OpenChooseChapterDialog()
     {
       ServiceRegistration.Get<IScreenManager>().ShowDialog("dialog_retro_context_menu");
