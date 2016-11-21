@@ -297,62 +297,92 @@ namespace MediaPortal.Extensions.OnlineLibraries
       return AssignMissingGenreIds(genres, MUSIC_GENRE_MAP);
     }
 
-    public bool FindAndUpdateTrack(TrackInfo trackInfo, bool forceQuickMode)
+    public List<AlbumInfo> GetLastChangedAudioAlbums()
+    {
+      List<AlbumInfo> albums = new List<AlbumInfo>();
+      foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        foreach (AlbumInfo album in matcher.GetLastChangedAudioAlbums())
+          if (!albums.Contains(album))
+            albums.Add(album);
+      }
+      return albums;
+    }
+
+    public void ResetLastChangedAudioAlbums()
+    {
+      foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        matcher.ResetLastChangedAudioAlbums();
+      }
+    }
+
+    public List<TrackInfo> GetLastChangedAudio()
+    {
+      List<TrackInfo> tracks = new List<TrackInfo>();
+      foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        foreach (TrackInfo track in matcher.GetLastChangedAudio())
+          if (!tracks.Contains(track))
+            tracks.Add(track);
+      }
+      return tracks;
+    }
+
+    public void ResetLastChangedAudio()
+    {
+      foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        matcher.ResetLastChangedAudio();
+      }
+    }
+
+    public bool FindAndUpdateTrack(TrackInfo trackInfo, bool importOnly)
     {
       bool success = false;
       foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.FindAndUpdateTrack(trackInfo, matcher.Primary ? false : forceQuickMode);
+        success |= matcher.FindAndUpdateTrack(trackInfo, matcher.Primary ? false : importOnly);
       }
       return success;
     }
 
-    public bool FindAndUpdateTrackPerson(TrackInfo trackInfo, PersonInfo personInfo, bool forceQuickMode)
+    public bool UpdateAlbumPersons(AlbumInfo albumInfo, string occupation, bool importOnly)
     {
       bool success = false;
       foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.FindAndUpdateTrackPerson(trackInfo, personInfo, forceQuickMode);
+        success |= matcher.UpdateAlbumPersons(albumInfo, occupation, importOnly);
       }
       return success;
     }
 
-    public bool UpdateAlbumPersons(AlbumInfo albumInfo, string occupation, bool forceQuickMode)
+    public bool UpdateTrackPersons(TrackInfo trackInfo, string occupation, bool importOnly)
     {
       bool success = false;
       foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateAlbumPersons(albumInfo, occupation, forceQuickMode);
+        success |= matcher.UpdateTrackPersons(trackInfo, occupation, importOnly);
       }
       return success;
     }
 
-    public bool UpdateTrackPersons(TrackInfo trackInfo, string occupation, bool forceQuickMode)
+    public bool UpdateAlbumCompanies(AlbumInfo albumInfo, string companyType, bool importOnly)
     {
       bool success = false;
       foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateTrackPersons(trackInfo, occupation, forceQuickMode);
+        success |= matcher.UpdateAlbumCompanies(albumInfo, companyType, importOnly);
       }
       return success;
     }
 
-    public bool UpdateAlbumCompanies(AlbumInfo albumInfo, string companyType, bool forceQuickMode)
+    public bool UpdateAlbum(AlbumInfo albumInfo, bool updateTrackList, bool importOnly)
     {
       bool success = false;
       foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateAlbumCompanies(albumInfo, companyType, forceQuickMode);
-      }
-      return success;
-    }
-
-    public bool UpdateAlbum(AlbumInfo albumInfo, bool updateTrackList, bool forceQuickMode)
-    {
-      bool success = false;
-      foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
-      {
-        success |= matcher.UpdateAlbum(albumInfo, updateTrackList, matcher.Primary ? false : forceQuickMode);
+        success |= matcher.UpdateAlbum(albumInfo, updateTrackList, matcher.Primary ? false : importOnly);
       }
 
       if (updateTrackList)
@@ -365,7 +395,7 @@ namespace MediaPortal.Extensions.OnlineLibraries
           //TrackInfo trackInfo = albumInfo.Tracks[i];
           //foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
           //{
-          //  matcher.FindAndUpdateTrack(trackInfo, forceQuickMode);
+          //  matcher.FindAndUpdateTrack(trackInfo, importOnly);
           //}
         }
       }
@@ -420,42 +450,82 @@ namespace MediaPortal.Extensions.OnlineLibraries
       return AssignMissingGenreIds(genres, MOVIE_GENRE_MAP);
     }
 
-    public bool FindAndUpdateMovie(MovieInfo movieInfo, bool forceQuickMode)
+    public List<MovieInfo> GetLastChangedMovies()
+    {
+      List<MovieInfo> movies = new List<MovieInfo>();
+      foreach (IMovieMatcher matcher in MOVIE_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        foreach (MovieInfo movie in matcher.GetLastChangedMovies())
+          if (!movies.Contains(movie))
+            movies.Add(movie);
+      }
+      return movies;
+    }
+
+    public void ResetLastChangedMovies()
+    {
+      foreach (IMovieMatcher matcher in MOVIE_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        matcher.ResetLastChangedMovies();
+      }
+    }
+
+    public List<MovieCollectionInfo> GetLastChangedMovieCollections()
+    {
+      List<MovieCollectionInfo> collections = new List<MovieCollectionInfo>();
+      foreach (IMovieMatcher matcher in MOVIE_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        foreach (MovieCollectionInfo collection in matcher.GetLastChangedMovieCollections())
+          if (!collections.Contains(collection))
+            collections.Add(collection);
+      }
+      return collections;
+    }
+
+    public void ResetLastChangedMovieCollections()
+    {
+      foreach (IMovieMatcher matcher in MOVIE_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        matcher.ResetLastChangedMovieCollections();
+      }
+    }
+
+    public bool FindAndUpdateMovie(MovieInfo movieInfo, bool importOnly)
     {
       bool success = false;
       foreach (IMovieMatcher matcher in MOVIE_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.FindAndUpdateMovie(movieInfo, matcher.Primary ? false : forceQuickMode);
+        success |= matcher.FindAndUpdateMovie(movieInfo, matcher.Primary ? false : importOnly);
       }
       return success;
     }
 
-    public bool UpdatePersons(MovieInfo movieInfo, string occupation, bool forceQuickMode)
+    public bool UpdatePersons(MovieInfo movieInfo, string occupation, bool importOnly)
     {
       bool success = false;
       foreach (IMovieMatcher matcher in MOVIE_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdatePersons(movieInfo, occupation, forceQuickMode);
+        success |= matcher.UpdatePersons(movieInfo, occupation, importOnly);
       }
       return success;
     }
 
-    public bool UpdateCharacters(MovieInfo movieInfo, bool forceQuickMode)
+    public bool UpdateCharacters(MovieInfo movieInfo, bool importOnly)
     {
       bool success = false;
       foreach (IMovieMatcher matcher in MOVIE_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateCharacters(movieInfo, forceQuickMode);
+        success |= matcher.UpdateCharacters(movieInfo, importOnly);
       }
       return success;
     }
 
-    public bool UpdateCollection(MovieCollectionInfo collectionInfo, bool updateMovieList, bool forceQuickMode)
+    public bool UpdateCollection(MovieCollectionInfo collectionInfo, bool updateMovieList, bool importOnly)
     {
       bool success = false;
       foreach (IMovieMatcher matcher in MOVIE_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateCollection(collectionInfo, updateMovieList, forceQuickMode);
+        success |= matcher.UpdateCollection(collectionInfo, updateMovieList, importOnly);
       }
 
       if (updateMovieList)
@@ -468,19 +538,19 @@ namespace MediaPortal.Extensions.OnlineLibraries
           //MovieInfo movieInfo = collectionInfo.Movies[i];
           //foreach (IMovieMatcher matcher in MOVIE_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
           //{
-          //  success |= matcher.FindAndUpdateMovie(movieInfo, forceQuickMode);
+          //  success |= matcher.FindAndUpdateMovie(movieInfo, importOnly);
           //}
         }
       }
       return success;
     }
 
-    public bool UpdateCompanies(MovieInfo movieInfo, string companyType, bool forceQuickMode)
+    public bool UpdateCompanies(MovieInfo movieInfo, string companyType, bool importOnly)
     {
       bool success = false;
       foreach (IMovieMatcher matcher in MOVIE_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateCompanies(movieInfo, companyType, forceQuickMode);
+        success |= matcher.UpdateCompanies(movieInfo, companyType, importOnly);
       }
       return success;
     }
@@ -545,52 +615,92 @@ namespace MediaPortal.Extensions.OnlineLibraries
       return AssignMissingGenreIds(genres, SERIES_GENRE_MAP);
     }
 
-    public bool FindAndUpdateEpisode(EpisodeInfo episodeInfo, bool forceQuickMode)
+    public List<SeriesInfo> GetLastChangedSeries()
+    {
+      List<SeriesInfo> series = new List<SeriesInfo>();
+      foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        foreach (SeriesInfo ser in matcher.GetLastChangedSeries())
+          if (!series.Contains(ser))
+            series.Add(ser);
+      }
+      return series;
+    }
+
+    public void ResetLastChangedSeries()
+    {
+      foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        matcher.ResetLastChangedSeries();
+      }
+    }
+
+    public List<EpisodeInfo> GetLastChangedEpisodes()
+    {
+      List<EpisodeInfo> episodes = new List<EpisodeInfo>();
+      foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        foreach (EpisodeInfo episode in matcher.GetLastChangedEpisodes())
+          if (!episodes.Contains(episode))
+            episodes.Add(episode);
+      }
+      return episodes;
+    }
+
+    public void ResetLastChangedEpisodes()
+    {
+      foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
+      {
+        matcher.ResetLastChangedEpisodes();
+      }
+    }
+
+    public bool FindAndUpdateEpisode(EpisodeInfo episodeInfo, bool importOnly)
     {
       bool success = false;
       foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.FindAndUpdateEpisode(episodeInfo, matcher.Primary ? false : forceQuickMode);
+        success |= matcher.FindAndUpdateEpisode(episodeInfo, matcher.Primary ? false : importOnly);
       }
       return success;
     }
 
-    public bool UpdateEpisodePersons(EpisodeInfo episodeInfo, string occupation, bool forceQuickMode)
+    public bool UpdateEpisodePersons(EpisodeInfo episodeInfo, string occupation, bool importOnly)
     {
       bool success = false;
       foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateEpisodePersons(episodeInfo, occupation, forceQuickMode);
+        success |= matcher.UpdateEpisodePersons(episodeInfo, occupation, importOnly);
       }
       return success;
     }
 
-    public bool UpdateEpisodeCharacters(EpisodeInfo episodeInfo, bool forceQuickMode)
+    public bool UpdateEpisodeCharacters(EpisodeInfo episodeInfo, bool importOnly)
     {
       bool success = false;
       foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateEpisodeCharacters(episodeInfo, forceQuickMode);
+        success |= matcher.UpdateEpisodeCharacters(episodeInfo, importOnly);
       }
       return success;
     }
 
-    public bool UpdateSeason(SeasonInfo seasonInfo, bool forceQuickMode)
+    public bool UpdateSeason(SeasonInfo seasonInfo, bool importOnly)
     {
       bool success = false;
       foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateSeason(seasonInfo, forceQuickMode);
+        success |= matcher.UpdateSeason(seasonInfo, importOnly);
       }
       return success;
     }
 
-    public bool UpdateSeries(SeriesInfo seriesInfo, bool updateEpisodeList, bool forceQuickMode)
+    public bool UpdateSeries(SeriesInfo seriesInfo, bool updateEpisodeList, bool importOnly)
     {
       bool success = false;
       foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateSeries(seriesInfo, updateEpisodeList, matcher.Primary ? false : forceQuickMode);
+        success |= matcher.UpdateSeries(seriesInfo, updateEpisodeList, matcher.Primary ? false : importOnly);
       }
 
       if (updateEpisodeList)
@@ -604,39 +714,39 @@ namespace MediaPortal.Extensions.OnlineLibraries
           //EpisodeInfo episodeInfo = seriesInfo.Episodes[i];
           //foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
           //{
-          //  success |= matcher.FindAndUpdateEpisode(episodeInfo, forceQuickMode);
+          //  success |= matcher.FindAndUpdateEpisode(episodeInfo, importOnly);
           //}
         }
       }
       return success;
     }
 
-    public bool UpdateSeriesPersons(SeriesInfo seriesInfo, string occupation, bool forceQuickMode)
+    public bool UpdateSeriesPersons(SeriesInfo seriesInfo, string occupation, bool importOnly)
     {
       bool success = false;
       foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateSeriesPersons(seriesInfo, occupation, forceQuickMode);
+        success |= matcher.UpdateSeriesPersons(seriesInfo, occupation, importOnly);
       }
       return success;
     }
 
-    public bool UpdateSeriesCharacters(SeriesInfo seriesInfo, bool forceQuickMode)
+    public bool UpdateSeriesCharacters(SeriesInfo seriesInfo, bool importOnly)
     {
       bool success = false;
       foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateSeriesCharacters(seriesInfo, forceQuickMode);
+        success |= matcher.UpdateSeriesCharacters(seriesInfo, importOnly);
       }
       return success;
     }
 
-    public bool UpdateSeriesCompanies(SeriesInfo seriesInfo, string companyType, bool forceQuickMode)
+    public bool UpdateSeriesCompanies(SeriesInfo seriesInfo, string companyType, bool importOnly)
     {
       bool success = false;
       foreach (ISeriesMatcher matcher in SERIES_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateSeriesCompanies(seriesInfo, companyType, forceQuickMode);
+        success |= matcher.UpdateSeriesCompanies(seriesInfo, companyType, importOnly);
       }
       return success;
     }

@@ -183,6 +183,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
     public static bool SkipOnlineSearches { get; private set; }
     public static bool SkipFanArtDownload { get; private set; }
     public static bool CacheOfflineFanArt { get; private set; }
+    public static bool CacheLocalFanArt { get; private set; }
     public static bool IncludeArtistDetails { get; private set; }
     public static bool IncludeComposerDetails { get; private set; }
     public static bool IncludeMusicLabelDetails { get; private set; }
@@ -193,6 +194,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       SkipOnlineSearches = _settingWatcher.Settings.SkipOnlineSearches;
       SkipFanArtDownload = _settingWatcher.Settings.SkipFanArtDownload;
       CacheOfflineFanArt = _settingWatcher.Settings.CacheOfflineFanArt;
+      CacheLocalFanArt = _settingWatcher.Settings.CacheLocalFanArt;
       IncludeArtistDetails = _settingWatcher.Settings.IncludeArtistDetails;
       IncludeComposerDetails = _settingWatcher.Settings.IncludeComposerDetails;
       IncludeMusicLabelDetails = _settingWatcher.Settings.IncludeMusicLabelDetails;
@@ -357,7 +359,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       get { return _metadata; }
     }
 
-    public virtual bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
+    public virtual bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly)
     {
       IFileSystemResourceAccessor fsra = mediaItemAccessor as IFileSystemResourceAccessor;
       if (fsra == null)
@@ -426,21 +428,24 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
             if (tag.Tag.Track != 0)
               trackNo = tag.Tag.Track;
 
-            MultipleMediaItemAspect providerResourceAspect = MediaItemAspect.CreateAspect(extractedAspectData, ProviderResourceAspect.Metadata);
-            providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_INDEX, 0);
-            providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_PRIMARY, true);
-            providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_SIZE, fsra.Size);
-            providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, fsra.CanonicalLocalResourcePath.Serialize());
-            // FIXME Albert: tag.MimeType returns taglib/mp3 for an MP3 file. This is not what we want and collides with the
-            // mimetype handling in the BASS player, which expects audio/xxx.
-            if (!string.IsNullOrWhiteSpace(tag.MimeType))
-              providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_MIME_TYPE, tag.MimeType.Replace("taglib/", "audio/"));
+            if (importOnly)
+            {
+              MultipleMediaItemAspect providerResourceAspect = MediaItemAspect.CreateAspect(extractedAspectData, ProviderResourceAspect.Metadata);
+              providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_INDEX, 0);
+              providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_PRIMARY, true);
+              providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_SIZE, fsra.Size);
+              providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, fsra.CanonicalLocalResourcePath.Serialize());
+              // FIXME Albert: tag.MimeType returns taglib/mp3 for an MP3 file. This is not what we want and collides with the
+              // mimetype handling in the BASS player, which expects audio/xxx.
+              if (!string.IsNullOrWhiteSpace(tag.MimeType))
+                providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_MIME_TYPE, tag.MimeType.Replace("taglib/", "audio/"));
 
-            MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_TITLE, title);
-            MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_SORT_TITLE, BaseInfo.GetSortTitle(title));
-            MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_ISVIRTUAL, false);
-            MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_COMMENT, StringUtils.TrimToNull(tag.Tag.Comment));
-            MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_RECORDINGTIME, fsra.LastChanged);
+              MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_TITLE, title);
+              MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_SORT_TITLE, BaseInfo.GetSortTitle(title));
+              MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_ISVIRTUAL, false);
+              MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_COMMENT, StringUtils.TrimToNull(tag.Tag.Comment));
+              MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_RECORDINGTIME, fsra.LastChanged);
+            }
 
             trackInfo.TrackName = title;
             if (tag.Properties.AudioBitrate != 0)
@@ -574,7 +579,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
               else
               {
                 // In quick mode only allow thumbs taken from cache.
-                bool cachedOnly = forceQuickMode;
+                bool cachedOnly = importOnly;
 
                 // Thumbnail extraction
                 fileName = mediaItemAccessor.ResourcePathName;
@@ -610,30 +615,30 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
         if (SkipOnlineSearches && !SkipFanArtDownload)
         {
           TrackInfo tempInfo = trackInfo.Clone();
-          OnlineMatcherService.Instance.FindAndUpdateTrack(tempInfo, forceQuickMode);
+          OnlineMatcherService.Instance.FindAndUpdateTrack(tempInfo, importOnly);
           trackInfo.CopyIdsFrom(tempInfo);
           trackInfo.HasChanged = tempInfo.HasChanged;
         }
         else if (!SkipOnlineSearches)
         {
-          OnlineMatcherService.Instance.FindAndUpdateTrack(trackInfo, forceQuickMode);
+          OnlineMatcherService.Instance.FindAndUpdateTrack(trackInfo, importOnly);
         }
 
         if (refresh)
         {
-          if ((IncludeArtistDetails && !BaseInfo.HasRelationship(extractedAspectData, PersonAspect.ASPECT_ID) && trackInfo.Artists.Count > 0) ||
-            (IncludeComposerDetails && !BaseInfo.HasRelationship(extractedAspectData, PersonAspect.ASPECT_ID) && trackInfo.Composers.Count > 0))
+          if ((IncludeArtistDetails && !BaseInfo.HasRelationship(extractedAspectData, PersonAspect.ROLE_ARTIST) && trackInfo.Artists.Count > 0) ||
+            (IncludeComposerDetails && !BaseInfo.HasRelationship(extractedAspectData, PersonAspect.ROLE_COMPOSER) && trackInfo.Composers.Count > 0))
           {
             trackInfo.HasChanged = true;
           }
         }
 
-        if (!trackInfo.HasChanged && !forceQuickMode)
+        if (!trackInfo.HasChanged && !importOnly)
           return false;
 
         trackInfo.SetMetadata(extractedAspectData);
 
-        if (!refresh)
+        if (importOnly)
         {
           //Store metadata for the Relationship Extractors
           if (IncludeArtistDetails)

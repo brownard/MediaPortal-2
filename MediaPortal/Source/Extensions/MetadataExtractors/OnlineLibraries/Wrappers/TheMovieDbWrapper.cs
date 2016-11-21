@@ -39,18 +39,19 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
   class TheMovieDbWrapper : ApiWrapper<ImageItem, string>
   {
     protected MovieDbApiV3 _movieDbHandler;
-    protected DateTime _lastRefresh;
-    protected TimeSpan _cacheTimeout = TimeSpan.FromHours(12);
+    protected TimeSpan _cacheTimeout = TimeSpan.FromHours(24);
+    private bool _movieMode = true;
 
     /// <summary>
     /// Initializes the library. Needs to be called at first.
     /// </summary>
     /// <returns></returns>
-    public bool Init(string cachePath, bool useHttps)
+    public bool Init(string cachePath, bool useHttps, bool movieMode)
     {
       _movieDbHandler = new MovieDbApiV3("1e3f311b50e6ca53bbc3fcade2214b5e", cachePath, useHttps);
       SetDefaultLanguage(MovieDbApiV3.DefaultLanguage);
       SetCachePath(cachePath);
+      _movieMode = movieMode;
       return true;
     }
 
@@ -973,62 +974,73 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
     /// <returns></returns>
     public override bool RefreshCache(DateTime lastRefresh)
     {
-      //Avoid having both TV and Movie matcher updating the cache
-      if (DateTime.Now - _lastRefresh <= _cacheTimeout)
+      if (DateTime.Now - lastRefresh <= _cacheTimeout)
         return false;
-
-      _lastRefresh = DateTime.Now;
 
       try
       {
-        //Refresh movies
+        DateTime startTime = DateTime.Now;
         int page = 1;
         List<int> changedItems = new List<int>();
-        ChangeCollection changes = _movieDbHandler.GetMovieChanges(page, lastRefresh);
-        foreach (Change change in changes.Changes)
-          changedItems.Add(change.Id);
-        while (page < changes.TotalPages)
+        ChangeCollection changes;
+        if (_movieMode)
         {
-          page++;
+          //Refresh movies
+          startTime = DateTime.Now;
+          page = 1;
+          changedItems.Clear();
           changes = _movieDbHandler.GetMovieChanges(page, lastRefresh);
           foreach (Change change in changes.Changes)
             changedItems.Add(change.Id);
-        }
-        foreach (int movieId in changedItems)
-          _movieDbHandler.DeleteMovieCache(movieId);
+          while (page < changes.TotalPages)
+          {
+            page++;
+            changes = _movieDbHandler.GetMovieChanges(page, lastRefresh);
+            foreach (Change change in changes.Changes)
+              changedItems.Add(change.Id);
+          }
+          foreach (int movieId in changedItems)
+            _movieDbHandler.DeleteMovieCache(movieId);
+          FireCacheUpdateFinished(startTime, DateTime.Now, UpdateType.Movie, changedItems.Select(i => i.ToString()).ToList());
 
-        //Refresh persons
-        page = 1;
-        changedItems.Clear();
-        changes = _movieDbHandler.GetPersonChanges(page, lastRefresh);
-        foreach (Change change in changes.Changes)
-          changedItems.Add(change.Id);
-        while (page < changes.TotalPages)
-        {
-          page++;
+          //Refresh persons
+          startTime = DateTime.Now;
+          page = 1;
+          changedItems.Clear();
           changes = _movieDbHandler.GetPersonChanges(page, lastRefresh);
           foreach (Change change in changes.Changes)
             changedItems.Add(change.Id);
+          while (page < changes.TotalPages)
+          {
+            page++;
+            changes = _movieDbHandler.GetPersonChanges(page, lastRefresh);
+            foreach (Change change in changes.Changes)
+              changedItems.Add(change.Id);
+          }
+          foreach (int movieId in changedItems)
+            _movieDbHandler.DeletePersonCache(movieId);
+          FireCacheUpdateFinished(startTime, DateTime.Now, UpdateType.Person, changedItems.Select(i => i.ToString()).ToList());
         }
-        foreach (int movieId in changedItems)
-          _movieDbHandler.DeletePersonCache(movieId);
-
-        //Refresh series
-        page = 1;
-        changedItems.Clear();
-        changes = _movieDbHandler.GetSeriesChanges(page, lastRefresh);
-        foreach (Change change in changes.Changes)
-          changedItems.Add(change.Id);
-        while (page < changes.TotalPages)
+        else
         {
-          page++;
+          //Refresh series
+          startTime = DateTime.Now;
+          page = 1;
+          changedItems.Clear();
           changes = _movieDbHandler.GetSeriesChanges(page, lastRefresh);
           foreach (Change change in changes.Changes)
             changedItems.Add(change.Id);
+          while (page < changes.TotalPages)
+          {
+            page++;
+            changes = _movieDbHandler.GetSeriesChanges(page, lastRefresh);
+            foreach (Change change in changes.Changes)
+              changedItems.Add(change.Id);
+          }
+          foreach (int movieId in changedItems)
+            _movieDbHandler.DeleteSeriesCache(movieId);
+          FireCacheUpdateFinished(startTime, DateTime.Now, UpdateType.Series, changedItems.Select(i => i.ToString()).ToList());
         }
-        foreach (int movieId in changedItems)
-          _movieDbHandler.DeleteSeriesCache(movieId);
-
         return true;
       }
       catch (Exception ex)

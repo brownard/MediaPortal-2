@@ -125,6 +125,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
     /// <returns></returns>
     public ChangeCollection GetMovieChanges(int page, DateTime startTime)
     {
+      //Returns changes for the last 24 hours
       string url = GetUrl(URL_GETMOVIECHANGES, null);
       url += "&page=" + page;
       url += "&start_date=" + startTime.ToString(@"yyyy\-MM\-dd");
@@ -137,6 +138,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
     /// <returns></returns>
     public ChangeCollection GetPersonChanges(int page, DateTime startTime)
     {
+      //Returns changes for the last 24 hours
       string url = GetUrl(URL_GETPERSONCHANGES, null);
       url += "&page=" + page;
       url += "&start_date=" + startTime.ToString(@"yyyy\-MM\-dd");
@@ -149,6 +151,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
     /// <returns></returns>
     public ChangeCollection GetSeriesChanges(int page, DateTime startTime)
     {
+      //Returns changes for the last 24 hours
       string url = GetUrl(URL_GETSERIESCHANGES, null);
       url += "&page=" + page;
       url += "&start_date=" + startTime.ToString(@"yyyy\-MM\-dd");
@@ -427,6 +430,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
     }
 
     /// <summary>
+    /// Returns cache file for a single <see cref="Movie"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of movie</param>
+    /// <returns>Cache file name</returns>
+    public string GetMovieCacheFile(int id, string language)
+    {
+      return CreateAndGetCacheName(id, language, "Movie");
+    }
+
+    /// <summary>
     /// Returns detailed information for a single <see cref="Movie"/> with given <paramref name="imdbId"/>. This method caches request
     /// to same movies using the cache path given in <see cref="MovieDbApiV3"/> constructor.
     /// </summary>
@@ -461,6 +474,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
     }
 
     /// <summary>
+    /// Returns cache file for a single <see cref="Movie"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of movie</param>
+    /// <returns>Cache file name</returns>
+    public string GetMovieCacheFile(string imdbId, string language)
+    {
+      return CreateAndGetCacheName(imdbId, language, "Movie");
+    }
+
+    /// <summary>
     /// Returns a <see cref="MovieCasts"/> for the given <paramref name="id"/>.
     /// </summary>
     /// <param name="id">TMDB id of movie</param>
@@ -475,6 +498,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
       if (cacheOnly) return null;
       string url = GetUrl(URL_GETMOVIECASTCREW, null, id);
       return _downloader.Download<MovieCasts>(url, cache);
+    }
+
+    /// <summary>
+    /// Returns cache file for <see cref="MovieCasts"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of movie</param>
+    /// <returns>Cache file name</returns>
+    public string GetMovieCastCrewCacheFile(int id, string language)
+    {
+      return CreateAndGetCacheName(id, language, "Crew");
     }
 
     /// <summary>
@@ -533,6 +566,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
     }
 
     /// <summary>
+    /// Returns cache file for <see cref="MovieCollection"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of collection</param>
+    /// <returns>Cache file name</returns>
+    public string GetCollectionCacheFile(int id, string language)
+    {
+      return CreateAndGetCacheName(id, language, "Collection");
+    }
+
+    /// <summary>
     /// Returns a <see cref="ImageCollection"/> for the given <paramref name="id"/>.
     /// </summary>
     /// <param name="id">TMDB id of movie collection</param>
@@ -566,6 +609,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
     }
 
     /// <summary>
+    /// Returns cache file for <see cref="Company"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of company</param>
+    /// <returns>Cache file name</returns>
+    public string GetCompanyCacheFile(int id, string language)
+    {
+      return CreateAndGetCacheName(id, language, "Company");
+    }
+
+    /// <summary>
     /// Returns detailed information for a single <see cref="Network"/> with given <paramref name="id"/>. This method caches request
     /// to same network using the cache path given in <see cref="MovieDbApiV3"/> constructor.
     /// </summary>
@@ -585,6 +638,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
     }
 
     /// <summary>
+    /// Returns cache file for <see cref="Network"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of network</param>
+    /// <returns>Cache file name</returns>
+    public string GetNetworkCacheFile(int id, string language)
+    {
+      return CreateAndGetCacheName(id, language, "Network");
+    }
+
+    /// <summary>
     /// Returns detailed information for a single <see cref="Person"/> with given <paramref name="id"/>. This method caches request
     /// to same person using the cache path given in <see cref="MovieDbApiV3"/> constructor.
     /// </summary>
@@ -601,6 +664,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
       if (cacheOnly) return null;
       string url = GetUrl(URL_GETPERSON, language, id) + "&append_to_response=external_ids";
       return _downloader.Download<Person>(url, cache);
+    }
+
+    /// <summary>
+    /// Returns cache file for <see cref="Person"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of person</param>
+    /// <returns>Cache file name</returns>
+    public string GetPersonCacheFile(int id, string language)
+    {
+      return CreateAndGetCacheName(id, language, "Person");
     }
 
     /// <summary>
@@ -637,6 +710,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
     }
 
     /// <summary>
+    /// Returns cache file for <see cref="Series"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of series</param>
+    /// <returns>Cache file name</returns>
+    public string GetSeriesCacheFile(int id, string language)
+    {
+      return CreateAndGetCacheName(id, language, "Series");
+    }
+
+    /// <summary>
     /// Returns a <see cref="MovieCasts"/> for the given <paramref name="id"/>.
     /// </summary>
     /// <param name="id">TMDB id of series</param>
@@ -651,6 +734,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
       if (cacheOnly) return null;
       string url = GetUrl(URL_GETSERIESCASTCREW, null, id);
       return _downloader.Download<MovieCasts>(url, cache);
+    }
+
+    /// <summary>
+    /// Returns cache file for <see cref="MovieCasts"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of series</param>
+    /// <returns>Cache file name</returns>
+    public string GetSeriesCastCrewCacheFile(int id, string language)
+    {
+      return CreateAndGetCacheName(id, language, "Series_Crew");
     }
 
     /// <summary>
@@ -688,6 +781,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
     }
 
     /// <summary>
+    /// Returns cache file for <see cref="Season"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of series</param>
+    /// <returns>Cache file name</returns>
+    public string GetSeriesSeasonCacheFile(int id, int season, string language)
+    {
+      return CreateAndGetCacheName(id, language, string.Format("Season{0}", season));
+    }
+
+    /// <summary>
     /// Returns a <see cref="MovieCasts"/> for the given <paramref name="id"/>.
     /// </summary>
     /// <param name="id">TMDB id of series</param>
@@ -703,6 +806,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
       if (cacheOnly) return null;
       string url = GetUrl(URL_GETSEASONCASTCREW, null, id, season);
       return _downloader.Download<MovieCasts>(url, cache);
+    }
+
+    /// <summary>
+    /// Returns cache file for <see cref="MovieCasts"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of series</param>
+    /// <returns>Cache file name</returns>
+    public string GetSeriesSeasonCastCrewCacheFile(int id, int season, string language)
+    {
+      return CreateAndGetCacheName(id, language, string.Format("Season{0}_Crew", season));
     }
 
     /// <summary>
@@ -742,6 +855,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
     }
 
     /// <summary>
+    /// Returns cache file for <see cref="Episode"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of series</param>
+    /// <returns>Cache file name</returns>
+    public string GetSeriesEpisodeCacheFile(int id, int season, int episode, string language)
+    {
+      return CreateAndGetCacheName(id, language, string.Format("Season{0}_Episode{1}", season, episode));
+    }
+
+    /// <summary>
     /// Returns a <see cref="MovieCasts"/> for the given <paramref name="id"/>.
     /// </summary>
     /// <param name="id">TMDB id of series</param>
@@ -758,6 +881,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries.MovieDbV3
       if (cacheOnly) return null;
       string url = GetUrl(URL_GETEPISODECASTCREW, null, id, season, episode);
       return _downloader.Download<MovieCasts>(url, cache);
+    }
+
+    /// <summary>
+    /// Returns cache file for <see cref="MovieCasts"/> with given <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">Id of series</param>
+    /// <returns>Cache file name</returns>
+    public string GetSeriesEpisodeCastCrewCacheFile(int id, int season, int episode, string language)
+    {
+      return CreateAndGetCacheName(id, language, string.Format("Season{0}_Episode{1}_Crew", season, episode));
     }
 
     /// <summary>

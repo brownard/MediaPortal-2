@@ -550,6 +550,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         if (DateTime.Now - lastRefresh <= _cacheTimeout)
           return false;
 
+        DateTime startTime = DateTime.Now;
         List<int> changedItems = new List<int>();
         Dictionary<int, DateTime> seriesChangeDates = _tvMazeHandler.GetSeriesChangeDates();
         foreach (var change in seriesChangeDates)
@@ -559,6 +560,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         }
         foreach (int seriesId in changedItems)
           _tvMazeHandler.DeleteSeriesCache(seriesId);
+        FireCacheUpdateFinished(startTime, DateTime.Now, UpdateType.Person, changedItems.Select(i => i.ToString()).ToList());
 
         return true;
       }

@@ -70,14 +70,14 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
       return GetPersonSearchFilter(extractedAspects);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool forceQuickMode)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool importOnly)
     {
       extractedLinkedAspects = null;
 
       if (!MovieMetadataExtractor.IncludeWriterDetails)
         return false;
 
-      if (forceQuickMode)
+      if (importOnly)
         return false;
 
       if (BaseInfo.IsVirtualResource(aspects))
@@ -91,15 +91,15 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         return false;
 
       if(!MovieMetadataExtractor.SkipOnlineSearches)
-        OnlineMatcherService.Instance.UpdatePersons(movieInfo, PersonAspect.OCCUPATION_WRITER, forceQuickMode);
+        OnlineMatcherService.Instance.UpdatePersons(movieInfo, PersonAspect.OCCUPATION_WRITER, importOnly);
 
       if (movieInfo.Writers.Count == 0)
         return false;
 
-      if (BaseInfo.CountRelationships(aspects, LinkedRole) < movieInfo.Writers.Count)
+      if (BaseInfo.CountRelationships(aspects, LinkedRole) < movieInfo.Writers.Where(p => p.HasExternalId).Count())
         movieInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!movieInfo.HasChanged && !forceQuickMode)
+      if (!movieInfo.HasChanged && !importOnly)
         return false;
 
       AddToCheckCache(movieInfo);

@@ -232,6 +232,16 @@ namespace MediaPortal.Common.MediaManagement.Helpers
 
         info.Name = ActorName;
         info.Occupation = PersonAspect.OCCUPATION_ACTOR;
+        info.LastChanged = LastChanged;
+        info.DateAdded = DateAdded;
+        return (T)(object)info;
+      }
+      else if (typeof(T) == typeof(CharacterInfo))
+      {
+        CharacterInfo info = new CharacterInfo();
+        info.CopyIdsFrom(this);
+        info.Name = Name;
+        info.ActorName = ActorName;
         return (T)(object)info;
       }
       else if (typeof(T) == typeof(CharacterInfo))
@@ -251,7 +261,13 @@ namespace MediaPortal.Common.MediaManagement.Helpers
 
     public override string ToString()
     {
-      return Name ?? "?";
+      return string.IsNullOrEmpty(Name) ? "[Unnamed Character]" : Name;
+    }
+
+    public override int GetHashCode()
+    {
+      //TODO: Check if this is functional
+      return ToString().GetHashCode();
     }
 
     public override bool Equals(object obj)
@@ -291,12 +307,6 @@ namespace MediaPortal.Common.MediaManagement.Helpers
         return true; //More lax comparison if actor is the same
 
       return false;
-    }
-
-    public override int GetHashCode()
-    {
-      //TODO: Check if this is functional
-      return (string.IsNullOrEmpty(Name) ? "Unnamed Character" : Name).GetHashCode();
     }
 
     public int CompareTo(CharacterInfo other)

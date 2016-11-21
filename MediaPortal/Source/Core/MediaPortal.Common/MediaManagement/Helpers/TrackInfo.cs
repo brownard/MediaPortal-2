@@ -422,6 +422,8 @@ namespace MediaPortal.Common.MediaManagement.Helpers
         info.Compilation = Compilation;
         info.Languages.AddRange(Languages);
         info.Artists.AddRange(AlbumArtists);
+        info.LastChanged = LastChanged;
+        info.DateAdded = DateAdded;
         return (T)(object)info;
       }
       return default(T);
@@ -433,14 +435,19 @@ namespace MediaPortal.Common.MediaManagement.Helpers
 
     public override string ToString()
     {
-      if (string.IsNullOrEmpty(Album))
-        return TrackName;
+      if (!string.IsNullOrEmpty(Album) && TrackNum > 0)
+        return string.Format(TRACK_FORMAT_STR, Album, TrackNum, string.IsNullOrEmpty(TrackName) ? "[Unnamed Track]" : TrackName);
 
-      Match albumMatch = _fromAlbumName.Match(Album);
-      return string.Format(TRACK_FORMAT_STR,
-        Album,
-        TrackNum,
-        TrackName);
+      if (TrackNum > 0)
+        return string.Format(SHORT_FORMAT_STR, TrackNum, string.IsNullOrEmpty(TrackName) ? "[Unnamed Track]" : TrackName);
+
+      return string.IsNullOrEmpty(TrackName) ? "[Unnamed Track]" : TrackName;
+    }
+
+    public override int GetHashCode()
+    {
+      //TODO: Check if this is functional
+      return ToString().GetHashCode();
     }
 
     public override bool Equals(object obj)
@@ -504,12 +511,6 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       }
 
       return false;
-    }
-
-    public override int GetHashCode()
-    {
-      //TODO: Check if this is functional
-      return (string.IsNullOrEmpty(TrackName) ? "Unnamed Track" : TrackName).GetHashCode();
     }
 
     public int CompareTo(TrackInfo other)

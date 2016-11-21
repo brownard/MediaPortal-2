@@ -70,14 +70,14 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       return GetCompanySearchFilter(extractedAspects);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool forceQuickMode)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool importOnly)
     {
       extractedLinkedAspects = null;
 
       if (!AudioMetadataExtractor.IncludeMusicLabelDetails)
         return false;
 
-      if (forceQuickMode)
+      if (importOnly)
         return false;
 
       AlbumInfo albumInfo = new AlbumInfo();
@@ -88,15 +88,15 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
         return false;
 
       if (!AudioMetadataExtractor.SkipOnlineSearches)
-        OnlineMatcherService.Instance.UpdateAlbumCompanies(albumInfo, CompanyAspect.COMPANY_MUSIC_LABEL, forceQuickMode);
+        OnlineMatcherService.Instance.UpdateAlbumCompanies(albumInfo, CompanyAspect.COMPANY_MUSIC_LABEL, importOnly);
 
       if (albumInfo.MusicLabels.Count == 0)
         return false;
 
-      if (BaseInfo.CountRelationships(aspects, LinkedRole) < albumInfo.MusicLabels.Count)
+      if (BaseInfo.CountRelationships(aspects, LinkedRole) < albumInfo.MusicLabels.Where(p => p.HasExternalId).Count())
         albumInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!albumInfo.HasChanged && !forceQuickMode)
+      if (!albumInfo.HasChanged && !importOnly)
         return false;
 
       AddToCheckCache(albumInfo);

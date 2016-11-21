@@ -70,7 +70,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       return GetPersonSearchFilter(extractedAspects);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool forceQuickMode)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool importOnly)
     {
       extractedLinkedAspects = null;
 
@@ -87,15 +87,15 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       UpdatePersons(aspects, albumInfo.Artists, true);
 
       if (!AudioMetadataExtractor.SkipOnlineSearches)
-        OnlineMatcherService.Instance.UpdateAlbumPersons(albumInfo, PersonAspect.OCCUPATION_ARTIST, forceQuickMode);
+        OnlineMatcherService.Instance.UpdateAlbumPersons(albumInfo, PersonAspect.OCCUPATION_ARTIST, importOnly);
 
       if (albumInfo.Artists.Count == 0)
         return false;
 
-      if (BaseInfo.CountRelationships(aspects, LinkedRole) < albumInfo.Artists.Count)
+      if (BaseInfo.CountRelationships(aspects, LinkedRole) < albumInfo.Artists.Where(p => p.HasExternalId).Count())
         albumInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!albumInfo.HasChanged && !forceQuickMode)
+      if (!albumInfo.HasChanged && !importOnly)
         return false;
 
       AddToCheckCache(albumInfo);

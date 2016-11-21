@@ -70,14 +70,14 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       return GetPersonSearchFilter(extractedAspects);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool forceQuickMode)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool importOnly)
     {
       extractedLinkedAspects = null;
 
       if (!AudioMetadataExtractor.IncludeComposerDetails)
         return false;
 
-      if (forceQuickMode)
+      if (importOnly)
         return false;
 
       if (BaseInfo.IsVirtualResource(aspects))
@@ -93,15 +93,15 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       UpdatePersons(aspects, trackInfo.Composers, false);
 
       if (!AudioMetadataExtractor.SkipOnlineSearches)
-        OnlineMatcherService.Instance.UpdateTrackPersons(trackInfo, PersonAspect.OCCUPATION_COMPOSER, forceQuickMode);
+        OnlineMatcherService.Instance.UpdateTrackPersons(trackInfo, PersonAspect.OCCUPATION_COMPOSER, importOnly);
 
       if (trackInfo.Composers.Count == 0)
         return false;
 
-      if (BaseInfo.CountRelationships(aspects, LinkedRole) < trackInfo.Composers.Count)
+      if (BaseInfo.CountRelationships(aspects, LinkedRole) < trackInfo.Composers.Where(p => p.HasExternalId).Count())
         trackInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!trackInfo.HasChanged && !forceQuickMode)
+      if (!trackInfo.HasChanged && !importOnly)
         return false;
 
       AddToCheckCache(trackInfo);

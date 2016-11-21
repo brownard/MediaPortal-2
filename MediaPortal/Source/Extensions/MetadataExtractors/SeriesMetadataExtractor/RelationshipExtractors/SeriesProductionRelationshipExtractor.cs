@@ -70,14 +70,14 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
       return GetCompanySearchFilter(extractedAspects);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool forceQuickMode)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool importOnly)
     {
       extractedLinkedAspects = null;
 
       if (!SeriesMetadataExtractor.IncludeProductionCompanyDetails)
         return false;
 
-      if (forceQuickMode)
+      if (importOnly)
         return false;
 
       SeriesInfo seriesInfo = new SeriesInfo();
@@ -88,15 +88,15 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
         return false;
 
       if (!SeriesMetadataExtractor.SkipOnlineSearches)
-        OnlineMatcherService.Instance.UpdateSeriesCompanies(seriesInfo, CompanyAspect.COMPANY_PRODUCTION, forceQuickMode);
+        OnlineMatcherService.Instance.UpdateSeriesCompanies(seriesInfo, CompanyAspect.COMPANY_PRODUCTION, importOnly);
 
       if (seriesInfo.ProductionCompanies.Count == 0)
         return false;
 
-      if (BaseInfo.CountRelationships(aspects, LinkedRole) < seriesInfo.ProductionCompanies.Count)
+      if (BaseInfo.CountRelationships(aspects, LinkedRole) < seriesInfo.ProductionCompanies.Where(p => p.HasExternalId).Count())
         seriesInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!seriesInfo.HasChanged && !forceQuickMode)
+      if (!seriesInfo.HasChanged && !importOnly)
         return false;
 
       AddToCheckCache(seriesInfo);

@@ -24,6 +24,7 @@
 
 using System;
 using MediaPortal.Common.MediaManagement.Helpers;
+using System.Collections.Generic;
 
 namespace MediaPortal.Extensions.OnlineLibraries.Libraries
 {
@@ -33,11 +34,16 @@ namespace MediaPortal.Extensions.OnlineLibraries.Libraries
     bool Enabled { get; set; }
     string Id { get; }
 
-    bool FindAndUpdateMovie(MovieInfo movieInfo, bool forceQuickMode);
-    bool UpdatePersons(MovieInfo movieInfo, string occupation, bool forceQuickMode);
-    bool UpdateCharacters(MovieInfo movieInfo, bool forceQuickMode);
-    bool UpdateCompanies(MovieInfo movieInfo, string companyType, bool forceQuickMode);
-    bool UpdateCollection(MovieCollectionInfo movieCollectionInfo, bool updateMovieList, bool forceQuickMode);
+    List<MovieInfo> GetLastChangedMovies();
+    void ResetLastChangedMovies();
+    List<MovieCollectionInfo> GetLastChangedMovieCollections();
+    void ResetLastChangedMovieCollections();
+
+    bool FindAndUpdateMovie(MovieInfo movieInfo, bool importOnly);
+    bool UpdatePersons(MovieInfo movieInfo, string occupation, bool importOnly);
+    bool UpdateCharacters(MovieInfo movieInfo, bool importOnly);
+    bool UpdateCompanies(MovieInfo movieInfo, string companyType, bool importOnly);
+    bool UpdateCollection(MovieCollectionInfo movieCollectionInfo, bool updateMovieList, bool importOnly);
 
     void StoreActorMatch(PersonInfo person);
     void StoreDirectorMatch(PersonInfo person);

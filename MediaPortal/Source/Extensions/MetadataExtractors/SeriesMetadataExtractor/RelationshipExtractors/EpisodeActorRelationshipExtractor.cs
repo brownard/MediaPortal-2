@@ -70,14 +70,14 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
       return GetPersonSearchFilter(extractedAspects);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool forceQuickMode)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool importOnly)
     {
       extractedLinkedAspects = null;
 
       if (!SeriesMetadataExtractor.IncludeActorDetails)
         return false;
 
-      if (forceQuickMode)
+      if (importOnly)
         return false;
 
       if (BaseInfo.IsVirtualResource(aspects))
@@ -91,15 +91,15 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
         return false;
 
       if(!SeriesMetadataExtractor.SkipOnlineSearches)
-        OnlineMatcherService.Instance.UpdateEpisodePersons(episodeInfo, PersonAspect.OCCUPATION_ACTOR, forceQuickMode);
+        OnlineMatcherService.Instance.UpdateEpisodePersons(episodeInfo, PersonAspect.OCCUPATION_ACTOR, importOnly);
 
       if (episodeInfo.Actors.Count == 0)
         return false;
 
-      if (BaseInfo.CountRelationships(aspects, LinkedRole) < episodeInfo.Actors.Count)
+      if (BaseInfo.CountRelationships(aspects, LinkedRole) < episodeInfo.Actors.Where(p => p.HasExternalId).Count())
         episodeInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!episodeInfo.HasChanged && !forceQuickMode)
+      if (!episodeInfo.HasChanged && !importOnly)
         return false;
 
       AddToCheckCache(episodeInfo);

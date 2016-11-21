@@ -69,7 +69,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
       return GetMovieCollectionSearchFilter(extractedAspects);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool forceQuickMode)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IDictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid> extractedLinkedAspects, bool importOnly)
     {
       extractedLinkedAspects = null;
 
@@ -85,10 +85,10 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
       else if (!MovieMetadataExtractor.SkipOnlineSearches && collectionInfo.HasExternalId)
         OnlineMatcherService.Instance.UpdateCollection(collectionInfo, false, false);
 
-      if (!BaseInfo.HasRelationship(aspects, LinkedRole))
+      if (!BaseInfo.HasRelationship(aspects, LinkedRole) && collectionInfo.HasExternalId)
         collectionInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!collectionInfo.HasChanged && !forceQuickMode)
+      if (!collectionInfo.HasChanged && !importOnly)
         return false;
 
       extractedLinkedAspects = new Dictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid>();

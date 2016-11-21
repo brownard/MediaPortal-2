@@ -95,8 +95,6 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
   {
     #region Constants
 
-    protected static double MINIMUM_IMPORT_AGE = 1;
-
     protected static readonly IEnumerable<Guid> EMPTY_MIA_ID_ENUMERATION = new Guid[] { };
 
     protected static readonly IEnumerable<Guid> DIRECTORY_MIA_ID_ENUMERATION = new[]
@@ -325,6 +323,25 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       }
     }
 
+    protected async Task<ICollection<MediaItem>> GetUpdatableMediaItems(IEnumerable<Guid> necessaryRequestedMiaTypeIds, IEnumerable<Guid> optionalRequestedMiaTypeIds)
+    {
+      while (true)
+      {
+        try
+        {
+          await Activated.WaitAsync();
+          // ReSharper disable PossibleMultipleEnumeration
+          return _mediaBrowsingCallback.GetUpdatableMediaItems(necessaryRequestedMiaTypeIds, optionalRequestedMiaTypeIds);
+          // ReSharper restore PossibleMultipleEnumeration
+        }
+        catch (DisconnectedException)
+        {
+          ServiceRegistration.Get<ILogger>().Info("ImporterWorker.{0}.{1}: MediaLibrary disconnected. Requesting suspension...", ParentImportJobController, _blockName);
+          ParentImportJobController.ParentImporterWorker.RequestAction(new ImporterWorkerAction(ImporterWorkerAction.ActionType.Suspend)).Wait();
+        }
+      }
+    }
+
     protected async Task<IDictionary<Guid, DateTime>> GetManagedMediaItemAspectCreationDates()
     {
       while (true)
@@ -359,7 +376,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       }
     }
 
-    protected async Task<Guid> UpdateMediaItem(Guid parentDirectoryId, ResourcePath path, IEnumerable<MediaItemAspect> updatedAspects, ImportJobInformation jobInfo, CancellationToken cancelToken)
+    protected async Task<Guid> UpdateMediaItem(Guid parentDirectoryId, ResourcePath path, IEnumerable<MediaItemAspect> updatedAspects, ImportJobInformation jobInfo, bool isRefresh, CancellationToken cancelToken)
     {
       while (true)
       {
@@ -367,7 +384,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
         {
           await Activated.WaitAsync();
           // ReSharper disable PossibleMultipleEnumeration
-          return _importResultHandler.UpdateMediaItem(parentDirectoryId, path, updatedAspects, jobInfo.JobType == ImportJobType.Refresh, jobInfo.BasePath, cancelToken);
+          return _importResultHandler.UpdateMediaItem(parentDirectoryId, path, updatedAspects, isRefresh, jobInfo.BasePath, cancelToken);
           // ReSharper restore PossibleMultipleEnumeration
         }
         catch (DisconnectedException)
@@ -414,10 +431,10 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       }
     }
 
-    protected Task<IDictionary<Guid, IList<MediaItemAspect>>> ExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> existingAspects, bool forceQuickMode)
+    protected Task<IDictionary<Guid, IList<MediaItemAspect>>> ExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> existingAspects, bool importOnly)
     {
       // ToDo: This is a workaround. MetadataExtractors should have an async ExtractMetadata method that returns a Task.
-      return Task.FromResult(ServiceRegistration.Get<IMediaAccessor>().ExtractMetadata(mediaItemAccessor, ImportJobInformation.MetadataExtractorIds, existingAspects, forceQuickMode));
+      return Task.FromResult(ServiceRegistration.Get<IMediaAccessor>().ExtractMetadata(mediaItemAccessor, ImportJobInformation.MetadataExtractorIds, existingAspects, importOnly));
     }
 
     #endregion

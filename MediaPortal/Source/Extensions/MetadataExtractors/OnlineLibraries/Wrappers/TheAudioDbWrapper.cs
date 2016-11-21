@@ -225,7 +225,6 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         List<AudioDbArtist> foundArtists = _audioDbHandler.GetArtistByMbid(person.MusicBrainzId, cacheOnly);
         if (foundArtists != null && foundArtists.Count == 1)
         {
-          //Get the artist into the cache
           artistDetail = _audioDbHandler.GetArtist(foundArtists[0].ArtistId, cacheOnly);
         }
       }
@@ -267,25 +266,20 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
 
       if (track.AudioDbId > 0)
         trackDetail = _audioDbHandler.GetTrack(track.AudioDbId, cacheOnly);
+
       if (trackDetail == null && !string.IsNullOrEmpty(track.MusicBrainzId))
-      {
-        AudioDbTrack foundTrack = _audioDbHandler.GetTrackByMbid(track.MusicBrainzId, cacheOnly);
-        if (foundTrack != null)
-        {
-          //Get the track into the cache
-          trackDetail = _audioDbHandler.GetTrack(foundTrack.TrackID, cacheOnly);
-        }
-      }
+        trackDetail = _audioDbHandler.GetTrackByMbid(track.MusicBrainzId, cacheOnly);
+
       if (trackDetail == null && track.TrackNum > 0 && track.AlbumAudioDbId > 0)
       {
         List<AudioDbTrack> foundTracks = _audioDbHandler.GetTracksByAlbumId(track.AlbumAudioDbId, cacheOnly);
         if (foundTracks != null && foundTracks.Count > 0)
-        {
           trackDetail = foundTracks.FirstOrDefault(t => t.TrackNumber == track.TrackNum);
-        }
       }
       if (trackDetail == null) return false;
 
+      //Get the track into the cache
+      trackDetail = _audioDbHandler.GetTrack(trackDetail.TrackID, cacheOnly);
       trackDetail.SetLanguage(language);
 
       track.AudioDbId = trackDetail.TrackID;
@@ -337,7 +331,6 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         List<AudioDbAlbum> foundAlbums = _audioDbHandler.GetAlbumByMbid(album.MusicBrainzId, cacheOnly);
         if (foundAlbums != null && foundAlbums.Count == 1)
         {
-          //Get the album into the cache
           albumDetail = _audioDbHandler.GetAlbum(foundAlbums[0].AlbumId, cacheOnly);
         }
       }
