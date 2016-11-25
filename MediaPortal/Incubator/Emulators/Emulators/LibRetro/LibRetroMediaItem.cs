@@ -15,7 +15,7 @@ namespace Emulators.LibRetro
     {
       LibRetroPath = libRetroPath;
       //otherwise MP2's player manager won't try and find a player 
-      MediaItemAspect.GetOrCreateAspect(aspects, VideoAspect.Metadata);
+      MediaItemAspect.GetOrCreateAspect(_aspects, VideoAspect.Metadata);
     }
 
     public string LibRetroPath { get; set; }
