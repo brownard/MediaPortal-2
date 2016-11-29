@@ -32,7 +32,7 @@
             <Button.Content>
               <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} != {null} ? {0} : {1}">
                 <Binding Source="{StaticResource Model}" Path="CurrentDeviceName" />
-                <Binding Source="{DynamicResource Select_Device}" Path="Resource" />
+                <Binding Source="{StaticResource Select_Device}" Path="Resource" />
               </MultiBinding>
             </Button.Content>
           </Button>
