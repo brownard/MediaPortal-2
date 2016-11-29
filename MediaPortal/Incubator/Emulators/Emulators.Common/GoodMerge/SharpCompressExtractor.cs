@@ -1,7 +1,7 @@
 ﻿using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.ResourceAccess;
-using SharpCompress.Archive;
+using SharpCompress.Archives;
 using SharpCompress.Common;
 using System;
 using System.Collections.Generic;
@@ -56,7 +56,7 @@ namespace Emulators.Common.GoodMerge
         return true;
       try
       {
-        _extractor = ArchiveFactory.Open(_archivePath, Options.None);
+        _extractor = ArchiveFactory.Open(_archivePath);
         _extractor.CompressedBytesRead += ExtractorCompressedBytesRead;
         _extractor.EntryExtractionEnd += ExtractorEntryExtractionEnd;
         return true;
