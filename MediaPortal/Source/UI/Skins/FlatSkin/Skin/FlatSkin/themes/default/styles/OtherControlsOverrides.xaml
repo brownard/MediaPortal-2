@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="www.team-mediaportal.com/2008/mpf/directx"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    DependsOnStyleResources="FullScreenContentConsts,ButtonsOverrides,MediaButtons,MediaColors,MediaConsts,MediaStyles,Consts,Colors,Buttons,OtherControls"
+    >
+  
+  <Model x:Key="FanArtBackgroundModel" Id="8F42C8E9-E8A3-475C-A50A-99E1E644DC91"/>
+
+  <Style x:Key="MediaItemsListListViewStyle" BasedOn="{ThemeResource ContentsMenuListViewStyle}">
+    <EventSetter Event="SelectionChanged" Handler="{CommandStencil Source={StaticResource FanArtBackgroundModel}, Path=SetSelectedItem}"/>
+    <Setter Property="ItemTemplate"/>
+    <!-- Don't inherit the ItemTemplate from ContentsMenuListViewStyle - It should remain null to make the SkinEngine choose an appropriate template -->
+    <Setter Property="DataStringProvider" Value="{ThemeResource MediaItemDataStringProvider}"/>
+    <Setter Property="ItemContainerStyle" Value="{ThemeResource MediaItemWithContextMenuContainerStyle}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ListView}">
+          <ScrollViewer CanContentScroll="True" Margin="5"
+              HorizontalScrollBarVisibility="Disabled" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <ItemsPresenter VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+          </ScrollViewer>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <BindingSetter Property="ItemsPanel">
+      <BindingSetter.BindingWrapper>
+        <BindingWrapper>
+          <BindingWrapper.Binding>
+            <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} == {LayoutType}.{ListLayout} ? {1} : {2}">
+              <Binding Source="{StaticResource ViewModeModel}" Path="LayoutType"/>
+              <Binding>
+                <Binding.Source>
+                  <ItemsPanelTemplate>
+                    <VirtualizingStackPanel x:Name="ListItemsHost" IsItemsHost="True"/>
+                  </ItemsPanelTemplate>
+                </Binding.Source>
+              </Binding>
+              <Binding>
+                <Binding.Source>
+                  <ItemsPanelTemplate>
+                    <VirtualizingWrapPanel x:Name="GridItemsHost" IsItemsHost="True"/>
+                  </ItemsPanelTemplate>
+                </Binding.Source>
+              </Binding>
+            </MultiBinding>
+          </BindingWrapper.Binding>
+        </BindingWrapper>
+      </BindingSetter.BindingWrapper>
+    </BindingSetter>
+  </Style>
+
+</ResourceDictionary>

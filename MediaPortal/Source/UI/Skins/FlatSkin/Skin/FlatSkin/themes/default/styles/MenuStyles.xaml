@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="www.team-mediaportal.com/2008/mpf/directx"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:collections="clr-namespace:MediaPortal.UI.Presentation.DataObjects;assembly=MediaPortal.UI"
+    DependsOnStyleResources="ButtonsOverrides,Consts,Colors,Buttons,OtherControls"
+    >
+
+  <StringFormatConverter x:Key="StringFormatConverter"/>
+
+  <!-- An item list container represented by a standard "Button", scrolling its "ItemLabel" label when focused -->
+  <Style x:Key="QuickMediaMenuItemContainerStyle" BasedOn="{ThemeResource DefaultItemContainerStyle}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ListViewItem}">
+          <Button Style="{ThemeResource ButtonWideStyle}"
+                  Command="{Binding Command}"
+                  IsEnabled="{Binding Enabled}"
+                  SetFocus="{Binding Path=Selected,Mode=OneTime}">
+            <Button.Triggers>
+              <Trigger Property="HasFocus" Value="True">
+                <Setter Property="StackPanel.ZIndex" Value="100.0"/>
+              </Trigger>
+            </Button.Triggers>
+          </Button>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Data template for a quick media menu item containing just an icon -->
+  <DataTemplate x:Key="QuickMediaMenuItemDataTemplate" DataType="{x:Type collections:ListItem}">
+    <Grid x:Name="ItemControl">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <Image x:Name="MenuIconImage" Width="64" Height="64" Stretch="Uniform">
+        <Image.Source>
+          <Binding Path="AdditionalProperties[MediaMenu:Icon]" Converter="{StaticResource StringFormatConverter}" ConverterParameter="Icons\{0}.png"/>
+        </Image.Source>
+      </Image>
+    </Grid>
+  </DataTemplate>
+
+  <Style x:Key="QuickMediaMenuListViewStyle_Base" BasedOn="{ThemeResource DefaultListViewStyle}">
+    <Setter Property="ItemTemplate" Value="{ThemeResource QuickMediaMenuItemDataTemplate}"/>
+    <Setter Property="ItemContainerStyle" Value="{ThemeResource QuickMediaMenuItemContainerStyle}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ListView}">
+          <ItemsPresenter VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="QuickMediaMenuListViewStyle_Vertical" BasedOn="{ThemeResource QuickMediaMenuListViewStyle_Base}">
+    <Setter Property="ItemsPanel">
+      <Setter.Value>
+        <ItemsPanelTemplate>
+          <StackPanel x:Name="ListItemsHost" IsItemsHost="True" Orientation="Vertical"/>
+        </ItemsPanelTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="QuickMediaMenuListViewStyle_Horizontal" BasedOn="{ThemeResource QuickMediaMenuListViewStyle_Base}">
+    <Setter Property="ItemsPanel">
+      <Setter.Value>
+        <ItemsPanelTemplate>
+          <StackPanel x:Name="ListItemsHost" IsItemsHost="True" Orientation="Horizontal"/>
+        </ItemsPanelTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+</ResourceDictionary>

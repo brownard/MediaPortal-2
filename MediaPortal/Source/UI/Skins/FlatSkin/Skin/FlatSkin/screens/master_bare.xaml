@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+This is the master template for standard menu screens:
+On top the window buttons, the player controls and the notification symbol,
+at the middle the client area and
+at the bottom the navbar.
+
+Usage:
+
+  <Include
+      xmlns="www.team-mediaportal.com/2008/mpf/directx"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Source="screens\master_bare.xaml">
+    <Include.Resources>
+      <ControlTemplate x:Key="Client_Template">
+        [UI element to be displayed in the client area]
+      </ControlTemplate>
+    </Include.Resources>
+  </Include>
+
+Parameters which have to be accessible by a DynamicResource lookup:
+ - Client_Template (ConrolTemplate): Template for element to be shown in the client area.
+-->
+
+<Screen
+    xmlns="www.team-mediaportal.com/2008/mpf/directx"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mp_special_workflow="clr-namespace:MediaPortal.UI.SkinEngine.SpecialElements.Workflow;assembly=SkinEngine"
+    xmlns:mp_special_controls="clr-namespace:MediaPortal.UI.SkinEngine.SpecialElements.Controls;assembly=SkinEngine"
+    mp_special_workflow:WorkflowContext.StateSlot="Root"
+    x:Name="Screen"
+    >
+  <Screen.Resources>
+    <Model x:Key="MouseModel" Id="CA6428A7-A6E2-4dd3-9661-F89CEBAF8E62"/>
+    <Model x:Key="HomeServerModel" Id="854ABA9A-71A1-420b-A657-9641815F9C01"/>
+    <Model x:Key="TimeModel" Id="E821B1C8-0666-4339-8027-AA45A4F6F107"/>
+
+    <!--<ControlTemplate x:Key="Header_Text_Template">
+      <Label Content="Home" HorizontalAlignment="Left" VerticalAlignment="Center"
+             FontSize="{ThemeResource HugeFontSize}" Color="{ThemeResource TextColor}" />
+    </ControlTemplate>-->
+  </Screen.Resources>
+
+  <DockPanel x:Name="ScreenAnimationElement" LastChildFill="True">
+    <!-- HeaderPanel -->
+    <Grid x:Name="HeaderPanel" DockPanel.Dock="Top" Height="{ThemeResource HeaderPanelHeight}" Margin="50,20">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+
+      <Label x:Name="HeaderLabel" HorizontalAlignment="Left" VerticalAlignment="Center"
+             FontSize="{ThemeResource HugeFontSize}" Color="{ThemeResource TextColor}"
+             Content="{Binding Source={DynamicResource ResourceKey=Header_Text},Path=Resource}"/>
+
+      <Label x:Name="TimeLabel" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"
+             FontSize="{ThemeResource BigFontSize}" Color="{ThemeResource TextColor}"
+             Content="{Binding Source={StaticResource TimeModel}, Path=CurrentTime}"/>
+
+    </Grid>
+
+    <Line x:Name="UpperSeparator" DockPanel.Dock="Top" HorizontalAlignment="Stretch" Margin="0,20"
+          X1="0" X2="10" Height="2" Stroke="{ThemeResource HeaderFooterSeparatorLineStrokeColor}" StrokeThickness="2"/>
+
+    <!-- FooterPanel -->
+    <DockPanel x:Name="FooterPanel" DockPanel.Dock="Bottom" Height="{ThemeResource FooterPanelHeight}" LastChildFill="False">
+      <Control x:Name="FooterArea" DockPanel.Dock="Center"
+        Template="{DynamicResource ResourceKey=Footer_Template}"/>
+    </DockPanel>
+
+    <Line x:Name="LowerSeparator" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch" Margin="0,20"
+          X1="0" X2="10" Height="2" Stroke="{ThemeResource HeaderFooterSeparatorLineStrokeColor}" StrokeThickness="2"/>
+
+    <!-- Order matters here: The client area control has to be the last control (LastChildFill) -->
+    <Control x:Name="ClientArea" DockPanel.Dock="Center"
+        Template="{DynamicResource ResourceKey=Client_Template}"/>
+    
+  </DockPanel>
+</Screen>

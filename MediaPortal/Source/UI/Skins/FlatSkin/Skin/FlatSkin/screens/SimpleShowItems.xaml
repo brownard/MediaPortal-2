@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This screen acts as a simple base screen for each special screen which shows media items and which
+     doesn't bring in special images/controls/etc. -->
+<Include
+  xmlns="www.team-mediaportal.com/2008/mpf/directx"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:fanart="clr-namespace:MediaPortal.Extensions.UserServices.FanArtService.Client;assembly=FanArtService.Client"
+  Source="screens\master_show_items.xaml"
+  >
+  <Include.Resources>
+
+    <!-- Header_Text resource has to be added by including screen -->
+    
+
+  </Include.Resources>
+</Include>
