@@ -267,7 +267,9 @@ namespace MediaPortal.Common.MediaManagement.Helpers
     public override int GetHashCode()
     {
       //TODO: Check if this is functional
-      return ToString().GetHashCode();
+      if (string.IsNullOrEmpty(NameId))
+        AssignNameId();
+      return string.IsNullOrEmpty(NameId) ? "[Unnamed Character]".GetHashCode() : NameId.GetHashCode();
     }
 
     public override bool Equals(object obj)

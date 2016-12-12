@@ -56,7 +56,7 @@ namespace MediaPortal.Common.MediaManagement.Helpers
     /// <summary>
     /// Short format string that holds track number and name.
     /// </summary>
-    public static string SHORT_FORMAT_STR = "{1} - {2}";
+    public static string SHORT_FORMAT_STR = "{0} - {1}";
 
     protected static Regex _fromName = new Regex(@"(?<album>.*): (?<trackNum>\d+) - (?<track>.*)", RegexOptions.IgnoreCase);
     protected static Regex _fromAlbumName = new Regex(@"(?<album>.*) \((?<year>\d+)\)", RegexOptions.IgnoreCase);
@@ -244,7 +244,7 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       if (Composers.Count > 0) MediaItemAspect.SetCollectionAttribute(aspectData, AudioAspect.ATTR_COMPOSERS, Composers.Where(p => !string.IsNullOrEmpty(p.Name)).Select(p => p.Name).ToList<object>());
 
       aspectData.Remove(GenreAspect.ASPECT_ID);
-      foreach (GenreInfo genre in Genres)
+      foreach (GenreInfo genre in Genres.Distinct())
       {
         MultipleMediaItemAspect genreAspect = MediaItemAspect.CreateAspect(aspectData, GenreAspect.Metadata);
         genreAspect.SetAttribute(GenreAspect.ATTR_ID, genre.Id);
@@ -447,7 +447,9 @@ namespace MediaPortal.Common.MediaManagement.Helpers
     public override int GetHashCode()
     {
       //TODO: Check if this is functional
-      return ToString().GetHashCode();
+      if (string.IsNullOrEmpty(NameId))
+        AssignNameId();
+      return string.IsNullOrEmpty(NameId) ? "[Unnamed Track]".GetHashCode() : NameId.GetHashCode();
     }
 
     public override bool Equals(object obj)

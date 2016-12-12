@@ -46,7 +46,6 @@ namespace MediaPortal.Common.Services.ServerCommunication
     protected const string SV_PLAYLISTS_CHANGE_COUNTER = "PlaylistsChangeCounter";
     protected const string SV_MIA_TYPE_REGISTRATIONS_CHANGE_COUNTER = "MIATypeRegistrationsChangeCounter";
     protected const string SV_REGISTERED_SHARES_CHANGE_COUNTER = "RegisteredSharesChangeCounter";
-    protected const string SV_CURRENTLY_IMPORTING_SHARES_CHANGE_COUNTER = "CurrentlyImportingSharesChangeCounter";
 
     public UPnPContentDirectoryServiceProxy(CpService serviceStub) : base(serviceStub, "ContentDirectory")
     {
@@ -62,8 +61,6 @@ namespace MediaPortal.Common.Services.ServerCommunication
         FireMIATypeRegistrationsChanged();
       else if (statevariable.Name == SV_REGISTERED_SHARES_CHANGE_COUNTER)
         FireRegisteredSharesChangeCounterChanged();
-      else if (statevariable.Name == SV_CURRENTLY_IMPORTING_SHARES_CHANGE_COUNTER)
-        FireCurrentlyImportingSharesChanged();
     }
 
     // We could also provide the asynchronous counterparts of the following methods... do we need them?
@@ -117,13 +114,6 @@ namespace MediaPortal.Common.Services.ServerCommunication
         dlgt();
     }
 
-    protected void FireCurrentlyImportingSharesChanged()
-    {
-      ParameterlessMethod dlgt = CurrentlyImportingSharesChanged;
-      if (dlgt != null)
-        dlgt();
-    }
-
     #region State variables
 
     // We don't make those events available via the public interface because .net event registrations are not allowed between MP2 modules.
@@ -132,7 +122,6 @@ namespace MediaPortal.Common.Services.ServerCommunication
     public event ParameterlessMethod PlaylistsChanged;
     public event ParameterlessMethod MIATypeRegistrationsChanged;
     public event ParameterlessMethod RegisteredSharesChangeCounterChanged;
-    public event ParameterlessMethod CurrentlyImportingSharesChanged;
 
     #endregion
 

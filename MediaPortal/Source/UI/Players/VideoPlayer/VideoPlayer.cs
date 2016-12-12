@@ -35,7 +35,6 @@ using MediaPortal.Common;
 using MediaPortal.Common.Localization;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.ResourceAccess;
-using MediaPortal.Common.Services.Settings;
 using MediaPortal.Common.Settings;
 using MediaPortal.UI.Players.Video.Settings;
 using MediaPortal.UI.Players.Video.Subtitles;
@@ -52,7 +51,6 @@ using SharpDX;
 using SharpDX.Direct3D9;
 using Size = SharpDX.Size2;
 using SizeF = SharpDX.Size2F;
-using PointF = SharpDX.Vector2;
 
 namespace MediaPortal.UI.Players.Video
 {
@@ -146,6 +144,7 @@ namespace MediaPortal.UI.Players.Video
 
     protected bool _textureInvalid = true;
     protected MpcSubsRenderer _mpcSubsRenderer;
+    private FilterFileWrapper _ccFilter;
 
     #endregion
 
@@ -220,13 +219,15 @@ namespace MediaPortal.UI.Players.Video
       if (settings.EnableClosedCaption)
       {
         // ClosedCaptions filter
-        var ccFilter = FilterLoader.LoadFilterFromDll(CCFILTER_FILENAME, new Guid(CCFILTER_CLSID), true);
-        if (ccFilter == null)
+        _ccFilter = FilterLoader.LoadFilterFromDll(CCFILTER_FILENAME, new Guid(CCFILTER_CLSID), true);
+        var baseFilter = _ccFilter.GetFilter();
+        if (baseFilter == null)
         {
+          _ccFilter.Dispose();
           ServiceRegistration.Get<ILogger>().Warn("{0}: Failed to add {1} to graph", PlayerTitle, CCFILTER_FILENAME);
           return;
         }
-        _graphBuilder.AddFilter(ccFilter, CCFILTER_FILENAME);
+        _graphBuilder.AddFilter(baseFilter, CCFILTER_FILENAME);
       }
     }
 
@@ -728,34 +729,40 @@ namespace MediaPortal.UI.Players.Video
         {
           if (lfsra.LocalFsResourceAccessor == null)
             return false;
-          using (var stream = lfsra.LocalFsResourceAccessor.OpenRead())
-          using (var chaptersReader = new StreamReader(stream))
+
+          Stream stream;
+          using (stream = lfsra.LocalFsResourceAccessor.OpenRead())
           {
-            string line = chaptersReader.ReadLine();
-
-            int fps;
-            if (string.IsNullOrWhiteSpace(line) || !int.TryParse(line.Substring(line.LastIndexOf(' ') + 1), out fps))
-            {
-              ServiceRegistration.Get<ILogger>().Warn("VideoPlayer: EnumerateExternalChapters() - Invalid ComSkip chapter file");
+            if (stream == null || stream.Length == 0)
               return false;
-            }
-
-            double framesPerSecond = fps / 100.0;
-
-            while ((line = chaptersReader.ReadLine()) != null)
+            using (var chaptersReader = new StreamReader(stream))
             {
-              if (String.IsNullOrEmpty(line))
-                continue;
+              string line = chaptersReader.ReadLine();
 
-              string[] tokens = line.Split('\t');
-              if (tokens.Length != 2)
-                continue;
-
-              foreach (var token in tokens)
+              int fps;
+              if (string.IsNullOrWhiteSpace(line) || !int.TryParse(line.Substring(line.LastIndexOf(' ') + 1), out fps))
               {
-                int time;
-                if (int.TryParse(token, NumberStyles.Float, NumberFormatInfo.InvariantInfo, out time))
-                  positions.Add(time / framesPerSecond);
+                ServiceRegistration.Get<ILogger>().Warn("VideoPlayer: EnumerateExternalChapters() - Invalid ComSkip chapter file");
+                return false;
+              }
+
+              double framesPerSecond = fps / 100.0;
+
+              while ((line = chaptersReader.ReadLine()) != null)
+              {
+                if (String.IsNullOrEmpty(line))
+                  continue;
+
+                string[] tokens = line.Split('\t');
+                if (tokens.Length != 2)
+                  continue;
+
+                foreach (var token in tokens)
+                {
+                  int time;
+                  if (int.TryParse(token, NumberStyles.Float, NumberFormatInfo.InvariantInfo, out time))
+                    positions.Add(time / framesPerSecond);
+                }
               }
             }
           }
@@ -1209,7 +1216,7 @@ namespace MediaPortal.UI.Players.Video
       if (currentTime.TotalSeconds / duration.TotalSeconds > 0.99)
         state = null;
       else
-        state = new PositionResumeState { ResumePosition = CurrentTime };
+        state = new PositionResumeState { ResumePosition = CurrentTime, ActiveResourceLocatorIndex = _mediaItem != null ? _mediaItem.ActiveResourceLocatorIndex : 0 };
       return true;
     }
 
@@ -1223,6 +1230,17 @@ namespace MediaPortal.UI.Players.Video
       PositionResumeState pos = state as PositionResumeState;
       if (pos == null)
         return false;
+
+      if (_mediaItem != null)
+      {
+        // Check for multi-resource media items, first set the matching part, then the position
+        if (pos.ActiveResourceLocatorIndex != _mediaItem.ActiveResourceLocatorIndex && pos.ActiveResourceLocatorIndex <= _mediaItem.MaximumResourceLocatorIndex)
+        {
+          _mediaItem.ActiveResourceLocatorIndex = pos.ActiveResourceLocatorIndex;
+          if (!NextItem(_mediaItem, StartTime.AtOnce))
+            return false;
+        }
+      }
       CurrentTime = pos.ResumePosition;
       return true;
     }

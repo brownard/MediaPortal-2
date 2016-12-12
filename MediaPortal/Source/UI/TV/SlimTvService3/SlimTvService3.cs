@@ -48,6 +48,7 @@ using TvDatabase;
 using TvEngine.Events;
 using TvLibrary.Interfaces;
 using TvService;
+using MediaPortal.Backend.ClientCommunication;
 
 namespace MediaPortal.Plugins.SlimTv.Service
 {
@@ -220,6 +221,12 @@ namespace MediaPortal.Plugins.SlimTv.Service
 
     #region Recordings / MediaLibrary synchronization
 
+    protected void UpdateServerState()
+    {
+      var state = new TvServerState { IsRecording = _tvControl.IsAnyCardRecording() };
+      ServiceRegistration.Get<IServerStateService>().UpdateState(TvServerState.STATE_ID, state);
+    }
+
     protected override bool RegisterEvents()
     {
       ITvServerEvent tvServerEvent = GlobalServiceProvider.Instance.TryGet<ITvServerEvent>();
@@ -237,6 +244,7 @@ namespace MediaPortal.Plugins.SlimTv.Service
 
         if (tvEvent.EventType == TvServerEventType.RecordingStarted || tvEvent.EventType == TvServerEventType.RecordingEnded)
         {
+          UpdateServerState();
           var recording = Recording.Retrieve(tvEvent.Recording.IdRecording);
           if (recording != null)
           {
@@ -280,6 +288,8 @@ namespace MediaPortal.Plugins.SlimTv.Service
 
     private IUser GetUserByUserName(string userName)
     {
+      if (_tvControl == null)
+        return null;
       return Card.ListAll()
         .Where(c => c != null && c.Enabled)
         .SelectMany(c => { var users = _tvControl.GetUsersForCard(c.IdCard); return users ?? new IUser[] { }; })

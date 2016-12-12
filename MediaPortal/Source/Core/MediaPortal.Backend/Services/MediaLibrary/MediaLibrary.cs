@@ -52,6 +52,8 @@ using MediaPortal.Backend.Services.UserProfileDataManagement;
 using System.IO;
 using MediaPortal.Common.UserProfileDataManagement;
 using System.Diagnostics;
+using MediaPortal.Common.Services.MediaManagement;
+using System.Threading.Tasks;
 
 namespace MediaPortal.Backend.Services.MediaLibrary
 {
@@ -147,6 +149,8 @@ namespace MediaPortal.Backend.Services.MediaLibrary
       {
         try
         {
+          if(!_parent._shareDeleteSync.ContainsKey(path))
+            _parent._shareDeleteSync.Add(path, new object());
           lock (_parent._shareDeleteSync[basePath])
           {
             return _parent.AddOrUpdateMediaItem(parentDirectoryId, _parent.LocalSystemId, path, null, updatedAspects, true, isRefresh, cancelToken);
@@ -311,6 +315,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
     protected MIA_Management _miaManagement = null;
     protected object _syncObj = new object();
     protected string _localSystemId;
+    protected ICollection<Share> _importingSharesCache;
     protected IMediaBrowsing _mediaBrowsingCallback;
     protected IImportResultHandler _importResultHandler;
     protected AsynchronousMessageQueue _messageQueue;
@@ -318,6 +323,9 @@ namespace MediaPortal.Backend.Services.MediaLibrary
     protected Dictionary<Guid, ShareWatcher> _shareWatchers = new Dictionary<Guid, ShareWatcher>();
     protected Dictionary<ResourcePath, object> _shareDeleteSync = new Dictionary<ResourcePath, object>();
     protected List<RelationshipHierarchy> _hierarchies = new List<RelationshipHierarchy>();
+    protected object _shareImportSync = new object();
+    protected Dictionary<Guid, ShareImportState> _shareImportStates = new Dictionary<Guid, ShareImportState>();
+    protected object _shareCacheSync = new object();
 
     #endregion
 
@@ -352,21 +360,113 @@ namespace MediaPortal.Backend.Services.MediaLibrary
         {
           case ImporterWorkerMessaging.MessageType.ImportStarted:
           case ImporterWorkerMessaging.MessageType.ImportCompleted:
-            ResourcePath path = (ResourcePath) message.MessageData[ImporterWorkerMessaging.RESOURCE_PATH];
-            ICollection<Share> shares = GetShares(null).Values;
-            Share share = shares.BestContainingPath(path);
-            if (share == null)
-              break;
-            if (messageType == ImporterWorkerMessaging.MessageType.ImportStarted)
-              ContentDirectoryMessaging.SendShareImportMessage(ContentDirectoryMessaging.MessageType.ShareImportStarted, share.ShareId);
-            else
-              ContentDirectoryMessaging.SendShareImportMessage(ContentDirectoryMessaging.MessageType.ShareImportCompleted, share.ShareId);
+            {
+              ResourcePath path = (ResourcePath)message.MessageData[ImporterWorkerMessaging.RESOURCE_PATH];
+              Share share = null;
+              lock (_shareCacheSync)
+              {
+                if (_importingSharesCache == null || messageType == ImporterWorkerMessaging.MessageType.ImportStarted)
+                  _importingSharesCache = GetShares(null).Values;
+                share = _importingSharesCache.BestContainingPath(path);
+              }
+              if (share == null)
+                break;
+              if (messageType == ImporterWorkerMessaging.MessageType.ImportStarted)
+              {
+                ContentDirectoryMessaging.SendShareImportMessage(ContentDirectoryMessaging.MessageType.ShareImportStarted, share.ShareId);
+                lock (_shareImportSync)
+                {
+                  if (!_shareImportStates.ContainsKey(share.ShareId))
+                    _shareImportStates.Add(share.ShareId, new ShareImportState { ShareId = share.ShareId, IsImporting = true, Progress = -1 });
+                }
+                UpdateServerState();
+              }
+              else
+              {
+                ContentDirectoryMessaging.SendShareImportMessage(ContentDirectoryMessaging.MessageType.ShareImportCompleted, share.ShareId);
+                lock (_shareImportSync)
+                {
+                  if (_shareImportStates.ContainsKey(share.ShareId))
+                    _shareImportStates.Remove(share.ShareId);
+                }
+                //Delay state update to ensure it's last
+                Task.Run(async () => 
+                {
+                  await Task.Delay(1000);
+                  UpdateServerState();
+                });
+              }
+            }
             break;
-
+          case ImporterWorkerMessaging.MessageType.ImportProgress:
+            {
+              var progress = (Dictionary<ImportJobInformation, Tuple<int, int>>)message.MessageData[ImporterWorkerMessaging.IMPORT_PROGRESS];
+              if (progress != null)
+              {
+                bool anyProgressAvailable = false;
+                foreach (ImportJobInformation importJobInfo in progress.Keys)
+                {
+                  Share share = null;
+                  lock (_shareCacheSync)
+                  {
+                    if (_importingSharesCache == null)
+                      _importingSharesCache = GetShares(null).Values;
+                    share = _importingSharesCache.BestContainingPath(importJobInfo.BasePath);
+                  }
+                  if (share == null)
+                    continue;
+                  lock (_shareImportSync)
+                  {
+                    if (_shareImportStates.ContainsKey(share.ShareId))
+                    {
+                      _shareImportStates[share.ShareId].IsImporting = true;
+                      _shareImportStates[share.ShareId].Progress = Convert.ToInt32(((double)progress[importJobInfo].Item2 / (double)progress[importJobInfo].Item1) * 100.0);
+                      anyProgressAvailable = true;
+                    }
+                  };
+                }
+                if (anyProgressAvailable)
+                  UpdateServerState();
+              }
+            }
+            break;
           case ImporterWorkerMessaging.MessageType.RefreshLocalShares:
             GetShares(null).Values.ToList().ForEach(TryScheduleLocalShareRefresh);
             break;
         }
+      }
+    }
+
+    protected void UpdateServerState()
+    {
+      try
+      {
+        double? progress = null;
+        double count = 0;
+        bool importing = false;
+        List<ShareImportState> shareStates = new List<ShareImportState>();
+        lock (_shareImportSync)
+          shareStates.AddRange(_shareImportStates.Values);
+        foreach (ShareImportState shareSate in shareStates)
+        {
+          importing |= shareSate.IsImporting;
+          if (shareSate.Progress >= 0)
+          {
+            progress += shareSate.Progress;
+            count++;
+          }
+        }
+        var state = new ShareImportServerState
+        {
+          IsImporting = importing,
+          Progress = (progress.HasValue && importing) ? Convert.ToInt32(progress / count) : -1,
+          Shares = shareStates.ToArray()
+        };
+        ServiceRegistration.Get<IServerStateService>().UpdateState(ShareImportServerState.STATE_ID, state);
+      }
+      catch (Exception ex)
+      {
+        Logger.Warn("MediaLibrary: Error sending import progress", ex);
       }
     }
 
@@ -1604,10 +1704,9 @@ namespace MediaPortal.Backend.Services.MediaLibrary
         if (!_miaManagement.ManagedMediaItemAspectTypes.ContainsKey(mia.Metadata.AspectId))
           // Simply skip unknown MIA types. All types should have been added before update.
           continue;
-        if (mia.Metadata.AspectId == ImporterAspect.ASPECT_ID ||
-            mia.Metadata.AspectId == ProviderResourceAspect.ASPECT_ID)
+        if (mia.Metadata.AspectId == ImporterAspect.ASPECT_ID)
         { // Those aspects are managed by the MediaLibrary
-          //Logger.Warn("MediaLibrary.AddOrUpdateMediaItem: Client tried to update either ImporterAspect or ProviderResourceAspect");
+          //Logger.Warn("MediaLibrary.AddOrUpdateMediaItem: Client tried to update ImporterAspect");
           continue;
         }
         // Let MIA management decide if it's and add or update
@@ -2696,6 +2795,12 @@ namespace MediaPortal.Backend.Services.MediaLibrary
           client.Properties[KEY_CURRENTLY_IMPORTING_SHARE_IDS] = new List<Guid> {shareId};
       }
       ContentDirectoryMessaging.SendShareImportMessage(ContentDirectoryMessaging.MessageType.ShareImportStarted, shareId);
+      lock (_shareImportSync)
+      {
+        if (!_shareImportStates.ContainsKey(share.ShareId))
+          _shareImportStates.Add(share.ShareId, new ShareImportState { ShareId = share.ShareId, IsImporting = true, Progress = -1 });
+      }
+      UpdateServerState();
     }
 
     public void ClientCompletedShareImport(Guid shareId)
@@ -2717,6 +2822,12 @@ namespace MediaPortal.Backend.Services.MediaLibrary
           ((ICollection<Guid>) value).Remove(shareId);
       }
       ContentDirectoryMessaging.SendShareImportMessage(ContentDirectoryMessaging.MessageType.ShareImportCompleted, shareId);
+      lock (_shareImportSync)
+      {
+        if (_shareImportStates.ContainsKey(share.ShareId))
+          _shareImportStates.Remove(share.ShareId);
+      }
+      UpdateServerState();
     }
 
     public ICollection<Guid> GetCurrentlyImportingShareIds()
@@ -2724,9 +2835,9 @@ namespace MediaPortal.Backend.Services.MediaLibrary
       ICollection<Guid> result = new List<Guid>();
       IImporterWorker importerWorker = ServiceRegistration.Get<IImporterWorker>();
       // Shares of media library
-      ICollection<Share> shares = GetShares(null).Values;
+      _importingSharesCache = GetShares(null).Values;
       CollectionUtils.AddAll(result, importerWorker.ImportJobs.Where(importJobInfo => importJobInfo.State == ImportJobState.Active).
-          Select(importJobInfo => shares.BestContainingPath(importJobInfo.BasePath)).Where(share => share != null).Select(share => share.ShareId));
+          Select(importJobInfo => _importingSharesCache.BestContainingPath(importJobInfo.BasePath)).Where(share => share != null).Select(share => share.ShareId));
       // Client shares
       IClientManager clientManager = ServiceRegistration.Get<IClientManager>();
       lock (clientManager.SyncObj)
@@ -2926,6 +3037,8 @@ namespace MediaPortal.Backend.Services.MediaLibrary
       Share share = GetShare(shareId);
       TryCancelLocalImportJobs(share);
 
+      if (!_shareDeleteSync.ContainsKey(share.BaseResourcePath))
+        _shareDeleteSync.Add(share.BaseResourcePath, new object());
       lock (_shareDeleteSync[share.BaseResourcePath])
       {
         ISQLDatabase database = ServiceRegistration.Get<ISQLDatabase>();

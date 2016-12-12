@@ -29,7 +29,6 @@ using MediaPortal.Backend.ClientCommunication;
 using MediaPortal.Common;
 using MediaPortal.Common.General;
 using MediaPortal.Common.MediaManagement;
-using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.MLQueries;
 using MediaPortal.Common.Messaging;
 using MediaPortal.Common.ResourceAccess;
@@ -57,12 +56,10 @@ namespace MediaPortal.Backend.Services.ClientCommunication
 
     protected DvStateVariable PlaylistsChangeCounter;
     protected DvStateVariable MIATypeRegistrationsChangeCounter;
-    protected DvStateVariable CurrentlyImportingSharesChangeCounter;
     protected DvStateVariable RegisteredSharesChangeCounter;
 
     protected UInt32 _playlistsChangeCt = 0;
     protected UInt32 _miaTypeRegistrationsChangeCt = 0;
-    protected UInt32 _currentlyImportingSharesChangeCt = 0;
     protected UInt32 _registeredSharesChangeCt = 0;
 
     public UPnPContentDirectoryServiceImpl() : base(
@@ -333,6 +330,14 @@ namespace MediaPortal.Backend.Services.ClientCommunication
         };
       AddStateVariable(A_ARG_TYPE_MediaItems);
 
+      // Used to transport a collection of share import progresses
+      // ReSharper disable once InconsistentNaming - Following UPnP standards variable naming convention.
+      DvStateVariable A_ARG_TYPE_DictionaryGuidInt32 = new DvStateVariable("A_ARG_TYPE_DictionaryGuidInt32", new DvExtendedDataType(UPnPExtendedDataTypes.DtDictionaryGuidInt32))
+      {
+        SendEvents = false,
+      };
+      AddStateVariable(A_ARG_TYPE_DictionaryGuidInt32);
+
       // Used to transport a single media item filter
       // ReSharper disable once InconsistentNaming - Following UPnP standards variable naming convention.
       DvStateVariable A_ARG_TYPE_MediaItemFilter = new DvStateVariable("A_ARG_TYPE_MediaItemFilter", new DvExtendedDataType(UPnPExtendedDataTypes.DtMediaItemsFilter))
@@ -452,14 +457,6 @@ namespace MediaPortal.Backend.Services.ClientCommunication
             Value = (uint) 0
         };
       AddStateVariable(RegisteredSharesChangeCounter);
-
-      // Change event for currently importing shares
-      CurrentlyImportingSharesChangeCounter = new DvStateVariable("CurrentlyImportingSharesChangeCounter", new DvStandardDataType(UPnPStandardDataType.Ui4))
-        {
-            SendEvents = true,
-            Value = (uint) 0
-        };
-      AddStateVariable(CurrentlyImportingSharesChangeCounter);
 
       // More state variables go here
 
@@ -1052,21 +1049,6 @@ namespace MediaPortal.Backend.Services.ClientCommunication
             break;
           case ContentDirectoryMessaging.MessageType.RegisteredSharesChanged:
             RegisteredSharesChangeCounter.Value = ++_registeredSharesChangeCt;
-            break;
-          case ContentDirectoryMessaging.MessageType.ShareImportStarted:
-          case ContentDirectoryMessaging.MessageType.ShareImportCompleted:
-            CurrentlyImportingSharesChangeCounter.Value = ++_currentlyImportingSharesChangeCt;
-            break;
-        }
-      }
-      else if (message.ChannelName == ImporterWorkerMessaging.CHANNEL)
-      {
-        ImporterWorkerMessaging.MessageType messageType = (ImporterWorkerMessaging.MessageType) message.MessageType;
-        switch (messageType)
-        {
-          case ImporterWorkerMessaging.MessageType.ImportStarted:
-          case ImporterWorkerMessaging.MessageType.ImportCompleted:
-            CurrentlyImportingSharesChangeCounter.Value = ++_currentlyImportingSharesChangeCt;
             break;
         }
       }

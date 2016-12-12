@@ -22,6 +22,8 @@
 
 #endregion
 
+using MediaPortal.Common;
+using MediaPortal.Common.Localization;
 using MediaPortal.Common.Settings;
 
 namespace MediaPortal.Extensions.OnlineLibraries
@@ -36,6 +38,19 @@ namespace MediaPortal.Extensions.OnlineLibraries
     protected GenreMapping[] _musicGenreMap = new GenreMapping[0];
     protected GenreMapping[] _seriesGenreMap = new GenreMapping[0];
     protected GenreMapping[] _movieGenreMap = new GenreMapping[0];
+    protected string _musicLanguageCulture = ServiceRegistration.Get<ILocalization>().CurrentCulture.Name;
+    protected string _seriesLanguageCulture = ServiceRegistration.Get<ILocalization>().CurrentCulture.Name;
+    protected string _movieLanguageCulture = ServiceRegistration.Get<ILocalization>().CurrentCulture.Name;
+
+    public OnlineLibrarySettings()
+    {
+      if (string.IsNullOrEmpty(_musicLanguageCulture))
+        _musicLanguageCulture = "en-US";
+      if (string.IsNullOrEmpty(_movieLanguageCulture))
+        _movieLanguageCulture = "en-US";
+      if (string.IsNullOrEmpty(_seriesLanguageCulture))
+        _seriesLanguageCulture = "en-US";
+    }
 
     //Only download basic FanArt like backdrops, banners, posters and thumbnails
     //Not DiscArt,  ClearArt, Logos etc. 
@@ -69,6 +84,13 @@ namespace MediaPortal.Extensions.OnlineLibraries
       set { _musicGenreMap = value; }
     }
 
+    [Setting(SettingScope.Global)]
+    public string MusicLanguageCulture
+    {
+      get { return _musicLanguageCulture; }
+      set { _musicLanguageCulture = value; }
+    }
+
     //Series matcher settings
     [Setting(SettingScope.Global)]
     public MatcherSetting[] SeriesMatchers
@@ -84,6 +106,13 @@ namespace MediaPortal.Extensions.OnlineLibraries
       set { _seriesGenreMap = value; }
     }
 
+    [Setting(SettingScope.Global)]
+    public string SeriesLanguageCulture
+    {
+      get { return _seriesLanguageCulture; }
+      set { _seriesLanguageCulture = value; }
+    }
+
     //Movie matcher settings
     [Setting(SettingScope.Global)]
     public MatcherSetting[] MovieMatchers
@@ -97,6 +126,13 @@ namespace MediaPortal.Extensions.OnlineLibraries
     {
       get { return _movieGenreMap; }
       set { _movieGenreMap = value; }
+    }
+
+    [Setting(SettingScope.Global)]
+    public string MovieLanguageCulture
+    {
+      get { return _movieLanguageCulture; }
+      set { _movieLanguageCulture = value; }
     }
   }
 }

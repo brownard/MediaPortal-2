@@ -135,12 +135,13 @@
         </media:MovieAspectWrapper.Template>
       </media:MovieAspectWrapper>
     </StackPanel>
+
     <media:UserDataWrapper MediaItem="{Binding Source={StaticResource FanArtBackgroundModel},Path=MediaItem}">
       <media:UserDataWrapper.Template>
         <ControlTemplate>
           <Grid DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                 IsVisible="{Binding Path=PlayPercentage,Converter={StaticResource ReferenceToBoolConverter}}">
-            <Image HorizontalAlignment="Right" VerticalAlignment="Center" Stretch="Fill" Width="95" Height="95" Margin="0,10,10,10" >
+            <Image VerticalAlignment="Center" Stretch="Fill" Width="95" Height="95" Margin="0,10,40,0" >
               <Image.Source>
                 <Binding Path="PlayPercentage" Converter="{StaticResource StringFormatConverter}" ConverterParameter="{}CircularBar\{0:F0}.png"/>
               </Image.Source>
@@ -149,5 +150,7 @@
         </ControlTemplate>
       </media:UserDataWrapper.Template>
     </media:UserDataWrapper>
+    
   </StackPanel>
+  
 </Grid>

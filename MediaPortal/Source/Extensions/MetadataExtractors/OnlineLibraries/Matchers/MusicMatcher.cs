@@ -144,6 +144,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
     private bool _cacheRefreshable;
     private DateTime? _lastCacheRefresh;
     private DateTime _lastCacheCheck = DateTime.MinValue;
+    private string _preferredLanguageCulture = "en-US";
 
     private SimpleNameMatcher _artistMatcher;
     private SimpleNameMatcher _composerMatcher;
@@ -179,6 +180,12 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
     public bool CacheRefreshable
     {
       get { return _cacheRefreshable; }
+    }
+
+    public string PreferredLanguageCulture
+    {
+      get { return _preferredLanguageCulture; }
+      set { _preferredLanguageCulture = value; }
     }
 
     #endregion
@@ -342,13 +349,13 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
 
           //These lists contain Ids and other properties that are not persisted, so they will always appear changed.
           //So changes to these lists will only be stored if something else has changed.
-          MetadataUpdater.SetOrUpdateList(trackInfo.Artists, trackMatch.Artists.Distinct().ToList(), trackInfo.Artists.Count == 0);
-          MetadataUpdater.SetOrUpdateList(trackInfo.Composers, trackMatch.Composers.Distinct().ToList(), trackInfo.Composers.Count == 0);
+          MetadataUpdater.SetOrUpdateList(trackInfo.Artists, trackMatch.Artists.Where(p => !string.IsNullOrEmpty(p.Name)).Distinct().ToList(), trackInfo.Artists.Count == 0);
+          MetadataUpdater.SetOrUpdateList(trackInfo.Composers, trackMatch.Composers.Where(p => !string.IsNullOrEmpty(p.Name)).Distinct().ToList(), trackInfo.Composers.Count == 0);
           if (albumMatch)
           {
-            MetadataUpdater.SetOrUpdateList(trackInfo.MusicLabels, trackMatch.MusicLabels.Distinct().ToList(), trackInfo.MusicLabels.Count == 0);
+            MetadataUpdater.SetOrUpdateList(trackInfo.MusicLabels, trackMatch.MusicLabels.Where(c => !string.IsNullOrEmpty(c.Name)).Distinct().ToList(), trackInfo.MusicLabels.Count == 0);
             //In some cases the album artists can be "Various Artist" and/or "Multiple Artists" or other variations
-            MetadataUpdater.SetOrUpdateList(trackInfo.AlbumArtists, trackMatch.AlbumArtists.Distinct().ToList(), trackInfo.AlbumArtists.Count == 0);
+            MetadataUpdater.SetOrUpdateList(trackInfo.AlbumArtists, trackMatch.AlbumArtists.Where(p => !string.IsNullOrEmpty(p.Name)).Distinct().ToList(), trackInfo.AlbumArtists.Count == 0);
           }
 
           //Store person matches
@@ -505,9 +512,9 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
           //These lists contain Ids and other properties that are not loaded, so they will always appear changed.
           //So these changes will be ignored and only stored if there is any other reason for it to have changed.
           if (occupation == PersonAspect.OCCUPATION_ARTIST)
-            MetadataUpdater.SetOrUpdateList(trackInfo.Artists, trackMatch.Artists.Distinct().ToList(), false);
+            MetadataUpdater.SetOrUpdateList(trackInfo.Artists, trackMatch.Artists.Where(p => !string.IsNullOrEmpty(p.Name)).Distinct().ToList(), false);
           else if (occupation == PersonAspect.OCCUPATION_COMPOSER)
-            MetadataUpdater.SetOrUpdateList(trackInfo.Composers, trackMatch.Composers.Distinct().ToList(), false);
+            MetadataUpdater.SetOrUpdateList(trackInfo.Composers, trackMatch.Composers.Where(p => !string.IsNullOrEmpty(p.Name)).Distinct().ToList(), false);
         }
 
         List<string> thumbs = new List<string>();
@@ -633,7 +640,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
           //These lists contain Ids and other properties that are not loaded, so they will always appear changed.
           //So these changes will be ignored and only stored if there is any other reason for it to have changed.
           if (occupation == PersonAspect.OCCUPATION_ARTIST)
-            MetadataUpdater.SetOrUpdateList(albumInfo.Artists, albumMatch.Artists.Distinct().ToList(), false);
+            MetadataUpdater.SetOrUpdateList(albumInfo.Artists, albumMatch.Artists.Where(p => !string.IsNullOrEmpty(p.Name)).Distinct().ToList(), false);
         }
 
         List<string> thumbs = new List<string>();
@@ -743,7 +750,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
           //These lists contain Ids and other properties that are not loaded, so they will always appear changed.
           //So these changes will be ignored and only stored if there is any other reason for it to have changed.
           if (companyType == CompanyAspect.COMPANY_MUSIC_LABEL)
-            MetadataUpdater.SetOrUpdateList(albumInfo.MusicLabels, albumMatch.MusicLabels.Distinct().ToList(), false);
+            MetadataUpdater.SetOrUpdateList(albumInfo.MusicLabels, albumMatch.MusicLabels.Where(c => !string.IsNullOrEmpty(c.Name)).Distinct().ToList(), false);
         }
 
         List<string> thumbs = new List<string>();
@@ -848,8 +855,10 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
           albumInfo.HasChanged |= MetadataUpdater.SetOrUpdateString(ref albumInfo.Description, albumMatch.Description);
 
           if (albumInfo.TotalTracks < albumMatch.TotalTracks)
+          {
             albumInfo.HasChanged = true;
-          MetadataUpdater.SetOrUpdateValue(ref albumInfo.TotalTracks, albumMatch.TotalTracks);
+            albumInfo.TotalTracks = albumMatch.TotalTracks;
+          }
 
           albumInfo.HasChanged |= MetadataUpdater.SetOrUpdateValue(ref albumInfo.Compilation, albumMatch.Compilation);
           albumInfo.HasChanged |= MetadataUpdater.SetOrUpdateValue(ref albumInfo.DiscNum, albumMatch.DiscNum);
@@ -871,11 +880,14 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
 
           //These lists contain Ids and other properties that are not persisted, so they will always appear changed.
           //So changes to these lists will only be stored if something else has changed.
-          MetadataUpdater.SetOrUpdateList(albumInfo.Artists, albumMatch.Artists.Distinct().ToList(), albumInfo.Artists.Count == 0);
-          MetadataUpdater.SetOrUpdateList(albumInfo.MusicLabels, albumMatch.MusicLabels.Distinct().ToList(), albumInfo.MusicLabels.Count == 0);
+          MetadataUpdater.SetOrUpdateList(albumInfo.Artists, albumMatch.Artists.Where(p => !string.IsNullOrEmpty(p.Name)).Distinct().ToList(), albumInfo.Artists.Count == 0);
+          MetadataUpdater.SetOrUpdateList(albumInfo.MusicLabels, albumMatch.MusicLabels.Where(c => !string.IsNullOrEmpty(c.Name)).Distinct().ToList(), albumInfo.MusicLabels.Count == 0);
 
           if (updateTrackList) //Comparing all tracks can be quite time consuming
           {
+            foreach (TrackInfo track in albumMatch.Tracks)
+              OnlineMatcherService.Instance.AssignMissingMusicGenreIds(track.Genres);
+
             MetadataUpdater.SetOrUpdateList(albumInfo.Tracks, albumMatch.Tracks.Distinct().ToList(), true);
             List<string> artists = new List<string>();
             foreach (TrackInfo track in albumMatch.Tracks)
@@ -972,7 +984,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
     {
       if (typeof(TLang) == typeof(string))
       {
-        CultureInfo mpLocal = ServiceRegistration.Get<ILocalization>().CurrentCulture;
+        CultureInfo mpLocal = new CultureInfo(_preferredLanguageCulture);
         // If we don't have movie languages available, or the MP2 setting language is available, prefer it.
         if (mediaLanguages.Count == 0 || mediaLanguages.Contains(mpLocal.TwoLetterISOLanguageName))
           return (TLang)Convert.ChangeType(mpLocal.TwoLetterISOLanguageName, typeof(TLang));
@@ -1254,24 +1266,9 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
         if (!Init())
           return;
 
-        string[] fanArtTypes = new string[]
-        {
-          FanArtTypes.FanArt,
-          FanArtTypes.Poster,
-          FanArtTypes.Banner,
-          FanArtTypes.ClearArt,
-          FanArtTypes.Cover,
-          FanArtTypes.DiscArt,
-          FanArtTypes.Logo,
-          FanArtTypes.Thumbnail
-        };
-
         try
         {
           TLang language = FindMatchingLanguage(data.ShortLanguage);
-          foreach (string fanArtType in fanArtTypes)
-            FanArtCache.InitFanArtCount(data.MediaItemId, fanArtType);
-
           Logger.Debug(_id + " Download: Started for media item {0}", name);
           ApiWrapperImageCollection<TImg> images = null;
           string Id = "";

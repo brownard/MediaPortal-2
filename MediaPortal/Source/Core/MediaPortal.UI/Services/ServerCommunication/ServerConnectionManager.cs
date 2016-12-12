@@ -43,6 +43,7 @@ using MediaPortal.UI.Shares;
 using UPnP.Infrastructure.CP;
 using RelocationMode = MediaPortal.Common.MediaManagement.RelocationMode;
 using System.Threading;
+using MediaPortal.Common.Services.MediaManagement;
 
 namespace MediaPortal.UI.Services.ServerCommunication
 {
@@ -176,6 +177,7 @@ namespace MediaPortal.UI.Services.ServerCommunication
           {
             SharesMessaging.CHANNEL,
             ImporterWorkerMessaging.CHANNEL,
+            ServerStateMessaging.CHANNEL
           });
       _messageQueue.MessageReceived += OnMessageReceived;
       _messageQueue.Start();
@@ -267,6 +269,25 @@ namespace MediaPortal.UI.Services.ServerCommunication
             else
               cd.ClientCompletedShareImport(share.ShareId);
             break;
+        }
+      }
+      else if (message.ChannelName == ServerStateMessaging.CHANNEL)
+      {
+        //Check if Tv Server state has changed and update if necessary
+        ServerStateMessaging.MessageType messageType = (ServerStateMessaging.MessageType)message.MessageType;
+        if (messageType == ServerStateMessaging.MessageType.StatesChanged)
+        {
+          var states = message.MessageData[ServerStateMessaging.STATES] as IDictionary<Guid, object>;
+          if (states != null && states.ContainsKey(ShareImportServerState.STATE_ID))
+          {
+            ShareImportServerState importState = states[ShareImportServerState.STATE_ID] as ShareImportServerState;
+            List<ShareImportState> shareStates = new List<ShareImportState>(importState.Shares);
+            lock (_syncObj)
+            {
+              UpdateCurrentlyImportingShares(shareStates.Where(s => s.IsImporting).Select(s => s.ShareId).ToList());
+              UpdateCurrentlyImportingSharesProgresses(shareStates.Where(s => s.IsImporting).ToDictionary(s => s.ShareId, s => s.Progress));
+            }
+          }
         }
       }
     }
@@ -455,7 +476,6 @@ namespace MediaPortal.UI.Services.ServerCommunication
         cd.PlaylistsChanged += OnContentDirectoryPlaylistsChanged;
         cd.MIATypeRegistrationsChanged += OnContentDirectoryMIATypeRegistrationsChanged;
         cd.RegisteredSharesChangeCounterChanged += OnRegisteredSharesChangeCounterChanged;
-        cd.CurrentlyImportingSharesChanged += OnCurrentlyImportingSharesChanged;
 
         // Activate importer worker
         ServiceRegistration.Get<ILogger>().Debug("ServerConnectionManager: Activating importer worker");
@@ -507,22 +527,10 @@ namespace MediaPortal.UI.Services.ServerCommunication
         ContentDirectoryMessaging.SendShareImportMessage(ContentDirectoryMessaging.MessageType.ShareImportCompleted, oldShare);
     }
 
-    void OnCurrentlyImportingSharesChanged()
+    void UpdateCurrentlyImportingSharesProgresses(IDictionary<Guid, int> currentlyImportingSharesProgresses)
     {
-      ServiceRegistration.Get<IThreadPool>().Add(() =>
-        {
-          ICollection<Guid> currentlyImportingShares = null;
-          try
-          {
-            IContentDirectory cd = ContentDirectory;
-            currentlyImportingShares = cd == null ? null : cd.GetCurrentlyImportingShares();
-          }
-          catch (Exception)
-          {
-            ServiceRegistration.Get<ILogger>().Warn("ServerConnectionManager.OnCurrentlyImportingSharesChanged: Failed to update currently importing shares.");
-          }
-          UpdateCurrentlyImportingShares(currentlyImportingShares);
-        });
+      foreach (var progress in currentlyImportingSharesProgresses)
+        ContentDirectoryMessaging.SendShareImportProgressMessage(progress.Key, progress.Value);
     }
 
     #region IServerCommunicationManager implementation
@@ -669,7 +677,6 @@ namespace MediaPortal.UI.Services.ServerCommunication
           cd.PlaylistsChanged -= OnContentDirectoryPlaylistsChanged;
           cd.MIATypeRegistrationsChanged -= OnContentDirectoryMIATypeRegistrationsChanged;
           cd.RegisteredSharesChangeCounterChanged -= OnRegisteredSharesChangeCounterChanged;
-          cd.CurrentlyImportingSharesChanged -= OnCurrentlyImportingSharesChanged;
         }
         catch (Exception e)
         {
