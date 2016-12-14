@@ -24,6 +24,11 @@ namespace Emulators.Server
     protected static readonly Guid[] NECESSARY_MIAS = { ProviderResourceAspect.ASPECT_ID, GameAspect.ASPECT_ID };
     protected static readonly string[] IMAGE_PATTERNS = { "*.jpg", "*.png" };
 
+    public FanArtProviderSource Source
+    {
+      get { return FanArtProviderSource.File; }
+    }
+
     public bool TryGetFanArt(string mediaType, string fanArtType, string name, int maxWidth, int maxHeight, bool singleRandom, out IList<IResourceLocator> result)
     {
       result = null;
