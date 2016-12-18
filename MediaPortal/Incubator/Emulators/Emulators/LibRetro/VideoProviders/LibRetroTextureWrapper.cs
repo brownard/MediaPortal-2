@@ -68,7 +68,7 @@ namespace Emulators.LibRetro.VideoProviders
 
     protected void UpdateTexture<T>(T[] pixels, int width, int height, int countPerPixel, bool bottomLeftOrigin) where T : struct
     {
-      if (pixels == null)
+      if (pixels == null || width * height * countPerPixel >= pixels.Length)
         return;
 
       SynchronizedTexture texture = null;
