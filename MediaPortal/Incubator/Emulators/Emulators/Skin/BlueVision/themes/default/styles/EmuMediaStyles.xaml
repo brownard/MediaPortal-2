@@ -8,39 +8,38 @@
 
   <!-- Game Item -->  
   <ControlTemplate x:Key="ListViewGameItemTemplate">
-    <Grid x:Name="ItemControl" Margin="0,0,43,0">
+    <Grid x:Name="ItemControl" Margin="0,0,45,0">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="40"/>
       </Grid.ColumnDefinitions>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
 
-      <Image x:Name="ItemTypeSmall" Stretch="Uniform" Margin="10,2,5,2"
-             Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}"
-             Source="{Binding MediaItem}">
+      <Image x:Name="ItemTypeSmall" Stretch="Uniform" Margin="0,2,0,2" Source="{Binding MediaItem}"
+             Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
         <Image.IsVisible>
           <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
         </Image.IsVisible>
       </Image>
-      <Image x:Name="ItemTypeMedium" Stretch="Uniform" Margin="10,2,5,2"
-             Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}"
-             Source="{Binding MediaItem}">
+      <Image x:Name="ItemTypeMedium" Stretch="Uniform" Margin="0,2,5,2" Source="{Binding MediaItem}"
+             Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
         <Image.IsVisible>
           <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Medium}"/>
         </Image.IsVisible>
       </Image>
-      <Image x:Name="ItemTypeLarge" Stretch="Uniform" Margin="10,2,5,2"
-             Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}"
-             Source="{Binding MediaItem}">
+      <Image x:Name="ItemTypeLarge" Stretch="Uniform" Margin="0,2,5,2" Source="{Binding MediaItem}"
+             Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
         <Image.IsVisible>
           <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Large}"/>
         </Image.IsVisible>
       </Image>
 
-      <Label x:Name="ItemLabel" Grid.Column="1" Content="{Binding SimpleTitle}" FontSize="{ThemeResource SmallFontSize}"
-             Color="{ThemeResource TextColor}" FontFamily="DefaultBold" VerticalAlignment="Center">
+      <Label x:Name="ItemLabel" Grid.Row="0" Grid.Column="1" Content="{Binding SimpleTitle}" FontSize="{ThemeResource SmallFontSize}" 
+             Color="{ThemeResource TextColor}" VerticalAlignment="Center" FontFamily="DefaultBold">
         <Label.Opacity>
           <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} ? {1} : {2}">
             <Binding RelativeSource="{RelativeSource Mode=FindAncestor,AncestorType={x:Type Button}}" Path="HasFocus"/>
@@ -49,19 +48,24 @@
           </MultiBinding>
         </Label.Opacity>
       </Label>
-      
     </Grid>
   </ControlTemplate>
 
   <ControlTemplate x:Key="GridViewGameItemTemplate">
-    <Grid Width="{StaticResource MEDIA_POSTER_WIDTH}" Height="{StaticResource MEDIA_POSTER_HEIGHT}" Margin="3,2,3,2"
-          HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Grid x:Name="ItemControl" Margin="2" Width="{StaticResource MEDIA_AUDIO_WIDTH}" Height="{StaticResource MEDIA_AUDIO_HEIGHT}">
+
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
       <Grid.RowDefinitions>
         <RowDefinition Height="*"/>
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
-      <Grid Grid.Row="1">
+
+      <Grid Grid.Row="1" Grid.Column="1">
         <Grid.OpacityMask>
           <VisualBrush>
             <VisualBrush.Visual>
@@ -69,16 +73,18 @@
             </VisualBrush.Visual>
           </VisualBrush>
         </Grid.OpacityMask>
-
-        <Image HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Uniform"
-               Source="{Binding MediaItem}" FallbackSource="VideoLarge.png" />
+        <Image x:Name="thumb" Source="{Binding MediaItem}" Stretch="Uniform"
+               HorizontalAlignment="Center" VerticalAlignment="Center">
+        </Image>
+        <Border BorderThickness="0" Background="#BF666666" IsVisible="{Binding ElementName=thumb, Path=!HasImage}"
+                Width="{StaticResource MEDIA_AUDIO_WIDTH}" Height="{StaticResource MEDIA_AUDIO_HEIGHT}"/>
+        <Image Source="Game.png" IsVisible="{Binding ElementName=thumb, Path=!HasImage}" Stretch="Uniform" Margin="20"/>|
       </Grid>
     </Grid>
   </ControlTemplate>
 
   <ControlTemplate x:Key="CoverViewGameItemTemplate">
-    <Grid x:Name="ItemControl" Margin="3,0,3,0"
-          Width="{StaticResource MEDIA_COVER_WIDTH}" Height="{StaticResource MEDIA_COVER_HEIGHT}">
+    <Grid x:Name="ItemControl" Margin="3,0,3,0" Height="{StaticResource MEDIA_COVER_HEIGHT}" Width="{StaticResource MEDIA_COVER_WIDTH}">
       <Grid.RowDefinitions>
         <RowDefinition Height="*"/>
         <RowDefinition Height="Auto"/>
@@ -87,7 +93,7 @@
         <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
 
-      <Grid Grid.Row="1" Background="#BF666666" >
+      <Grid Grid.Row="1" Background="#BF666666">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -101,8 +107,14 @@
             </VisualBrush.Visual>
           </VisualBrush>
         </Grid.OpacityMask>
-        <Image Stretch="Uniform" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
-               Source="{Binding MediaItem}" FallbackSource="VideoLarge.png" />
+        <!--Border BorderThickness="0" Background="#BF666666" IsVisible="{Binding ElementName=thumb, Path=!HasImage}"/-->
+        <Image x:Name="thumb" Stretch="Uniform">
+          <Image.Source>
+            <ImageSourceWrapper Delay="0" DelayInOut="false" Transition="transitions\dissolve" TransitionDuration="0"
+                                Source="{Binding MediaItem}"/>
+          </Image.Source>
+        </Image>
+        <Image Source="Game.png" IsVisible="{Binding ElementName=thumb, Path=!HasImage}" Margin="50" Stretch="Uniform"/>|
       </Grid>
 
       <Border Grid.Row="1" CornerRadius="{ThemeResource MediumRadiusFocus}" BorderBrush="{ThemeResource MediaItemsFocusedBorderBrush}"

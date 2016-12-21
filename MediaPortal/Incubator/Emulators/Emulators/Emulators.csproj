@@ -256,11 +256,14 @@
     <Content Include="Skin\BlueVision\images\A24958E2-538A-455E-A1DB-A7BB241AF7EC.jpg" />
     <Content Include="Skin\BlueVision\themes\Titanium Extended\screens\MediaItemGameDetails.inc" />
     <Content Include="Skin\BlueVision\themes\Titanium Extended\screens\MediaItemGameDetailsCover.inc" />
+    <Content Include="Skin\BlueVision\themes\Win10\screens\MediaItemGameDetails.inc" />
     <Content Include="Skin\default\workflow\Emulators-actions.xml">
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Skin\Titanium\images\A24958E2-538A-455E-A1DB-A7BB241AF7EC.jpg" />
     <Content Include="Skin\Titanium\screens\MediaItemGameDetails.inc" />
+    <Content Include="Skin\WMCSkin\screens\MediaItemGameDetails.inc" />
+    <Content Include="Skin\WMCSkin\screens\MediaItemGameListDetails.inc" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Skin\default\screens\GameShowItems.xaml">
@@ -478,6 +481,26 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Skin\default\screens\dialog_retro_choose_state.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Skin\BlueVision\themes\Win10\screens\emulator_config_master.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Skin\BlueVision\themes\Win10\screens\GameShowItems.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Skin\BlueVision\themes\Win10\styles\EmuMediaStyles.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Skin\WMCSkin\screens\GameShowItems.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Skin\WMCSkin\themes\default\styles\ConfigControls.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Skin\WMCSkin\themes\default\styles\EmuMediaStyles.xaml">
       <SubType>Designer</SubType>
     </Content>
   </ItemGroup>

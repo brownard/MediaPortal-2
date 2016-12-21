@@ -6,8 +6,7 @@
     Source="screens\master_menu.xaml"
     >
   <Include.Resources>
-    <ResourceWrapper x:Key="Header_Text" Resource="[Emulators.MenuItem]"/>
-    <ResourceWrapper x:Key="Cover_Width" Resource="860"/>
+    <ResourceWrapper x:Key="Cover_Width" Resource="710"/>
 
     <!-- Contents -->
     <ControlTemplate x:Key="Contents_Template">
@@ -18,6 +17,7 @@
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
         <Control Grid.Column="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
@@ -26,12 +26,21 @@
           </Control.TemplateControl>
         </Control>
 
-        <Control Grid.Column="1" VerticalAlignment="Stretch" Width="{DynamicResource Cover_Width}"
+        <Control Grid.Column="1" VerticalAlignment="Stretch" Width="710"
           Template="{Binding Source={DynamicResource Media_Details_Template}}">
           <Control.IsVisible>
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutType" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} != {LayoutType}.{CoverLayout}"/>
           </Control.IsVisible>
         </Control>
+
+        <!--Control Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="0,0,-58,10">
+          <Control.TemplateControl>
+            <Include Source="screens\MediaItemsListHeader.inc"/>
+          </Control.TemplateControl>
+          <Control.LayoutTransform>
+            <RotateTransform Angle="270" CenterX="0.5" CenterY="0.5"/>
+          </Control.LayoutTransform>
+        </Control-->
       </Grid>
     </ControlTemplate>
 
