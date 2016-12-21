@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2015 Team MediaPortal
+#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -587,7 +587,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
           if (updateEpisodeList) //Comparing all episodes can be quite time consuming
           {
             foreach (EpisodeInfo episode in seriesMatch.Episodes)
-              OnlineMatcherService.Instance.AssignMissingMusicGenreIds(episode.Genres);
+              OnlineMatcherService.Instance.AssignMissingSeriesGenreIds(episode.Genres);
 
             //Only allow new episodes if empty. Online sources might have different names for same series so season name would look strange.
             bool allowAdd = seriesInfo.Episodes.Count == 0;
@@ -1606,7 +1606,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
 
     #region FanArt
 
-    public virtual bool ScheduleFanArtDownload(Guid mediaItemId, BaseInfo info)
+    public virtual bool ScheduleFanArtDownload(Guid mediaItemId, BaseInfo info, bool force)
     {
       string id;
       string mediaItem = mediaItemId.ToString().ToUpperInvariant();
@@ -1624,7 +1624,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
             Name = seriesInfo.ToString()
           };
           data.FanArtId[FanArtMediaTypes.Series] = id;
-          return ScheduleDownload(id, data.Serialize());
+          return ScheduleDownload(id, data.Serialize(), force);
         }
       }
       else if (info is SeasonInfo)
@@ -1652,7 +1652,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
           {
             data.FanArtId[FanArtMediaTypes.Undefined] = id;
           }
-          ScheduleDownload(id, data.Serialize());
+          ScheduleDownload(id, data.Serialize(), force);
         }
       }
       else if (info is EpisodeInfo)
@@ -1684,7 +1684,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
           {
             data.FanArtId[FanArtMediaTypes.Undefined] = id;
           }
-          ScheduleDownload(id, data.Serialize());
+          ScheduleDownload(id, data.Serialize(), force);
         }
       }
       else if (info is CompanyInfo)
@@ -1708,7 +1708,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
             data.FanArtMediaType = FanArtMediaTypes.TVNetwork;
             data.FanArtId[FanArtMediaTypes.TVNetwork] = id;
           }
-          return ScheduleDownload(id, data.Serialize());
+          return ScheduleDownload(id, data.Serialize(), force);
         }
       }
       else if (info is CharacterInfo)
@@ -1731,7 +1731,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
           {
             data.FanArtId[FanArtMediaTypes.Actor] = actorId;
           }
-          return ScheduleDownload(id, data.Serialize());
+          return ScheduleDownload(id, data.Serialize(), force);
         }
       }
       else if (info is PersonInfo)
@@ -1760,7 +1760,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
             data.FanArtMediaType = FanArtMediaTypes.Writer;
             data.FanArtId[FanArtMediaTypes.Writer] = id;
           }
-          return ScheduleDownload(id, data.Serialize());
+          return ScheduleDownload(id, data.Serialize(), force);
         }
       }
       return false;

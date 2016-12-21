@@ -1,7 +1,7 @@
-﻿#region Copyright (C) 2007-2015 Team MediaPortal
+#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -85,14 +85,24 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
         return false;
 
       UpdatePersons(aspects, albumInfo.Artists, true);
-
+      
+      int count = 0;
       if (!AudioMetadataExtractor.SkipOnlineSearches)
+      {
         OnlineMatcherService.Instance.UpdateAlbumPersons(albumInfo, PersonAspect.OCCUPATION_ARTIST, importOnly);
+        count = albumInfo.Artists.Where(p => p.HasExternalId).Count();
+        if (!albumInfo.IsRefreshed)
+          albumInfo.HasChanged = true; //Force save to update external Ids for metadata found by other MDEs
+      }
+      else
+      {
+        count = albumInfo.Artists.Where(p => !string.IsNullOrEmpty(p.Name)).Count();
+      }
 
       if (albumInfo.Artists.Count == 0)
         return false;
 
-      if (BaseInfo.CountRelationships(aspects, LinkedRole) < albumInfo.Artists.Where(p => p.HasExternalId).Count())
+      if (BaseInfo.CountRelationships(aspects, LinkedRole) < count || (BaseInfo.CountRelationships(aspects, LinkedRole) == 0 && albumInfo.Artists.Count > 0))
         albumInfo.HasChanged = true; //Force save if no relationship exists
 
       if (!albumInfo.HasChanged && !importOnly)

@@ -1,7 +1,7 @@
-﻿#region Copyright (C) 2007-2015 Team MediaPortal
+#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -89,17 +89,27 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
 
       if (CheckCacheContains(movieInfo))
         return false;
-
+       
+      int count = 0;
       if (!MovieMetadataExtractor.SkipOnlineSearches)
+      {
         OnlineMatcherService.Instance.UpdatePersons(movieInfo, PersonAspect.OCCUPATION_DIRECTOR, importOnly);
+        count = movieInfo.Directors.Where(p => p.HasExternalId).Count();
+        if (!movieInfo.IsRefreshed)
+          movieInfo.HasChanged = true; //Force save to update external Ids for metadata found by other MDEs
+      }
+      else
+      {
+        count = movieInfo.Directors.Where(p => !string.IsNullOrEmpty(p.Name)).Count();
+      }
 
       if (movieInfo.Directors.Count == 0)
         return false;
 
-      if (BaseInfo.CountRelationships(aspects, LinkedRole) < movieInfo.Directors.Where(p => p.HasExternalId).Count())
+      if (BaseInfo.CountRelationships(aspects, LinkedRole) < count || (BaseInfo.CountRelationships(aspects, LinkedRole) == 0 && movieInfo.Directors.Count > 0))
         movieInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!movieInfo.HasChanged && !importOnly)
+      if (!movieInfo.HasChanged)
         return false;
 
       AddToCheckCache(movieInfo);

@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2015 Team MediaPortal
+#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -61,6 +61,7 @@ namespace MediaPortal.UI.Players.Video
     protected FilterFileWrapper _sourceFilter = null;
     protected SubtitleRenderer _subtitleRenderer;
     protected IBaseFilter _subtitleFilter;
+    protected ITsReader _tsReader;
     protected GraphRebuilder _graphRebuilder;
     protected ChangedMediaType _changedMediaType;
     protected string _oldVideoFormat;
@@ -104,15 +105,16 @@ namespace MediaPortal.UI.Players.Video
     /// </summary>
     protected override void AddSourceFilter()
     {
+      VideoSettings settings = ServiceRegistration.Get<ISettingsManager>().Load<VideoSettings>() ?? new VideoSettings();
       // Render the file
       _sourceFilter = FilterLoader.LoadFilterFromDll("TsReader.ax", typeof(TsReader).GUID, true);
       var baseFilter = _sourceFilter.GetFilter();
 
       IFileSourceFilter fileSourceFilter = (IFileSourceFilter)baseFilter;
-      ITsReader tsReader = (ITsReader)baseFilter;
-      tsReader.SetRelaxedMode(1);
-      tsReader.SetTsReaderCallback(this);
-      tsReader.SetRequestAudioChangeCallback(this);
+      _tsReader = (ITsReader)baseFilter;
+      _tsReader.SetRelaxedMode(1);
+      _tsReader.SetTsReaderCallback(this);
+      _tsReader.SetRequestAudioChangeCallback(this);
 
       _graphBuilder.AddFilter(baseFilter, TSREADER_FILTER_NAME);
 
@@ -120,7 +122,7 @@ namespace MediaPortal.UI.Players.Video
       _subtitleFilter = _subtitleRenderer.AddSubtitleFilter(_graphBuilder);
       if (_subtitleFilter != null)
       {
-        _subtitleRenderer.RenderSubtitles = true;
+        _subtitleRenderer.RenderSubtitles = settings.EnableSubtitles;
         _subtitleRenderer.SetPlayer(this);
       }
 
@@ -193,8 +195,7 @@ namespace MediaPortal.UI.Players.Video
     /// </summary>
     protected void OnAfterGraphRebuild()
     {
-      ITsReader tsReader = (ITsReader)_sourceFilter;
-      tsReader.OnGraphRebuild(_changedMediaType);
+      _tsReader.OnGraphRebuild(_changedMediaType);
     }
 
     /// <summary>
@@ -258,7 +259,7 @@ namespace MediaPortal.UI.Players.Video
       if (refreshed)
       {
         // If base class has refreshed the stream infos, then update the subtitle streams.
-        ISubtitleStream subtitleStream = _sourceFilter as ISubtitleStream;
+        ISubtitleStream subtitleStream = _tsReader as ISubtitleStream;
         if (subtitleStream != null)
           _streamInfoSubtitles = new TsReaderStreamInfoHandler(subtitleStream);
       }
@@ -282,7 +283,7 @@ namespace MediaPortal.UI.Players.Video
     protected override void SetPreferredSubtitle()
     {
       EnumerateStreams();
-      ISubtitleStream subtitleStream = _sourceFilter as ISubtitleStream;
+      ISubtitleStream subtitleStream = _tsReader as ISubtitleStream;
       if (_streamInfoSubtitles == null || subtitleStream == null)
         return;
 

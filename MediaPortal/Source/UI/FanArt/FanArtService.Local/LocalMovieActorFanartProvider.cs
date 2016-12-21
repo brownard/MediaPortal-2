@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2015 Team MediaPortal
+#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -136,8 +136,8 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Local
 
                   foreach (ResourcePath thumbPath in
                       from potentialFanArtFile in potentialArtistFanArtFiles
-                      let potentialFanArtFileNameWithoutExtension = ResourcePathHelper.GetFileNameWithoutExtension(potentialFanArtFile.ToString()).ToLowerInvariant()
-                      where potentialFanArtFileNameWithoutExtension.StartsWith(actorName.Replace(" ", "_"))
+                      let potentialFanArtFileNameWithoutExtension = ResourcePathHelper.GetFileNameWithoutExtension(potentialFanArtFile.ToString())
+                      where potentialFanArtFileNameWithoutExtension.StartsWith(actorName.Replace(" ", "_"), StringComparison.InvariantCultureIgnoreCase)
                       select potentialFanArtFile)
                   files.Add(new ResourceLocator(mediaIteamLocator.NativeSystemId, thumbPath));
               }

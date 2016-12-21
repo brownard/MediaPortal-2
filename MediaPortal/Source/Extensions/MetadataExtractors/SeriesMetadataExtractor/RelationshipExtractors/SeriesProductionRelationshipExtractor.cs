@@ -1,7 +1,7 @@
-﻿#region Copyright (C) 2007-2015 Team MediaPortal
+#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -86,17 +86,27 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 
       if (CheckCacheContains(seriesInfo))
         return false;
-
+        
+      int count = 0;
       if (!SeriesMetadataExtractor.SkipOnlineSearches)
+      {
         OnlineMatcherService.Instance.UpdateSeriesCompanies(seriesInfo, CompanyAspect.COMPANY_PRODUCTION, importOnly);
+        count = seriesInfo.ProductionCompanies.Where(c => c.HasExternalId).Count();
+        if (!seriesInfo.IsRefreshed)
+          seriesInfo.HasChanged = true; //Force save to update external Ids for metadata found by other MDEs
+      }
+      else
+      {
+        count = seriesInfo.ProductionCompanies.Where(c => !string.IsNullOrEmpty(c.Name)).Count();
+      }
 
       if (seriesInfo.ProductionCompanies.Count == 0)
         return false;
 
-      if (BaseInfo.CountRelationships(aspects, LinkedRole) < seriesInfo.ProductionCompanies.Where(p => p.HasExternalId).Count())
+      if (BaseInfo.CountRelationships(aspects, LinkedRole) < count || (BaseInfo.CountRelationships(aspects, LinkedRole) == 0 && seriesInfo.ProductionCompanies.Count > 0))
         seriesInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!seriesInfo.HasChanged && !importOnly)
+      if (!seriesInfo.HasChanged)
         return false;
 
       AddToCheckCache(seriesInfo);

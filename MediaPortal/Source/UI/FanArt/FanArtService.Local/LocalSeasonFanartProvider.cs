@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2015 Team MediaPortal
+#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -170,7 +170,6 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Local
             if (season.HasValue)
             {
               List<string> prefixes = new List<string>();
-              prefixes.Add("");
               prefixes.Add(string.Format("season{0:00}-", season.Value));
               if (season.Value == 0)
               {
@@ -180,6 +179,7 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Local
               {
                 prefixes.Add("season-all-");
               }
+              prefixes.Add("");
 
               foreach (string prefix in prefixes)
               {

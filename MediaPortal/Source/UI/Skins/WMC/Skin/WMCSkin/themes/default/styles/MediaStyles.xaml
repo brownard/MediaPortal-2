@@ -758,7 +758,7 @@
 
   <ControlTemplate x:Key="List_WatchedFlag_Template">
     <Grid>
-      <Image x:Name="PartlyWatchedLabel" Height="35" Margin="0,0,5,0" Stretch="Uniform" Opacity="0.7"
+      <Image x:Name="PartlyWatchedLabel" Height="33" Margin="0,4,5,0" Stretch="Uniform" Opacity="0.7"
                Source="partlywatched.png">
         <Image.IsVisible>
           <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} == 0 &amp;&amp; {1} > 1">
@@ -768,7 +768,7 @@
         </Image.IsVisible>
       </Image>
 
-      <Image x:Name="WatchedLabel" Height="35" Margin="0,0,5,0" Stretch="Uniform" Opacity="0.7"
+      <Image x:Name="WatchedLabel" Height="33" Margin="0,4,5,0" Stretch="Uniform" Opacity="0.7"
                Source="watched.png">
         <Image.IsVisible>
           <Binding Path="PlayCount" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} > 0"/>
@@ -1082,9 +1082,16 @@
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
 
-      <Label x:Name="ItemLabel" Grid.Row="0" Grid.Column="1" Content="{Binding SimpleTitle}" Margin="0,0,10,0" FontFamily="SegoeUIBold"
-             FontSize="{ThemeResource SmallFontSize}" Color="{ThemeResource MediaItemUnwatchedColor}">
-      </Label>
+      <media:SeriesAspectWrapper MediaItem="{Binding MediaItem}" Grid.Row="0" Grid.Column="1" Margin="0,0,10,0">
+        <media:SeriesAspectWrapper.Template>
+          <ControlTemplate>
+            <Label x:Name="ItemLabel" FontSize="{ThemeResource SmallFontSize}" FontFamily="SegoeUIBold" Color="{ThemeResource MediaItemUnwatchedColor}"
+                     Content="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=SeriesName}">
+            </Label>
+          </ControlTemplate>
+        </media:SeriesAspectWrapper.Template>
+      </media:SeriesAspectWrapper>
+
       <Image x:Name="ItemTypeSmall" Stretch="Uniform" Margin="10,2,0,2"
              Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
         <Image.Source>

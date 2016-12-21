@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2015 Team MediaPortal
+#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -1164,7 +1164,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
 
     #region FanArt
 
-    public virtual bool ScheduleFanArtDownload(Guid mediaItemId, BaseInfo info)
+    public virtual bool ScheduleFanArtDownload(Guid mediaItemId, BaseInfo info, bool force)
     {
       string id;
       string mediaItem = mediaItemId.ToString().ToUpperInvariant();
@@ -1186,7 +1186,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
           {
             data.FanArtId[FanArtMediaTypes.Album] = id;
           }
-          return ScheduleDownload(id, data.Serialize());
+          return ScheduleDownload(id, data.Serialize(), force);
         }
       }
       else if (info is AlbumInfo)
@@ -1203,7 +1203,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
             Name = albumInfo.ToString()
           };
           data.FanArtId[FanArtMediaTypes.Album] = id;
-          return ScheduleDownload(id, data.Serialize());
+          return ScheduleDownload(id, data.Serialize(), force);
         }
       }
       else if (info is CompanyInfo)
@@ -1219,7 +1219,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
             Name = companyInfo.ToString()
           };
           data.FanArtId[FanArtMediaTypes.MusicLabel] = id;
-          return ScheduleDownload(id, data.Serialize());
+          return ScheduleDownload(id, data.Serialize(), force);
         }
       }
       else if (info is PersonInfo)
@@ -1243,7 +1243,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Matchers
             data.FanArtMediaType = FanArtMediaTypes.Writer;
             data.FanArtId[FanArtMediaTypes.Writer] = id;
           }
-          return ScheduleDownload(id, data.Serialize());
+          return ScheduleDownload(id, data.Serialize(), force);
         }
       }
       return false;

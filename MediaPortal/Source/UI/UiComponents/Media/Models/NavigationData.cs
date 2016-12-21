@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2015 Team MediaPortal
+#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -376,8 +376,10 @@ namespace MediaPortal.UiComponents.Media.Models
       ScreenConfig nextScreenConfig;
       LoadLayoutSettings(visibleScreen.ToString(), out nextScreenConfig);
 
-      Sorting.Sorting nextSortingMode = AvailableSortings.FirstOrDefault(sorting => sorting.GetType().ToString() == nextScreenConfig.Sorting) ?? _currentSorting;
-      Sorting.Sorting nextGroupingMode = String.IsNullOrEmpty(nextScreenConfig.Grouping) ? null : AvailableGroupings.FirstOrDefault(grouping => grouping.GetType().ToString() == nextScreenConfig.Grouping) ?? _currentGrouping;
+      Sorting.Sorting nextSortingMode = AvailableSortings.FirstOrDefault(
+        sorting => sorting.GetType().ToString() == nextScreenConfig.Sorting && sorting.IsAvailable(visibleScreen)) ?? _currentSorting;
+      Sorting.Sorting nextGroupingMode = string.IsNullOrEmpty(nextScreenConfig.Grouping) ? null : AvailableGroupings.FirstOrDefault(
+        grouping => grouping.GetType().ToString() == nextScreenConfig.Grouping && grouping.IsAvailable(visibleScreen)) ?? _currentGrouping;
 
       NavigationData newNavigationData = new NavigationData(this, subViewSpecification.ViewDisplayName,
           _baseWorkflowStateId, newState.StateId, subViewSpecification, visibleScreen, _availableScreens, nextSortingMode, nextGroupingMode, true)
@@ -422,8 +424,10 @@ namespace MediaPortal.UiComponents.Media.Models
       ScreenConfig nextScreenConfig;
       LoadLayoutSettings(nextScreen.GetType().ToString(), out nextScreenConfig);
 
-      Sorting.Sorting nextSortingMode = AvailableSortings.FirstOrDefault(sorting => sorting.GetType().ToString() == nextScreenConfig.Sorting) ?? _currentSorting;
-      Sorting.Sorting nextGroupingMode = String.IsNullOrEmpty(nextScreenConfig.Grouping) ? null : AvailableGroupings.FirstOrDefault(grouping => grouping.GetType().ToString() == nextScreenConfig.Grouping) ?? _currentGrouping;
+      Sorting.Sorting nextSortingMode = AvailableSortings.FirstOrDefault(
+        sorting => sorting.GetType().ToString() == nextScreenConfig.Sorting && sorting.IsAvailable(nextScreen)) ?? _currentSorting;
+      Sorting.Sorting nextGroupingMode = String.IsNullOrEmpty(nextScreenConfig.Grouping) ? null : AvailableGroupings.FirstOrDefault(
+        grouping => grouping.GetType().ToString() == nextScreenConfig.Grouping && grouping.IsAvailable(nextScreen)) ?? _currentGrouping;
 
       NavigationData newNavigationData = new NavigationData(this, subViewSpecification.ViewDisplayName,
           newState.StateId, newState.StateId, subViewSpecification, nextScreen, remainingScreens,

@@ -25,10 +25,8 @@
                              Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Margin="-10,-15,140,0">
     <media:SeriesAspectWrapper.Template>
       <ControlTemplate>
-        <Grid DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}">
           <Label x:Name="SeriesNameLabel" Color="{ThemeResource TextColor}" FontFamily="DefaultBold"
-                 Content="{Binding SeriesName}" />
-        </Grid>
+                 Content="{Binding SeriesName}" DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}"/>
       </ControlTemplate>
     </media:SeriesAspectWrapper.Template>
   </media:SeriesAspectWrapper>
@@ -121,11 +119,11 @@
   </StackPanel>
 
   <media:UserDataWrapper Grid.Column="1" MediaItem="{Binding Source={StaticResource FanArtBackgroundModel},Path=MediaItem}"
-                       HorizontalAlignment="Right" VerticalAlignment="Center">
+                         HorizontalAlignment="Right" VerticalAlignment="Center">
     <media:UserDataWrapper.Template>
       <ControlTemplate>
         <Grid DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}"
-              VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,0,5"
+              VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,-10,0,0"
               IsVisible="{Binding Path=PlayPercentage,Converter={StaticResource ReferenceToBoolConverter}}">
           <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -137,6 +135,7 @@
           <ProgressBar Height="12" Width="120" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,10,0"
                        Value="{Binding PlayPercentage}" Style="{ThemeResource PercentageProgressBarStyle}"/>
           <Label Grid.Column="1" Color="{ThemeResource TextColor}" Opacity="0.6" VerticalAlignment="Center"
+                 IsVisible="{Binding Path=PlayPercentage,Converter={StaticResource ReferenceToBoolConverter}}"
                  FontSize="{ThemeResource SmallerFontSize}" Margin="0,0,0,5">
             <Label.Content>
               <Binding Path="PlayPercentage" Converter="{StaticResource StringFormatConverter}" ConverterParameter="{}{0:F0}%"/>

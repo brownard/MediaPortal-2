@@ -1,17 +1,21 @@
-﻿#region Copyright (C) 2007-2015 Team MediaPortal
+﻿#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
+
     This file is part of MediaPortal 2
+
     MediaPortal 2 is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
+
     MediaPortal 2 is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
+
     You should have received a copy of the GNU General Public License
     along with MediaPortal 2. If not, see <http://www.gnu.org/licenses/>.
 */
@@ -38,7 +42,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
 
     public bool BuildRelationship
     {
-      get { return false; }
+      get { return true; }
     }
 
     public Guid Role
@@ -79,11 +83,11 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
         return false;
 
       SeriesInfo seriesInfo = episodeInfo.CloneBasicInstance<SeriesInfo>();
-
       UpdatePersons(aspects, seriesInfo.Actors, true);
       UpdateCharacters(aspects, seriesInfo.Characters, true);
-      UpdateSeries(aspects, seriesInfo);
-      OnlineMatcherService.Instance.AssignMissingMovieGenreIds(seriesInfo.Genres);
+      if (!UpdateSeries(aspects, seriesInfo))
+        return false;
+      OnlineMatcherService.Instance.AssignMissingSeriesGenreIds(seriesInfo.Genres);
 
       extractedLinkedAspects = new Dictionary<IDictionary<Guid, IList<MediaItemAspect>>, Guid>();
       IDictionary<Guid, IList<MediaItemAspect>> seriesAspects = new Dictionary<Guid, IList<MediaItemAspect>>();

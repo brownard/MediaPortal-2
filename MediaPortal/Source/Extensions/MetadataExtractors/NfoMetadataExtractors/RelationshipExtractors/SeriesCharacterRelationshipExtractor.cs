@@ -1,7 +1,7 @@
-﻿#region Copyright (C) 2007-2015 Team MediaPortal
+#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -41,7 +41,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
 
     public bool BuildRelationship
     {
-      get { return false; }
+      get { return true; }
     }
 
     public Guid Role
@@ -83,7 +83,8 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
       if (!seriesInfo.FromMetadata(aspects))
         return false;
 
-      UpdateCharacters(aspects, seriesInfo.Characters, true);
+      if (!UpdateCharacters(aspects, seriesInfo.Characters, true))
+        return false;
 
       if (seriesInfo.Characters.Count == 0)
         return false;

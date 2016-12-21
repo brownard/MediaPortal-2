@@ -1,7 +1,7 @@
-﻿#region Copyright (C) 2007-2015 Team MediaPortal
+#region Copyright (C) 2007-2017 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2015 Team MediaPortal
+    Copyright (C) 2007-2017 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -133,16 +133,17 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
 
         MovieInfo movieInfo = new MovieInfo();
         movieInfo.FromMetadata(aspects);
+        bool forceFanart = !movieInfo.IsRefreshed;
         MovieCollectionInfo collectionInfo = movieInfo.CloneBasicInstance<MovieCollectionInfo>();
         ExtractLocalImages(aspects, mediaItemId, collectionMediaItemId, movieInfo.ToString(), collectionInfo.ToString(), actorMediaItems);
         if(!MovieMetadataExtractor.SkipFanArtDownload)
-          OnlineMatcherService.Instance.DownloadMovieFanArt(mediaItemId, movieInfo);
+          OnlineMatcherService.Instance.DownloadMovieFanArt(mediaItemId, movieInfo, forceFanart);
 
         //Take advantage of the movie language being known and download collection too
         if (collectionMediaItemId.HasValue && !_checkCache.Contains(collectionMediaItemId.Value))
         {
           if (!MovieMetadataExtractor.SkipFanArtDownload)
-            OnlineMatcherService.Instance.DownloadMovieFanArt(collectionMediaItemId.Value, collectionInfo);
+            OnlineMatcherService.Instance.DownloadMovieFanArt(collectionMediaItemId.Value, collectionInfo, forceFanart);
           _checkCache.Contains(collectionMediaItemId.Value);
         }
       }
@@ -154,7 +155,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
           personInfo.Occupation == PersonAspect.OCCUPATION_WRITER)
         {
           if (!MovieMetadataExtractor.SkipFanArtDownload)
-            OnlineMatcherService.Instance.DownloadMovieFanArt(mediaItemId, personInfo);
+            OnlineMatcherService.Instance.DownloadMovieFanArt(mediaItemId, personInfo, !personInfo.IsRefreshed);
         }
       }
       else if (aspects.ContainsKey(CharacterAspect.ASPECT_ID))
@@ -162,7 +163,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         CharacterInfo characterInfo = new CharacterInfo();
         characterInfo.FromMetadata(aspects);
         if (!MovieMetadataExtractor.SkipFanArtDownload)
-          OnlineMatcherService.Instance.DownloadMovieFanArt(mediaItemId, characterInfo);
+          OnlineMatcherService.Instance.DownloadMovieFanArt(mediaItemId, characterInfo, !characterInfo.IsRefreshed);
       }
       else if (aspects.ContainsKey(CompanyAspect.ASPECT_ID))
       {
@@ -171,7 +172,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         if (companyInfo.Type == CompanyAspect.COMPANY_PRODUCTION)
         {
           if (!MovieMetadataExtractor.SkipFanArtDownload)
-            OnlineMatcherService.Instance.DownloadMovieFanArt(mediaItemId, companyInfo);
+            OnlineMatcherService.Instance.DownloadMovieFanArt(mediaItemId, companyInfo, !companyInfo.IsRefreshed);
         }
       }
     }
@@ -318,8 +319,8 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
 
                       foreach (ResourcePath thumbPath in
                           from potentialFanArtFile in potentialArtistFanArtFiles
-                          let potentialFanArtFileNameWithoutExtension = ResourcePathHelper.GetFileNameWithoutExtension(potentialFanArtFile.ToString()).ToLowerInvariant()
-                          where potentialFanArtFileNameWithoutExtension.StartsWith(actor.Value.Replace(" ", "_"))
+                          let potentialFanArtFileNameWithoutExtension = ResourcePathHelper.GetFileNameWithoutExtension(potentialFanArtFile.ToString())
+                          where potentialFanArtFileNameWithoutExtension.StartsWith(actor.Value.Replace(" ", "_"), StringComparison.InvariantCultureIgnoreCase)
                           select potentialFanArtFile)
                         SaveFolderFile(mediaItemLocater, thumbPath, FanArtTypes.Thumbnail, actor.Key, actor.Value);
                     }
@@ -338,26 +339,26 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
                 logoPaths.AddRange(
                     from potentialFanArtFile in potentialFanArtFiles
                     let potentialFanArtFileNameWithoutExtension = ResourcePathHelper.GetFileNameWithoutExtension(potentialFanArtFile.ToString()).ToLowerInvariant()
-                    where potentialFanArtFileNameWithoutExtension == "logo"
+                    where potentialFanArtFileNameWithoutExtension == "logo" || potentialFanArtFileNameWithoutExtension.EndsWith("-logo")
                     select potentialFanArtFile);
 
                 clearArtPaths.AddRange(
                     from potentialFanArtFile in potentialFanArtFiles
                     let potentialFanArtFileNameWithoutExtension = ResourcePathHelper.GetFileNameWithoutExtension(potentialFanArtFile.ToString()).ToLowerInvariant()
-                    where potentialFanArtFileNameWithoutExtension == "clearart"
+                    where potentialFanArtFileNameWithoutExtension == "clearart" || potentialFanArtFileNameWithoutExtension.EndsWith("-clearart")
                     select potentialFanArtFile);
 
                 bannerPaths.AddRange(
                     from potentialFanArtFile in potentialFanArtFiles
                     let potentialFanArtFileNameWithoutExtension = ResourcePathHelper.GetFileNameWithoutExtension(potentialFanArtFile.ToString()).ToLowerInvariant()
-                    where potentialFanArtFileNameWithoutExtension == "banner"
+                    where potentialFanArtFileNameWithoutExtension == "banner" || potentialFanArtFileNameWithoutExtension.EndsWith("-banner")
                     select potentialFanArtFile);
 
                 fanArtPaths.AddRange(
                     from potentialFanArtFile in potentialFanArtFiles
                     let potentialFanArtFileNameWithoutExtension = ResourcePathHelper.GetFileNameWithoutExtension(potentialFanArtFile.ToString()).ToLowerInvariant()
                     where potentialFanArtFileNameWithoutExtension == "backdrop" || potentialFanArtFileNameWithoutExtension == "fanart" ||
-                    potentialFanArtFileNameWithoutExtension.StartsWith(mediaItemFileNameWithoutExtension + "-fanart")
+                    potentialFanArtFileNameWithoutExtension.EndsWith("-fanart")
                     select potentialFanArtFile);
 
                 if (directoryFsra.ResourceExists("ExtraFanArt/"))
