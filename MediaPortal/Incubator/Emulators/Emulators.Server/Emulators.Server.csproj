@@ -34,7 +34,7 @@
   <ItemGroup>
     <Reference Include="MediaPortal.Backend, Version=2.0.0.1412, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Team MediaPortal\MP2-Server\MediaPortal.Backend.dll</HintPath>
+      <HintPath>..\..\..\Source\Core\MediaPortal.Backend\bin\x86\Release\MediaPortal.Backend.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
