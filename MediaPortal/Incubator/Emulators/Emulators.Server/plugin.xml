@@ -17,9 +17,9 @@
   </Runtime>
 
   <DependsOn>
-    <PluginReference PluginId="{BDA68C24-EEA3-47D0-B43A-86E086E43AE1}" CompatibleAPI="2"/> <!-- FanartService -->
-    <CoreDependency Name="MediaPortal.Common" CompatibleAPI="1" />
-    <CoreDependency Name="MediaPortal.Backend" CompatibleAPI="1" />
+    <PluginReference PluginId="{BDA68C24-EEA3-47D0-B43A-86E086E43AE1}" CompatibleAPI="3"/> <!-- FanartService -->
+    <CoreDependency Name="MediaPortal.Common" CompatibleAPI="2" />
+    <CoreDependency Name="MediaPortal.Backend" CompatibleAPI="2" />
   </DependsOn>
 
   <Register Location="/Media/MetadataExtractors">
