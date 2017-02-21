@@ -8,7 +8,7 @@ namespace Emulators.LibRetro.SoundProviders
 {
   public interface ISoundOutput : IDisposable
   {
-    bool Init(IntPtr windowHandle, Guid audioRenderer, int sampleRate, double bufferSizeSeconds);
+    bool Init(IntPtr windowHandle, Guid audioDeviceId, int sampleRate, double bufferSizeSeconds);
     bool Play();
     void Pause();
     void UnPause();

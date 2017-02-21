@@ -104,6 +104,8 @@
   <string name="Emulators.Config.LibRetro.AutoSaveInterval.Help">The number of seconds between auto saves</string>
   <string name="Emulators.Config.LibRetro.EnableVSync">Enable VSync</string>
   <string name="Emulators.Config.LibRetro.EnableVSync.Help">Whether to synchronize playback rate to the monitor refresh rate</string>
+  <string name="Emulators.Config.LibRetro.AudioDevice">Audio device</string>
+  <string name="Emulators.Config.LibRetro.AudioDevice.Help">Select the audio device to you use for audio output</string>
   <string name="Emulators.Config.LibRetro.AudioBufferSize">Audio buffer size</string>
   <string name="Emulators.Config.LibRetro.AudioBufferSize.Help">The size in seconds of the audio buffer. A larger buffer reduces the chance of audio artifacts at the cost of increased latency</string>
 

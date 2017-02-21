@@ -1,26 +1,20 @@
 ﻿using Emulators.LibRetro.Controllers;
 using Emulators.LibRetro.Controllers.Mapping;
 using Emulators.LibRetro.GLContexts;
+using Emulators.LibRetro.Render;
 using Emulators.LibRetro.Settings;
 using Emulators.LibRetro.SoundProviders;
 using Emulators.LibRetro.VideoProviders;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.Settings;
-using MediaPortal.UI.Players.Video.Settings;
 using MediaPortal.UI.SkinEngine.Players;
 using MediaPortal.UI.SkinEngine.SkinManagement;
 using SharpDX.Direct3D9;
 using SharpRetro.LibRetro;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Emulators.LibRetro.Render;
 
 namespace Emulators.LibRetro
 {
@@ -245,15 +239,10 @@ namespace Emulators.LibRetro
 
     protected void InitializeAudio()
     {
-      VideoSettings videoSettings = ServiceRegistration.Get<ISettingsManager>().Load<VideoSettings>();
-      Guid audioRenderer;
-      if (videoSettings == null || videoSettings.AudioRenderer == null || !Guid.TryParse(videoSettings.AudioRenderer.CLSID, out audioRenderer))
-        audioRenderer = Guid.Empty;
-      
       lock (_audioLock)
       {
         _soundOutput = new LibRetroDirectSound();
-        if (!_soundOutput.Init(SkinContext.Form.Handle, audioRenderer, (int)_retroEmulator.TimingInfo.SampleRate, _settings.AudioBufferSize))
+        if (!_soundOutput.Init(SkinContext.Form.Handle, _settings.AudioDeviceId, (int)_retroEmulator.TimingInfo.SampleRate, _settings.AudioBufferSize))
         {
           _soundOutput.Dispose();
           _soundOutput = null;

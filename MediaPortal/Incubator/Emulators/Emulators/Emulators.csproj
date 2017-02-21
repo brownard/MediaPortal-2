@@ -177,6 +177,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings\Configuration\ClearGoodMergeCache.cs" />
     <Compile Include="Settings\Configuration\EmulatorsConfigSetting.cs" />
+    <Compile Include="Settings\Configuration\LibRetro\AudioDeviceSetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\CoreInfoDirectorySetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\CoresDirectorySetting.cs" />
     <Compile Include="Settings\Configuration\LibRetro\SystemDirectorySetting.cs" />
@@ -207,10 +208,6 @@
     <ProjectReference Include="..\..\..\Source\Extensions\MetadataExtractors\OnlineLibraries\OnlineLibraries.csproj">
       <Project>{dca4d19e-75f4-4a8a-b70a-f3f4291dc62b}</Project>
       <Name>OnlineLibraries</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Source\UI\Players\VideoPlayer\VideoPlayers.csproj">
-      <Project>{ed9a8a29-91dd-4b21-8cb8-a8b0f3eff61c}</Project>
-      <Name>VideoPlayers</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Source\UI\SkinEngine\SkinEngine.csproj">
       <Project>{7e943389-3589-40c9-b481-2e223554cc49}</Project>

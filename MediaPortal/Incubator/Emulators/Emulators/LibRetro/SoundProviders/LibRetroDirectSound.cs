@@ -3,12 +3,7 @@ using MediaPortal.Common.Logging;
 using SharpDX.DirectSound;
 using SharpDX.Multimedia;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Emulators.LibRetro.SoundProviders
 {
@@ -22,27 +17,24 @@ namespace Emulators.LibRetro.SoundProviders
     protected int _nextWrite;
     protected double _samplesPerMs;
 
-    public bool Init(IntPtr windowHandle, Guid audioRenderer, int sampleRate, double bufferSizeSeconds)
+    public bool Init(IntPtr windowHandle, Guid audioDeviceId, int sampleRate, double bufferSizeSeconds)
     {
       try
       {
-        InitializeDirectSound(windowHandle, audioRenderer);
+        InitializeDirectSound(windowHandle, audioDeviceId);
         InitializeAudio(sampleRate, bufferSizeSeconds > 0 ? bufferSizeSeconds : DEFAULT_BUFFER_SIZE_SECONDS);
         return true;
       }
       catch (Exception ex)
       {
-        ServiceRegistration.Get<ILogger>().Warn("LibRetroDirectSound: Failed to initialise device", ex);
+        ServiceRegistration.Get<ILogger>().Warn("LibRetroDirectSound: Failed to initialise device {0}", ex, audioDeviceId);
         return false;
       }
     }
 
-    void InitializeDirectSound(IntPtr windowHandle, Guid audioRenderer)
+    void InitializeDirectSound(IntPtr windowHandle, Guid audioDeviceId)
     {
-      if (audioRenderer == Guid.Empty)
-        _directSound = new DirectSound();
-      else
-        _directSound = new DirectSound(audioRenderer);
+      _directSound = new DirectSound(audioDeviceId);
       // Set the cooperative level to priority so the format of the primary sound buffer can be modified.
       _directSound.SetCooperativeLevel(windowHandle, CooperativeLevel.Priority);
     }

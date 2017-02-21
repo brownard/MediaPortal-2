@@ -273,6 +273,11 @@
         HelpText="[Emulators.Config.LibRetro.EnableVSync.Help]"
         ClassName="Emulators.Settings.Configuration.LibRetro.EnableVSyncSetting"/>
     <ConfigSetting
+        Id="AudioDevice"
+        Text="[Emulators.Config.LibRetro.AudioDevice]"
+        HelpText="[Emulators.Config.LibRetro.AudioDevice.Help]"
+        ClassName="Emulators.Settings.Configuration.LibRetro.AudioDeviceSetting"/>
+    <ConfigSetting
         Id="AutoSave"
         Text="[Emulators.Config.LibRetro.AutoSave]"
         HelpText="[Emulators.Config.LibRetro.AutoSave.Help]"
