@@ -100,7 +100,7 @@ namespace MediaPortal.Common.Services.Dokan
       }
       try
       {
-        if (DokanRemoveMountPoint(_mountPoint) == DOKAN_SUCCESS)
+        if (DokanRemoveMountPoint(_mountPoint))
         {
          
           ServiceRegistration.Get<ILogger>().Info("Dokan: Successfully unmounted resource '{0}'", _mountPoint);
@@ -129,7 +129,7 @@ namespace MediaPortal.Common.Services.Dokan
       // lost Dokan mount from a formerly crashed MediaPortal
       //if (IsDokanDrive(driveLetter))
       //{
-        if (DokanRemoveMountPoint(mountPoint) == DOKAN_SUCCESS)
+        if (DokanRemoveMountPoint(mountPoint))
         {
           logger.Info("Dokan: Successfully unmounted remote resource '{0}' from former unclean shutdown", mountPoint);
         }
@@ -220,7 +220,7 @@ namespace MediaPortal.Common.Services.Dokan
       }
     }
 
-    private static int DokanRemoveMountPoint(string mountPoint)
+    private static bool DokanRemoveMountPoint(string mountPoint)
     {
       return DokanNativeMethods.DokanRemoveMountPoint(mountPoint);
     }
@@ -297,7 +297,7 @@ namespace MediaPortal.Common.Services.Dokan
     {
       lock (_syncObj)
       {
-        FileHandle handle = (FileHandle) info.Context;
+        FileHandle handle = info.Context as FileHandle;
         if (handle != null)
         {
           handle.Cleanup();
@@ -309,7 +309,7 @@ namespace MediaPortal.Common.Services.Dokan
     {
       lock (_syncObj)
       {
-        FileHandle handle = (FileHandle) info.Context;
+        FileHandle handle = info.Context as FileHandle;
         if (handle != null)
         {
           handle.Resource.RemoveFileHandle(handle);
@@ -320,7 +320,7 @@ namespace MediaPortal.Common.Services.Dokan
 
     public NtStatus ReadFile(string filename, byte[] buffer, out int bytesRead, long offset, DokanFileInfo info)
     {
-      FileHandle handle = (FileHandle) info.Context;
+      FileHandle handle = info.Context as FileHandle;
       Stream stream;
       bytesRead = 0;
       lock (_syncObj)
@@ -373,7 +373,7 @@ namespace MediaPortal.Common.Services.Dokan
       lock (_syncObj)
       {
         fileinfo = new FileInformation();
-        FileHandle handle = (FileHandle)info.Context;
+        FileHandle handle = info.Context as FileHandle;
         if (handle == null)
         {
           return DokanResult.FileNotFound;
@@ -408,7 +408,7 @@ namespace MediaPortal.Common.Services.Dokan
       files = new List<FileInformation>();
       lock (_syncObj)
       {
-        FileHandle handle = (FileHandle)info.Context;
+        FileHandle handle = info.Context as FileHandle;
         VirtualBaseDirectory directory = handle == null ? null : handle.Resource as VirtualBaseDirectory;
         if (directory == null)
         {

@@ -63,18 +63,18 @@ namespace MediaPortal.Extensions.OnlineLibraries
     public OnlineMatcherService()
     {
       MUSIC_MATCHERS.Add(MusicTheAudioDbMatcher.Instance);
-      MUSIC_MATCHERS.Add(CDFreeDbMatcher.Instance);
+      MUSIC_MATCHERS.Add(MusicFreeDbMatcher.Instance);
       MUSIC_MATCHERS.Add(MusicBrainzMatcher.Instance);
       MUSIC_MATCHERS.Add(MusicFanArtTvMatcher.Instance);
 
       MOVIE_MATCHERS.Add(MovieTheMovieDbMatcher.Instance);
-      MOVIE_MATCHERS.Add(MovieOmDbMatcher.Instance);
+      //MOVIE_MATCHERS.Add(MovieOmDbMatcher.Instance);
       MOVIE_MATCHERS.Add(MovieFanArtTvMatcher.Instance);
 
       SERIES_MATCHERS.Add(SeriesTvDbMatcher.Instance);
       SERIES_MATCHERS.Add(SeriesTheMovieDbMatcher.Instance);
       SERIES_MATCHERS.Add(SeriesTvMazeMatcher.Instance);
-      SERIES_MATCHERS.Add(SeriesOmDbMatcher.Instance);
+      //SERIES_MATCHERS.Add(SeriesOmDbMatcher.Instance);
       SERIES_MATCHERS.Add(SeriesFanArtTvMatcher.Instance);
 
       //Load settings
@@ -194,7 +194,6 @@ namespace MediaPortal.Extensions.OnlineLibraries
           new GenreMapping(SeriesGenre.MYSTERY, new SerializableRegex(@"Mystery", RegexOptions.IgnoreCase)),
           new GenreMapping(SeriesGenre.ROMANCE, new SerializableRegex(@"Romance", RegexOptions.IgnoreCase)),
           new GenreMapping(SeriesGenre.SCIENCE_FICTION, new SerializableRegex(@"Science Fiction|Science-Fiction|Sci-Fi", RegexOptions.IgnoreCase)),
-          new GenreMapping(SeriesGenre.MYSTERY, new SerializableRegex(@"Mystery", RegexOptions.IgnoreCase)),
           new GenreMapping(SeriesGenre.THRILLER, new SerializableRegex(@"Thriller|Disaster|Suspense", RegexOptions.IgnoreCase)),
           new GenreMapping(SeriesGenre.WAR, new SerializableRegex(@"War", RegexOptions.IgnoreCase)),
           new GenreMapping(SeriesGenre.WESTERN, new SerializableRegex(@"Western", RegexOptions.IgnoreCase)),
@@ -360,12 +359,12 @@ namespace MediaPortal.Extensions.OnlineLibraries
       return success;
     }
 
-    public bool UpdateTrackPersons(TrackInfo trackInfo, string occupation, bool importOnly)
+    public bool UpdateTrackPersons(TrackInfo trackInfo, string occupation, bool forAlbum, bool importOnly)
     {
       bool success = false;
       foreach (IMusicMatcher matcher in MUSIC_MATCHERS.OrderByDescending(m => m.Primary).Where(m => m.Enabled))
       {
-        success |= matcher.UpdateTrackPersons(trackInfo, occupation, importOnly);
+        success |= matcher.UpdateTrackPersons(trackInfo, occupation, forAlbum, importOnly);
       }
       return success;
     }

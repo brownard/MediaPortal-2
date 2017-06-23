@@ -593,7 +593,7 @@ namespace MediaPortal.UiComponents.BlueVision.Models
         return false;
 
       IWorkflowManager workflowManager = ServiceRegistration.Get<IWorkflowManager>();
-      return workflowManager.CurrentNavigationContext.WorkflowState.StateId == currentlyPlayingWorkflowStateId;
+      return workflowManager.IsStateContainedInNavigationStack(currentlyPlayingWorkflowStateId.Value);
     }
 
     private void IsHomeChanged(AbstractProperty property, object oldvalue)
@@ -789,6 +789,9 @@ namespace MediaPortal.UiComponents.BlueVision.Models
         if ((WorkflowManagerMessaging.MessageType)message.MessageType == WorkflowManagerMessaging.MessageType.StatesPopped)
         {
           UpdateSelectedGroup();
+          // MP2-665: Make sure to recreate the main tiles when navigating back into Home screen
+          if (IsHomeScreen)
+            CreatePositionedItems();
         }
         if ((WorkflowManagerMessaging.MessageType)message.MessageType == WorkflowManagerMessaging.MessageType.NavigationComplete)
         {

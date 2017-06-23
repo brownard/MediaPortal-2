@@ -26,7 +26,7 @@ using MediaPortal.Common.Settings;
 
 namespace MediaPortal.Plugins.SlimTv.Client.Settings
 {
-  class SlimTvClientSettings
+  public class SlimTvClientSettings
   {
     /// <summary>
     /// Defines the number of rows to be visible in EPG.
@@ -41,10 +41,35 @@ namespace MediaPortal.Plugins.SlimTv.Client.Settings
     public double EpgVisibleHours { get; set; }
 
     /// <summary>
+    /// Whether to show channel names in EPG.
+    /// </summary>
+    [Setting(SettingScope.User, DefaultValue = true)]
+    public bool EpgShowChannelNames { get; set; }
+
+    /// <summary>
+    /// Whether to channel numbers in EPG.
+    /// </summary>
+    [Setting(SettingScope.User, DefaultValue = true)]
+    public bool EpgShowChannelNumbers { get; set; }
+
+    /// <summary>
+    /// Whether to show channel logos in EPG.
+    /// </summary>
+    [Setting(SettingScope.User, DefaultValue = true)]
+    public bool EpgShowChannelLogos { get; set; }
+
+    /// <summary>
     /// Defines the zapping timeout in seconds.
     /// </summary>
     [Setting(SettingScope.User, DefaultValue = 2d)]
     public double ZapTimeout { get; set; }
+
+    /// <summary>
+    /// If set to <c>true</c>, the FullGuide will automatically start tuning a currently running program.
+    /// Recording and further options will be only available by context menu then.
+    /// </summary>
+    [Setting(SettingScope.User, DefaultValue = true)]
+    public bool ZapFromGuide { get; set; }
 
     /// <summary>
     /// If set to <c>true</c>, TV gets started when entering TV home state.

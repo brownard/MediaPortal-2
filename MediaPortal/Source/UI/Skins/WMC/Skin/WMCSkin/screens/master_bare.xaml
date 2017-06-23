@@ -33,6 +33,15 @@ Parameters which have to be accessible by a DynamicResource lookup:
     mp_special_workflow:WorkflowContext.StateSlot="Root"
     x:Name="Screen"
     >
+  <Screen.Resources>
+    <Model x:Key="MenuModel" Id="A6C6D5DA-55FE-4b5f-AE83-B03E8BBFA177"/>
+  </Screen.Resources>
+  <Screen.Triggers>
+    <EventTrigger RoutedEvent="Screen.Hide">
+      <TriggerCommand Command="{Command Source={StaticResource MenuModel}, Path=CloseMenu}"/>
+    </EventTrigger>
+  </Screen.Triggers>
+  
   <Grid x:Name="RootElement">
     <Grid.RowDefinitions>
       <RowDefinition Height="*"/>
@@ -50,7 +59,7 @@ Parameters which have to be accessible by a DynamicResource lookup:
     </Grid.Resources>
 
     <Control x:Name="FanArtBackground" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="-1"
-               Template="{DynamicResource ResourceKey=FanArtBackground_Template}"/>
+             Template="{DynamicResource ResourceKey=FanArtBackground_Template}"/>
 
     <DockPanel Grid.Column="0" Grid.Row="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                LastChildFill="True">
@@ -74,6 +83,22 @@ Parameters which have to be accessible by a DynamicResource lookup:
                       Command="{Command Source={Service WorkflowManager},Path=NavigatePush,Parameters=7F702D9C-F2DD-42da-9ED8-0BA92F07787F}"/>
               <Control Style="{ThemeResource NotificationControlStyle}" Margin="5,2,5,5" IsVisible="{Binding Source={StaticResource NotificationsModel},Path=IsNotificationsHintVisible}"
                        HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,5,0"
+                        DataContext="{Binding Source={StaticResource StateModel}, Path=[C37B62D0-8E87-42A4-877E-B41944DA9FC9]}"
+                        IsVisible="{Binding Converter={StaticResource ReferenceToBoolConverter}}">
+              <Label FontSize="{ThemeResource SmallerFontSize}" Margin="10,0,0,0"
+                     Color="{ThemeResource TextColor}" VerticalAlignment="Center" HorizontalAlignment="Right">
+                <Label.IsVisible>
+                  <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0}>=0">
+                    <Binding Path="Progress"/>
+                  </MultiBinding>
+                </Label.IsVisible>
+                <Label.Content>
+                  <Binding Path="Progress" Converter="{StaticResource StringFormatConverter}" ConverterParameter="{}{0}%"/>
+                </Label.Content>
+              </Label>
+              <Button Style="{ThemeResource ImportingButtonStyle}" IsVisible="{Binding IsImporting}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,5,0"
                         DataContext="{Binding Source={StaticResource StateModel}, Path=[2A58935C-3363-4FA1-B48D-1EF0E81F830D]}"
@@ -113,16 +138,16 @@ Parameters which have to be accessible by a DynamicResource lookup:
     </DockPanel>
 
     <!-- FooterPanel -->
-    <Grid Grid.Row="1" x:Name="FooterPanel" DockPanel.Dock="Bottom" Margin="1000,0,0,0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
+    <Grid Grid.Row="1" x:Name="FooterPanel" Margin="1000,0,0,0">
+      <Grid.RowDefinitions>
+         <RowDefinition Height="*"/>
+         </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
-            <Control x:Name="AlternativeFooterControl" HorizontalAlignment="Stretch" Grid.Column="0" 
-                 Template="{DynamicResource ResourceKey=Alternative_Footer_Template}">
-        </Control>
+      <Control x:Name="AlternativeFooterControl" HorizontalAlignment="Stretch" Grid.Column="0" 
+               Template="{DynamicResource ResourceKey=Alternative_Footer_Template}">
+      </Control>
       <mp_special_controls:PlayerControl Margin="15" Style="{ThemeResource NavigationScreenPlayerControlStyle}" 
                   AutoVisibility="True" PlayerContext="PrimaryPlayer" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
       <mp_special_controls:PlayerControl Margin="15" Style="{ThemeResource NavigationScreenPlayerControlStyle}"

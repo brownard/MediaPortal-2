@@ -245,7 +245,9 @@ namespace MediaPortal.Common.MediaManagement.Helpers
         IEnumerable collection;
         Artists.Clear();
         if (MediaItemAspect.TryGetAttribute(aspectData, AudioAlbumAspect.ATTR_ARTISTS, out collection))
-          Artists.AddRange(collection.Cast<string>().Select(s => new PersonInfo { Name = s, Occupation = PersonAspect.OCCUPATION_ARTIST }));
+          Artists.AddRange(collection.Cast<string>().Select(s => new PersonInfo { Name = s, Occupation = PersonAspect.OCCUPATION_ARTIST, ParentMediaName = Album }));
+        foreach (PersonInfo artist in Artists)
+          artist.AssignNameId();
 
         Awards.Clear();
         if (MediaItemAspect.TryGetAttribute(aspectData, AudioAlbumAspect.ATTR_AWARDS, out collection))
@@ -254,6 +256,8 @@ namespace MediaPortal.Common.MediaManagement.Helpers
         MusicLabels.Clear();
         if (MediaItemAspect.TryGetAttribute(aspectData, AudioAlbumAspect.ATTR_LABELS, out collection))
           MusicLabels.AddRange(collection.Cast<string>().Select(s => new CompanyInfo { Name = s, Type = CompanyAspect.COMPANY_MUSIC_LABEL }));
+        foreach (CompanyInfo company in MusicLabels)
+          company.AssignNameId();
 
         Genres.Clear();
         IList<MultipleMediaItemAspect> genreAspects;
@@ -297,7 +301,9 @@ namespace MediaPortal.Common.MediaManagement.Helpers
         IEnumerable collection;
         Artists.Clear();
         if (MediaItemAspect.TryGetAttribute(aspectData, AudioAspect.ATTR_ALBUMARTISTS, out collection))
-          Artists.AddRange(collection.Cast<string>().Select(s => new PersonInfo { Name = s, Occupation = PersonAspect.OCCUPATION_ARTIST }));
+          Artists.AddRange(collection.Cast<string>().Select(s => new PersonInfo { Name = s, Occupation = PersonAspect.OCCUPATION_ARTIST, ParentMediaName = Album }));
+        foreach (PersonInfo artist in Artists)
+          artist.AssignNameId();
 
         return true;
       }
@@ -381,6 +387,27 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       return false;
     }
 
+    /// <summary>
+    /// If album volume info is present, determines whether both albums represent the same volume.
+    /// </summary>
+    /// <param name="other">The album to match against.</param>
+    /// <returns><c>true</c> if the volumes match or no volume info is present.</returns>
+    public bool AlbumVolumesAreEqual(AlbumInfo other)
+    {
+      if (!string.IsNullOrEmpty(Album) && !string.IsNullOrEmpty(other.Album))
+      {
+        Match match = _albumNumber.Match(Album);
+        if (match.Success)
+        {
+          string searchNumber = match.Groups["number"].Value;
+          match = _albumNumber.Match(other.Album);
+          if (match.Success && searchNumber != match.Groups["number"].Value)
+            return false;
+        }
+      }
+      return true;
+    }
+
     #endregion
 
     #region Overrides
@@ -405,12 +432,15 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       AlbumInfo other = obj as AlbumInfo;
       if (other == null) return false;
 
+      //For albums, the name is likely to have come from a tag so ensure that names are similar in addition
+      //to the checks below, so that if a user has 2 albums in different qualities, deliberately tagged differently
+      //they don't get merged into the same album.
+      if (!string.IsNullOrEmpty(Album) && !string.IsNullOrEmpty(other.Album) && !MatchNames(Album, other.Album))
+        return false;
+
       if (AudioDbId > 0 && other.AudioDbId > 0)
         return AudioDbId == other.AudioDbId;
-      if (!string.IsNullOrEmpty(MusicBrainzId) && !string.IsNullOrEmpty(other.MusicBrainzId))
-        return string.Equals(MusicBrainzId, other.MusicBrainzId, StringComparison.InvariantCultureIgnoreCase);
-      if (!string.IsNullOrEmpty(MusicBrainzGroupId) && !string.IsNullOrEmpty(other.MusicBrainzGroupId))
-        return string.Equals(MusicBrainzGroupId, other.MusicBrainzGroupId, StringComparison.InvariantCultureIgnoreCase);
+      
       if (!string.IsNullOrEmpty(CdDdId) && !string.IsNullOrEmpty(other.CdDdId))
         return string.Equals(CdDdId, other.CdDdId, StringComparison.InvariantCultureIgnoreCase);
       if (!string.IsNullOrEmpty(UpcEanId) && !string.IsNullOrEmpty(other.UpcEanId))
@@ -419,31 +449,27 @@ namespace MediaPortal.Common.MediaManagement.Helpers
         return string.Equals(AmazonId, other.AmazonId, StringComparison.InvariantCultureIgnoreCase);
       if (!string.IsNullOrEmpty(ItunesId) && !string.IsNullOrEmpty(other.ItunesId))
         return string.Equals(ItunesId, other.ItunesId, StringComparison.InvariantCultureIgnoreCase);
-      if (!string.IsNullOrEmpty(NameId) && !string.IsNullOrEmpty(other.NameId))
-        return string.Equals(NameId, other.NameId, StringComparison.InvariantCultureIgnoreCase);
-      if (!string.IsNullOrEmpty(Album) && !string.IsNullOrEmpty(other.Album) && MatchNames(Album, other.Album) &&
-        ReleaseDate.HasValue && other.ReleaseDate.HasValue && ReleaseDate.Value == other.ReleaseDate.Value)
-        return true;
-      if (!string.IsNullOrEmpty(Album) && !string.IsNullOrEmpty(other.Album))
-      {
-        Match match = _albumNumber.Match(Album);
-        if (match.Success)
-        {
-          string searchNumber = match.Groups["number"].Value;
-          match = _albumNumber.Match(other.Album);
-          if (match.Success)
-          {
-            //Make sure "Album vol. 23" is not mistaken for "Album vol. 22"
-            if (searchNumber != match.Groups["number"].Value)
-            {
-              return false;
-            }
-          }
-        }
-        return MatchNames(Album, other.Album);
-      }
 
-      return false;
+      //Name id is generated from name and can be unreliable so should only be used if matches
+      if (!string.IsNullOrEmpty(NameId) && !string.IsNullOrEmpty(other.NameId) &&
+        string.Equals(NameId, other.NameId, StringComparison.InvariantCultureIgnoreCase))
+        return true;
+
+      if (!string.IsNullOrEmpty(MusicBrainzId) && !string.IsNullOrEmpty(other.MusicBrainzId))
+        return string.Equals(MusicBrainzId, other.MusicBrainzId, StringComparison.InvariantCultureIgnoreCase);
+      if (!string.IsNullOrEmpty(MusicBrainzGroupId) && !string.IsNullOrEmpty(other.MusicBrainzGroupId))
+        return string.Equals(MusicBrainzGroupId, other.MusicBrainzGroupId, StringComparison.InvariantCultureIgnoreCase);
+
+      if (ReleaseDate.HasValue && other.ReleaseDate.HasValue &&
+        (Artists == null || Artists.Count == 0 || other.Artists == null || other.Artists.Count == 0 || Artists[0].Equals(other.Artists[0])))
+        return ReleaseDate.Value.Year == other.ReleaseDate.Value.Year;
+
+      return AlbumVolumesAreEqual(other);
+    }
+
+    public override bool MatchNames(string name1, string name2)
+    {
+      return CompareNames(name1, name2, 0.8, 3);
     }
 
     public override T CloneBasicInstance<T>()
