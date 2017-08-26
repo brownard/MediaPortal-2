@@ -166,12 +166,7 @@ namespace Emulators.LibRetro.GLContexts
 
     protected bool HasDXExtensions()
     {
-      foreach (string extensionFunction in EXTENSION_FUNCTIONS)
-      {
-        if (!gl.IsExtensionFunctionSupported(extensionFunction))
-          return false;
-      }
-      return true;
+      return EXTENSION_FUNCTIONS.All(f => gl.IsExtensionFunctionSupported(f));
     }
   }
 }
