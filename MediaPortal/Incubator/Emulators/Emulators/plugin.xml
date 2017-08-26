@@ -8,8 +8,8 @@
     AutoActivate="True">
   
   <Version
-        PluginVersion="1.0"
-        ReleaseDate="2015-07-22 01:00:00 GMT+01:00"
+        PluginVersion="0.7"
+        ReleaseDate="2017-08-26 01:00:00 GMT+01:00"
         CurrentAPI="1"/>
   
   <Runtime>
