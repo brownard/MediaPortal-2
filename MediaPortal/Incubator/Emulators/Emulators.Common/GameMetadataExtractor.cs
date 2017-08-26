@@ -70,10 +70,13 @@ namespace Emulators.Common
       get { return _metadata; }
     }
 
-    public bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
+    public bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly, bool forceQuickMode)
     {
       try
       {
+        if (!importOnly)
+          return false;
+
         //Exclude mounted files contained within isos. The importer seems to try and import files in isos even if
         //we successfully import the iso file itself??
         if (mediaItemAccessor.ParentProvider.Metadata.ResourceProviderId == ISORESOURCEPROVIDER_ID)
@@ -84,7 +87,7 @@ namespace Emulators.Common
           return false;
 
         using (LocalFsResourceAccessorHelper rah = new LocalFsResourceAccessorHelper(mediaItemAccessor))
-          return ExtractGameData(rah.LocalFsResourceAccessor, extractedAspectData);
+          return ExtractGameData(rah.LocalFsResourceAccessor, extractedAspectData, forceQuickMode);
       }
       catch (Exception e)
       {
@@ -95,7 +98,7 @@ namespace Emulators.Common
       return false;
     }
 
-    static bool ExtractGameData(ILocalFsResourceAccessor lfsra, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData)
+    static bool ExtractGameData(ILocalFsResourceAccessor lfsra, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       var categories = ServiceRegistration.Get<IMediaCategoryHelper>().GetMediaCategories(lfsra.CanonicalLocalResourcePath);
       string platform = categories.FirstOrDefault(s => _platformCategories.ContainsKey(s));
@@ -115,10 +118,10 @@ namespace Emulators.Common
       {
         GameName = name,
         Platform = platform
-      };
+      };           
 
       GameMatcher matcher = GameMatcher.Instance;
-      if (!matcher.FindAndUpdateGame(gameInfo))
+      if (!forceQuickMode && !matcher.FindAndUpdateGame(gameInfo))
       {
         Logger.Debug("GamesMetadataExtractor: No match found for game: '{0}', '{1}'", lfsra.LocalFileSystemPath, platform);
         gameInfo.GameName = name;
