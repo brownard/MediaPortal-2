@@ -22,16 +22,14 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
-using System.Linq;
-using MediaPortal.Extensions.OnlineLibraries;
 using MediaPortal.Common.MediaManagement.MLQueries;
+using System;
+using System.Collections.Generic;
 
 namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
 {
@@ -72,10 +70,19 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
 
     public IFilter GetSearchFilter(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
     {
-      return GetPersonSearchFilter(extractedAspects);
+      if (!extractedAspects.ContainsKey(PersonAspect.ASPECT_ID))
+        return null;
+      return RelationshipExtractorUtils.CreateExternalItemFilter(extractedAspects, ExternalIdentifierAspect.TYPE_PERSON);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<RelationshipItem> extractedLinkedAspects)
+    public ICollection<string> GetExternalIdentifiers(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
+    {
+      if (!extractedAspects.ContainsKey(PersonAspect.ASPECT_ID))
+        return new List<string>();
+      return RelationshipExtractorUtils.CreateExternalItemIdentifiers(extractedAspects, ExternalIdentifierAspect.TYPE_PERSON);
+    }
+
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
@@ -96,7 +103,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
       if (trackInfo.AlbumArtists.Count == 0)
         return false;
 
-      extractedLinkedAspects = new List<RelationshipItem>();
+      extractedLinkedAspects = new List<IDictionary<Guid, IList<MediaItemAspect>>>();
       foreach (PersonInfo person in trackInfo.AlbumArtists)
       {
         person.AssignNameId();
@@ -105,9 +112,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
         person.SetMetadata(personAspects);
 
         if (personAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
-        {
-          extractedLinkedAspects.Add(new RelationshipItem(personAspects, Guid.Empty, Role, LinkedRole));
-        }
+          extractedLinkedAspects.Add(personAspects);
       }
       return extractedLinkedAspects.Count > 0;
     }
@@ -147,10 +152,6 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
 
       index = nameList.IndexOf(name);
       return index >= 0;
-    }
-
-    public void CacheExtractedItem(Guid extractedItemId, IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
-    {
     }
 
     internal static ILogger Logger

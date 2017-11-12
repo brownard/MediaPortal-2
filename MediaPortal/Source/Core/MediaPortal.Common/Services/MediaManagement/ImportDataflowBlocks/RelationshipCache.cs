@@ -23,7 +23,6 @@
 #endregion
 
 using MediaPortal.Common.MediaManagement;
-using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +30,7 @@ using System.Linq;
 namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
 {
   class RelationshipCache
-  {    
+  {
     protected IDictionary<string, IList<MediaItem>> _externalItemsMatch;
 
     public RelationshipCache()
@@ -39,20 +38,18 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       _externalItemsMatch = new Dictionary<string, IList<MediaItem>>();
     }
 
-    public bool TryAddExternalItem(MediaItem item)
+    public bool TryAddExternalItem(MediaItem item, IRelationshipRoleExtractor externalItemMatcher)
     {
-      IList<MultipleMediaItemAspect> externalAspects;
-      if (!MediaItemAspect.TryGetAspects(item.Aspects, ExternalIdentifierAspect.Metadata, out externalAspects) || externalAspects.Count == 0)
+      ICollection<string> identifiers = externalItemMatcher.GetExternalIdentifiers(item.Aspects);
+      if (identifiers == null || identifiers.Count == 0)
         return false;
 
       bool itemAdded = false;
-      MediaItem cached = item;
-      foreach (MultipleMediaItemAspect externalAspect in externalAspects)
+      foreach (string identifier in identifiers)
       {
-        string cacheKey = GetCacheKey(externalAspect);
         IList<MediaItem> cacheList;
-        if (!_externalItemsMatch.TryGetValue(cacheKey, out cacheList))
-          _externalItemsMatch[cacheKey] = cacheList = new List<MediaItem>();
+        if (!_externalItemsMatch.TryGetValue(identifier, out cacheList))
+          _externalItemsMatch[identifier] = cacheList = new List<MediaItem>();
         else if (cacheList.Any(i => i.MediaItemId == item.MediaItemId))
           continue;
 
@@ -64,40 +61,31 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
 
     public bool TryGetExternalItem(IDictionary<Guid, IList<MediaItemAspect>> extractedItem, IRelationshipRoleExtractor externalItemMatcher, out MediaItem externalItem)
     {
-      IList<MultipleMediaItemAspect> externalAspects;
-      if (MediaItemAspect.TryGetAspects(extractedItem, ExternalIdentifierAspect.Metadata, out externalAspects))
-      {
-        ICollection<Guid> checkedIds = new HashSet<Guid>();
-        foreach (MultipleMediaItemAspect externalAspect in externalAspects)
-        {
-          string cacheKey = GetCacheKey(externalAspect);
-          IList<MediaItem> cacheList;
-          if (!_externalItemsMatch.TryGetValue(cacheKey, out cacheList))
-            continue;
+      externalItem = null;
+      ICollection<string> identifiers = externalItemMatcher.GetExternalIdentifiers(extractedItem);
+      if (identifiers == null || identifiers.Count == 0)
+        return false;
 
-          foreach (MediaItem item in cacheList)
+      ICollection<Guid> checkedIds = new HashSet<Guid>();
+      foreach (string identifier in identifiers)
+      {
+        IList<MediaItem> cacheList;
+        if (!_externalItemsMatch.TryGetValue(identifier, out cacheList))
+          continue;
+
+        foreach (MediaItem item in cacheList)
+        {
+          if (checkedIds.Contains(item.MediaItemId))
+            continue;
+          if (externalItemMatcher.TryMatch(extractedItem, item.Aspects))
           {
-            if (checkedIds.Contains(item.MediaItemId))
-              continue;
-            if (externalItemMatcher.TryMatch(extractedItem, item.Aspects))
-            {
-              externalItem = item;
-              return true;
-            }
-            checkedIds.Add(item.MediaItemId);
+            externalItem = item;
+            return true;
           }
+          checkedIds.Add(item.MediaItemId);
         }
       }
-      externalItem = null;
       return false;
-    }
-
-    protected static string GetCacheKey(MultipleMediaItemAspect externalAspect)
-    {
-      string source = externalAspect.GetAttributeValue<string>(ExternalIdentifierAspect.ATTR_SOURCE);
-      string type = externalAspect.GetAttributeValue<string>(ExternalIdentifierAspect.ATTR_TYPE);
-      string id = externalAspect.GetAttributeValue<string>(ExternalIdentifierAspect.ATTR_ID);
-      return string.Format("{0} | {1} | {2}", source, type, id);
     }
   }
 }

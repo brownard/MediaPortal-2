@@ -211,100 +211,26 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 
     public static IFilter GetEpisodeSearchFilter(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
     {
-      List<IFilter> episodeFilters = new List<IFilter>();
-      if (!extractedAspects.ContainsKey(EpisodeAspect.ASPECT_ID))
+      SingleMediaItemAspect episodeAspect;
+      if (!MediaItemAspect.TryGetAspect(extractedAspects, EpisodeAspect.Metadata, out episodeAspect))
         return null;
 
-      int episodeFilter = -1;
-      int seriesFilter = -1;
-      IList<MultipleMediaItemAspect> externalAspects;
-      if (MediaItemAspect.TryGetAspects(extractedAspects, ExternalIdentifierAspect.Metadata, out externalAspects))
-      {
-        //Episode filter
-        foreach (MultipleMediaItemAspect externalAspect in externalAspects)
-        {
-          string source = externalAspect.GetAttributeValue<string>(ExternalIdentifierAspect.ATTR_SOURCE);
-          string type = externalAspect.GetAttributeValue<string>(ExternalIdentifierAspect.ATTR_TYPE);
-          string id = externalAspect.GetAttributeValue<string>(ExternalIdentifierAspect.ATTR_ID);
-          if (type == ExternalIdentifierAspect.TYPE_EPISODE)
-          {
-            if (episodeFilter < 0)
-            {
-              episodeFilter = episodeFilters.Count;
-              episodeFilters.Add(new BooleanCombinationFilter(BooleanOperator.And, new[]
-              {
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_SOURCE, RelationalOperator.EQ, source),
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_TYPE, RelationalOperator.EQ, type),
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_ID, RelationalOperator.EQ, id),
-              }));
-            }
-            else
-            {
-              episodeFilters[episodeFilter] = BooleanCombinationFilter.CombineFilters(BooleanOperator.Or, episodeFilters[episodeFilter],
-              new BooleanCombinationFilter(BooleanOperator.And, new[]
-              {
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_SOURCE, RelationalOperator.EQ, source),
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_TYPE, RelationalOperator.EQ, type),
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_ID, RelationalOperator.EQ, id),
-              }));
-            }
-          }
-        }
+      IFilter episodeFilter = RelationshipExtractorUtils.CreateExternalItemFilter(extractedAspects, ExternalIdentifierAspect.TYPE_EPISODE);
+      IFilter seriesFilter = RelationshipExtractorUtils.CreateExternalItemFilter(extractedAspects, ExternalIdentifierAspect.TYPE_SERIES);
+      if (seriesFilter == null)
+        return episodeFilter;
 
-        //Series filter
-        foreach (MultipleMediaItemAspect externalAspect in externalAspects)
-        {
-          string source = externalAspect.GetAttributeValue<string>(ExternalIdentifierAspect.ATTR_SOURCE);
-          string type = externalAspect.GetAttributeValue<string>(ExternalIdentifierAspect.ATTR_TYPE);
-          string id = externalAspect.GetAttributeValue<string>(ExternalIdentifierAspect.ATTR_ID);
-          if (type == ExternalIdentifierAspect.TYPE_SERIES)
-          {
-            if (seriesFilter < 0)
-            {
-              seriesFilter = episodeFilters.Count;
-              episodeFilters.Add(new BooleanCombinationFilter(BooleanOperator.And, new[]
-              {
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_SOURCE, RelationalOperator.EQ, source),
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_TYPE, RelationalOperator.EQ, type),
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_ID, RelationalOperator.EQ, id),
-              }));
-            }
-            else
-            {
-              episodeFilters[seriesFilter] = BooleanCombinationFilter.CombineFilters(BooleanOperator.Or, episodeFilters[seriesFilter],
-              new BooleanCombinationFilter(BooleanOperator.And, new[]
-              {
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_SOURCE, RelationalOperator.EQ, source),
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_TYPE, RelationalOperator.EQ, type),
-                new RelationalFilter(ExternalIdentifierAspect.ATTR_ID, RelationalOperator.EQ, id),
-              }));
-            }
-          }
-        }
-        if (seriesFilter >= 0)
-        {
-          SingleMediaItemAspect episodeAspect;
-          if (MediaItemAspect.TryGetAspect(extractedAspects, EpisodeAspect.Metadata, out episodeAspect))
-          {
-            int? seasonNumber = episodeAspect.GetAttributeValue<int?>(EpisodeAspect.ATTR_SEASON);
-            IEnumerable collection = episodeAspect.GetCollectionAttribute(EpisodeAspect.ATTR_EPISODE);
-            List<int> episodeNumbers = new List<int>();
-            if (collection != null)
-              episodeNumbers.AddRange(collection.Cast<int>());
-            if (seasonNumber.HasValue)
-            {
-              episodeFilters[seriesFilter] = BooleanCombinationFilter.CombineFilters(BooleanOperator.And, episodeFilters[seriesFilter],
-                new RelationalFilter(EpisodeAspect.ATTR_SEASON, RelationalOperator.EQ, seasonNumber.Value));
-            }
-            if (episodeNumbers.Count > 0)
-            {
-              episodeFilters[seriesFilter] = BooleanCombinationFilter.CombineFilters(BooleanOperator.And, episodeFilters[seriesFilter],
-                new RelationalFilter(EpisodeAspect.ATTR_EPISODE, RelationalOperator.EQ, episodeNumbers[0]));
-            }
-          }
-        }
-      }
-      return BooleanCombinationFilter.CombineFilters(BooleanOperator.Or, episodeFilters.ToArray());
+      int? seasonNumber = episodeAspect.GetAttributeValue<int?>(EpisodeAspect.ATTR_SEASON);
+      IFilter seasonNumberFilter = seasonNumber.HasValue ?
+        new RelationalFilter(EpisodeAspect.ATTR_SEASON, RelationalOperator.EQ, seasonNumber.Value) : null;
+
+      IEnumerable<int> episodeNumbers = episodeAspect.GetCollectionAttribute<int>(EpisodeAspect.ATTR_EPISODE);
+      IFilter episodeNumberFilter = episodeNumbers != null && episodeNumbers.Any() ?
+        new RelationalFilter(EpisodeAspect.ATTR_EPISODE, RelationalOperator.EQ, episodeNumbers.First()) : null;
+
+      seriesFilter = BooleanCombinationFilter.CombineFilters(BooleanOperator.And, seriesFilter, seasonNumberFilter, episodeNumberFilter);
+
+      return BooleanCombinationFilter.CombineFilters(BooleanOperator.Or, episodeFilter, seriesFilter);
     }
 
     public static IFilter GetCharacterSearchFilter(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)

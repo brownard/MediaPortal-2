@@ -22,17 +22,17 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
-using MediaPortal.Extensions.OnlineLibraries;
 using MediaPortal.Common.MediaManagement.MLQueries;
+using MediaPortal.Extensions.OnlineLibraries;
 using MediaPortal.Utilities.Collections;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 {
@@ -74,10 +74,53 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 
     public IFilter GetSearchFilter(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
     {
-      return GetEpisodeSearchFilter(extractedAspects);
+      SingleMediaItemAspect episodeAspect;
+      if (!MediaItemAspect.TryGetAspect(extractedAspects, EpisodeAspect.Metadata, out episodeAspect))
+        return null;
+
+      IFilter episodeFilter = RelationshipExtractorUtils.CreateExternalItemFilter(extractedAspects, ExternalIdentifierAspect.TYPE_EPISODE);
+      IFilter seriesFilter = RelationshipExtractorUtils.CreateExternalItemFilter(extractedAspects, ExternalIdentifierAspect.TYPE_SERIES);
+      if (seriesFilter == null)
+        return episodeFilter;
+
+      int? seasonNumber = episodeAspect.GetAttributeValue<int?>(EpisodeAspect.ATTR_SEASON);
+      IFilter seasonNumberFilter = seasonNumber.HasValue ?
+        new RelationalFilter(EpisodeAspect.ATTR_SEASON, RelationalOperator.EQ, seasonNumber.Value) : null;
+
+      IEnumerable<int> episodeNumbers = episodeAspect.GetCollectionAttribute<int>(EpisodeAspect.ATTR_EPISODE);
+      IFilter episodeNumberFilter = episodeNumbers != null && episodeNumbers.Any() ?
+        new RelationalFilter(EpisodeAspect.ATTR_EPISODE, RelationalOperator.EQ, episodeNumbers.First()) : null;
+
+      seriesFilter = BooleanCombinationFilter.CombineFilters(BooleanOperator.And, seriesFilter, seasonNumberFilter, episodeNumberFilter);
+
+      return BooleanCombinationFilter.CombineFilters(BooleanOperator.Or, episodeFilter, seriesFilter);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<RelationshipItem> extractedLinkedAspects)
+    public ICollection<string> GetExternalIdentifiers(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
+    {
+      SingleMediaItemAspect episodeAspect;
+      if (!MediaItemAspect.TryGetAspect(extractedAspects, EpisodeAspect.Metadata, out episodeAspect))
+        return new List<string>();
+
+      ICollection<string> episodeIdentifiers = RelationshipExtractorUtils.CreateExternalItemIdentifiers(extractedAspects, ExternalIdentifierAspect.TYPE_EPISODE);
+      ICollection<string> seriesIdentifiers = RelationshipExtractorUtils.CreateExternalItemIdentifiers(extractedAspects, ExternalIdentifierAspect.TYPE_SERIES);
+      if (seriesIdentifiers == null || seriesIdentifiers.Count == 0)
+        return episodeIdentifiers;
+
+      int? seasonNumber = episodeAspect.GetAttributeValue<int?>(EpisodeAspect.ATTR_SEASON);
+      string seasonEpisodeSuffix = seasonNumber.HasValue ? "S" + seasonNumber.Value : string.Empty;
+
+      IEnumerable<int> episodeNumbers = episodeAspect.GetCollectionAttribute<int>(EpisodeAspect.ATTR_EPISODE);
+      if (episodeNumbers != null && episodeNumbers.Any())
+        seasonEpisodeSuffix += "E" + episodeNumbers.First();
+
+      foreach (string seriesIdentifier in seriesIdentifiers)
+        episodeIdentifiers.Add(seriesIdentifier + seasonEpisodeSuffix);
+
+      return episodeIdentifiers;
+    }
+
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
@@ -89,9 +132,6 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 
       SeriesInfo seriesInfo = new SeriesInfo();
       if (!seriesInfo.FromMetadata(aspects))
-        return false;
-
-      if (CheckCacheContains(seriesInfo))
         return false;
 
       if (!SeriesMetadataExtractor.SkipOnlineSearches)
@@ -108,9 +148,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
       if (!seriesInfo.HasChanged)
         return false;
 
-      AddToCheckCache(seriesInfo);
-
-      extractedLinkedAspects = new List<RelationshipItem>();
+      extractedLinkedAspects = new List<IDictionary<Guid, IList<MediaItemAspect>>>();
       for (int i = 0; i < seriesInfo.Episodes.Count; i++)
       {
         EpisodeInfo episodeInfo = seriesInfo.Episodes[i];
@@ -121,7 +159,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
         MediaItemAspect.SetAttribute(episodeAspects, MediaAspect.ATTR_ISVIRTUAL, true);
 
         if (episodeAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
-          extractedLinkedAspects.Add(new RelationshipItem(episodeAspects, Guid.Empty, Role, LinkedRole));
+          extractedLinkedAspects.Add(episodeAspects);
       }
       return extractedLinkedAspects.Count > 0;
     }
@@ -159,10 +197,6 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 
       index = season.Value * 1000 + episodeList.First();
       return index >= 0;
-    }
-
-    public void CacheExtractedItem(Guid extractedItemId, IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
-    {
     }
 
     internal static ILogger Logger

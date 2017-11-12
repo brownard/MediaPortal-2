@@ -24,9 +24,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MediaPortal.Common.MediaManagement
 {
@@ -36,25 +33,14 @@ namespace MediaPortal.Common.MediaManagement
   public class RelationshipItem
   {
     /// <summary>
-    /// Creates a new <see cref="RelationshipItem"/> and sets <see cref="HasChanged"/> to true if <paramref name="mediaItemId"/> is empty. 
-    /// </summary>
-    /// <param name="aspects">The extracted aspects of the relationship item.</param>
-    /// <param name="mediaItemId">The media item id of the relationship item.</param>
-    public RelationshipItem(IDictionary<Guid, IList<MediaItemAspect>> aspects, Guid mediaItemId, Guid role, Guid linkedRole)
-      : this(aspects, mediaItemId, mediaItemId == Guid.Empty, role, linkedRole)
-    { }
-
-    /// <summary>
     /// Creates a new <see cref="RelationshipItem"/>.
     /// </summary>
     /// <param name="aspects">The extracted aspects of the relationship item.</param>
-    /// <param name="mediaItemId">The media item id of the relationship item.</param>
-    /// <param name="hasChanged">Whether aspects have been added or updated.</param>
-    public RelationshipItem(IDictionary<Guid, IList<MediaItemAspect>> aspects, Guid mediaItemId, bool hasChanged, Guid role, Guid linkedRole)
+    /// <param name="role">The role of the media item that this relationship belongs to.</param>
+    /// <param name="linkedRole">The role of this relationship.</param>
+    public RelationshipItem(IDictionary<Guid, IList<MediaItemAspect>> aspects, Guid role, Guid linkedRole)
     {
       Aspects = aspects;
-      MediaItemId = mediaItemId;
-      HasChanged = hasChanged;
       Role = role;
       LinkedRole = linkedRole;
     }
@@ -65,22 +51,12 @@ namespace MediaPortal.Common.MediaManagement
     public IDictionary<Guid, IList<MediaItemAspect>> Aspects { get; set; }
 
     /// <summary>
-    /// The media item id of the relationship item if known,
-    /// </summary>
-    public Guid MediaItemId { get; set; }
-
-    /// <summary>
-    /// Whether aspects have been added or updated.
-    /// </summary>
-    public bool HasChanged { get; set; }
-
-    /// <summary>
-    /// The role of the item this relationship was extracted from.
+    /// The role of the aspects this relationship was extracted from.
     /// </summary>
     public Guid Role { get; set; }
 
     /// <summary>
-    /// The role of this relationship.
+    /// The role of the aspects of this relationship.
     /// </summary>
     public Guid LinkedRole { get; set; }
   }

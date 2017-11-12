@@ -121,6 +121,7 @@
     <Compile Include="MediaManagement\MLQueries\RelationalUserDataFilter.cs" />
     <Compile Include="Genres\GenreSettings.cs" />
     <Compile Include="MediaManagement\RelationshipExtractorMetadata.cs" />
+    <Compile Include="MediaManagement\RelationshipExtractorUtils.cs" />
     <Compile Include="MediaManagement\RelationshipType.cs" />
     <Compile Include="MediaManagement\MLQueries\FilteredRelationshipFilter.cs" />
     <Compile Include="MediaManagement\RelationshipItem.cs" />

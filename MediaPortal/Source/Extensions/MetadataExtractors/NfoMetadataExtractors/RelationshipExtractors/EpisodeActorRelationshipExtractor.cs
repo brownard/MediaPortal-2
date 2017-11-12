@@ -22,9 +22,6 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
@@ -32,6 +29,8 @@ using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.MediaManagement.MLQueries;
 using MediaPortal.Utilities.Collections;
+using System;
+using System.Collections.Generic;
 
 namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
 {
@@ -72,10 +71,19 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
 
     public IFilter GetSearchFilter(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
     {
-      return GetPersonSearchFilter(extractedAspects);
+      if (!extractedAspects.ContainsKey(PersonAspect.ASPECT_ID))
+        return null;
+      return RelationshipExtractorUtils.CreateExternalItemFilter(extractedAspects, ExternalIdentifierAspect.TYPE_PERSON);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<RelationshipItem> extractedLinkedAspects)
+    public ICollection<string> GetExternalIdentifiers(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
+    {
+      if (!extractedAspects.ContainsKey(PersonAspect.ASPECT_ID))
+        return new List<string>();
+      return RelationshipExtractorUtils.CreateExternalItemIdentifiers(extractedAspects, ExternalIdentifierAspect.TYPE_PERSON);
+    }
+
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
@@ -87,7 +95,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
         return false;
 
       EpisodeInfo episodeInfo = new EpisodeInfo();
-      if(!episodeInfo.FromMetadata(aspects))
+      if (!episodeInfo.FromMetadata(aspects))
         return false;
 
       if (!UpdatePersons(aspects, episodeInfo.Actors, false))
@@ -96,7 +104,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
       if (episodeInfo.Actors.Count == 0)
         return false;
 
-      extractedLinkedAspects = new List<RelationshipItem>();
+      extractedLinkedAspects = new List<IDictionary<Guid, IList<MediaItemAspect>>>();
       foreach (PersonInfo person in episodeInfo.Actors)
       {
         person.AssignNameId();
@@ -105,9 +113,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
         person.SetMetadata(personAspects);
 
         if (personAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
-        {
-          extractedLinkedAspects.Add(new RelationshipItem(personAspects, Guid.Empty, Role, LinkedRole));
-        }
+          extractedLinkedAspects.Add(personAspects);
       }
       return extractedLinkedAspects.Count > 0;
     }
@@ -147,10 +153,6 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
 
       index = nameList.IndexOf(name);
       return index >= 0;
-    }
-
-    public void CacheExtractedItem(Guid extractedItemId, IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
-    {
     }
 
     internal static ILogger Logger

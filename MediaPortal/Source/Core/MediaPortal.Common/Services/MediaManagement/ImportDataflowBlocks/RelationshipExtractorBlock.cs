@@ -46,14 +46,14 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
   {
     protected class ExtractedRelation
     {
-      public ExtractedRelation(IRelationshipRoleExtractor extractor, RelationshipItem relationship)
+      public ExtractedRelation(IRelationshipRoleExtractor extractor, IDictionary<Guid, IList<MediaItemAspect>> aspects)
       {
         Extractor = extractor;
-        Relationship = relationship;
+        Aspects = aspects;
       }
 
       public IRelationshipRoleExtractor Extractor { get; protected set; }
-      public RelationshipItem Relationship { get; protected set; }
+      public IDictionary<Guid, IList<MediaItemAspect>> Aspects { get; protected set; }
     }
 
     #region Consts
@@ -223,11 +223,11 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     protected void ExtractRelationshipMetadata(IRelationshipRoleExtractor roleExtractor, Guid mediaItemId, IDictionary<Guid, IList<MediaItemAspect>> aspects, bool isRefresh, ICollection<ExtractedRelation> relations)
     {
       int extractedCount = 0;
-      IList<RelationshipItem> extractedItems;
+      IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedItems;
       if (roleExtractor.TryExtractRelationships(aspects, !isRefresh, out extractedItems))
       {
         extractedCount = extractedItems.Count;
-        foreach (RelationshipItem extractedItem in extractedItems)
+        foreach (IDictionary<Guid, IList<MediaItemAspect>> extractedItem in extractedItems)
           relations.Add(new ExtractedRelation(roleExtractor, extractedItem));
       }
 
@@ -257,11 +257,16 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
 
         //Add new relations to the MediaLibrary and update the relationship aspects of the parent item.
         //The MediaLibrary will handle adding the relationship aspects for the new relations. 
-        newMediaItems = await ReconcileMediaItem(mediaItemId, reconcileAspects, newRelations.Select(r => r.Relationship));
+        newMediaItems = await ReconcileMediaItem(mediaItemId, reconcileAspects,
+          newRelations.Select(r => new RelationshipItem(r.Aspects, r.Extractor.Role, r.Extractor.LinkedRole)));
 
         //Cache all newly added/updated relations
         foreach (MediaItem updatedMediaItem in newMediaItems)
-          _relationshipCache.TryAddExternalItem(updatedMediaItem);
+        {
+          var itemMatcher = GetLinkedRoleExtractors(updatedMediaItem.Aspects).FirstOrDefault();
+          if (itemMatcher != null)
+            _relationshipCache.TryAddExternalItem(updatedMediaItem, itemMatcher);
+        }
       }
       finally
       {
@@ -289,10 +294,10 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       foreach (var relation in relations)
       {
         MediaItem externalItem;
-        if (_relationshipCache.TryGetExternalItem(relation.Relationship.Aspects, relation.Extractor, out externalItem))
+        if (_relationshipCache.TryGetExternalItem(relation.Aspects, relation.Extractor, out externalItem))
         {
           if (relation.Extractor.BuildRelationship)
-            AddRelationship(relation.Extractor, externalItem.MediaItemId, aspects, relation.Relationship.Aspects, false);
+            AddRelationship(relation.Extractor, externalItem.MediaItemId, aspects, relation.Aspects, false);
         }
         else
         {
@@ -302,7 +307,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
           //after a share deletion whilst this import is running.
           //TODO: Update the interface definition to better reflect the usage of BuildRelationship
           if (!relation.Extractor.BuildRelationship)
-            AddRelationship(relation.Extractor, mediaItemId, aspects, relation.Relationship.Aspects, true);
+            AddRelationship(relation.Extractor, mediaItemId, aspects, relation.Aspects, true);
         }
       }
       return newRelations;
@@ -315,12 +320,12 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     /// <returns>A Task that completes when the item has been cached.</returns>
     protected async Task CacheImportResource(PendingImportResourceNewGen importResource)
     {
-      MediaItem item = new MediaItem(importResource.MediaItemId.Value, importResource.Aspects);      
+      MediaItem item = new MediaItem(importResource.MediaItemId.Value, importResource.Aspects);
       await _cacheSync.WaitAsync();
       try
       {
         foreach (IRelationshipRoleExtractor roleExtractor in GetLinkedRoleExtractors(importResource.Aspects))
-          _relationshipCache.TryAddExternalItem(item);
+          _relationshipCache.TryAddExternalItem(item, roleExtractor);
       }
       finally
       {

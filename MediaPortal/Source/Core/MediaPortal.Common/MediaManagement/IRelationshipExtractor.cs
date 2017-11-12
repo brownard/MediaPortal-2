@@ -73,12 +73,11 @@ namespace MediaPortal.Common.MediaManagement
     IFilter GetSearchFilter(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects);
 
     /// <summary>
-    /// Add extracted media item to cache so querying the database can be avoided
+    /// Get a collection of strings that can be used as keys to identify the extracted aspects.
     /// </summary>
-    /// <param name="extractedItemId"></param>
     /// <param name="extractedAspects"></param>
     /// <returns></returns>
-    void CacheExtractedItem(Guid extractedItemId, IDictionary<Guid, IList<MediaItemAspect>> extractedAspects);
+    ICollection<string> GetExternalIdentifiers(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects);
 
     /// <summary>
     /// Part 1 of the relationship building - try to build a relationship
@@ -88,7 +87,7 @@ namespace MediaPortal.Common.MediaManagement
     /// <param name="importOnly"></param>
     /// <param name="extractedLinkedAspects"></param>
     /// <returns></returns>
-    bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<RelationshipItem> extractedLinkedAspects);
+    bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects);
 
     /// <summary>
     /// Part 2 of the relationship building - if the extract was successful

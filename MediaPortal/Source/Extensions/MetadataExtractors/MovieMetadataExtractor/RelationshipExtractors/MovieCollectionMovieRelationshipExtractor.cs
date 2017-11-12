@@ -22,15 +22,15 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
-using MediaPortal.Extensions.OnlineLibraries;
 using MediaPortal.Common.MediaManagement.MLQueries;
+using MediaPortal.Extensions.OnlineLibraries;
+using System;
+using System.Collections.Generic;
 
 namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
 {
@@ -73,10 +73,19 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
 
     public IFilter GetSearchFilter(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
     {
-      return GetMovieSearchFilter(extractedAspects);
+      if (!extractedAspects.ContainsKey(MovieAspect.ASPECT_ID))
+        return null;
+      return RelationshipExtractorUtils.CreateExternalItemFilter(extractedAspects, ExternalIdentifierAspect.TYPE_MOVIE);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<RelationshipItem> extractedLinkedAspects)
+    public ICollection<string> GetExternalIdentifiers(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
+    {
+      if (!extractedAspects.ContainsKey(MovieAspect.ASPECT_ID))
+        return new List<string>();
+      return RelationshipExtractorUtils.CreateExternalItemIdentifiers(extractedAspects, ExternalIdentifierAspect.TYPE_MOVIE);
+    }
+
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
@@ -88,9 +97,6 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
 
       MovieCollectionInfo collectionInfo = new MovieCollectionInfo();
       if (!collectionInfo.FromMetadata(aspects))
-        return false;
-
-      if (CheckCacheContains(collectionInfo))
         return false;
 
       if (!MovieMetadataExtractor.SkipOnlineSearches && collectionInfo.HasExternalId)
@@ -107,9 +113,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
       if (!collectionInfo.HasChanged)
         return false;
 
-      AddToCheckCache(collectionInfo);
-
-      extractedLinkedAspects = new List<RelationshipItem>();
+      extractedLinkedAspects = new List<IDictionary<Guid, IList<MediaItemAspect>>>();
       for (int i = 0; i < collectionInfo.Movies.Count; i++)
       {
         MovieInfo movieInfo = collectionInfo.Movies[i];
@@ -120,7 +124,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         MediaItemAspect.SetAttribute(movieAspects, MediaAspect.ATTR_ISVIRTUAL, true);
 
         if (movieAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
-          extractedLinkedAspects.Add(new RelationshipItem(movieAspects, Guid.Empty, Role, LinkedRole));
+          extractedLinkedAspects.Add(movieAspects);
       }
       return extractedLinkedAspects.Count > 0;
     }
@@ -158,10 +162,6 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         index = movieInfo.ReleaseDate.Value.Year;
       }
       return index >= 0;
-    }
-
-    public void CacheExtractedItem(Guid extractedItemId, IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
-    {
     }
 
     internal static ILogger Logger
