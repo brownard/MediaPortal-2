@@ -404,7 +404,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
         {
           await Activated.WaitAsync();
           // ReSharper disable PossibleMultipleEnumeration
-          return _importResultHandler.UpdateMediaItem(parentDirectoryId, path, updatedAspects, isRefresh, jobInfo.BasePath, cancelToken);
+          return _importResultHandler.UpdateMediaItem(parentDirectoryId, path, updatedAspects, isRefresh, jobInfo.BasePath);
           // ReSharper restore PossibleMultipleEnumeration
         }
         catch (DisconnectedException)
@@ -423,7 +423,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
         {
           await Activated.WaitAsync();
           // ReSharper disable PossibleMultipleEnumeration
-          return _importResultHandler.UpdateMediaItem(parentDirectoryId, path, mediaItemId, updatedAspects, isRefresh, jobInfo.BasePath, cancelToken);
+          return _importResultHandler.UpdateMediaItem(parentDirectoryId, path, mediaItemId, updatedAspects, isRefresh, jobInfo.BasePath);
           // ReSharper restore PossibleMultipleEnumeration
         }
         catch (DisconnectedException)
