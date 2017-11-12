@@ -271,6 +271,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       ServiceRegistration.Get<ILogger>().Info(
         $"{BLOCK_NAME}: Added {relations.Count} relations ({newMediaItems.Count} new) to {GetMediaItemName(aspects)} ({mediaItemId})");
 
+      TransferTransientAspects(aspects, newMediaItems);
       return newMediaItems;
     }
 
@@ -362,6 +363,27 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
           result.AddRange(aspect);
 
       return result;
+    }
+
+    private static void TransferTransientAspects(IDictionary<Guid, IList<MediaItemAspect>> aspects, IEnumerable<MediaItem> destinationMediaItems)
+    {
+      var transientAspects = MediaItemAspect.GetAspects(aspects).Where(mia => mia.Metadata.IsTransientAspect);
+      foreach (MediaItemAspect aspect in transientAspects)
+      {
+        SingleMediaItemAspect singleAspect = aspect as SingleMediaItemAspect;
+        if (singleAspect != null)
+        {
+          foreach (MediaItem destination in destinationMediaItems)
+            MediaItemAspect.SetAspect(destination.Aspects, singleAspect);
+        }
+        else
+        {
+          MultipleMediaItemAspect multiAspect = aspect as MultipleMediaItemAspect;
+          if (multiAspect != null)
+            foreach (MediaItem destination in destinationMediaItems)
+              MediaItemAspect.AddOrUpdateAspect(destination.Aspects, multiAspect);
+        }
+      }
     }
 
     private static IEnumerable<IRelationshipRoleExtractor> GetRoleExtractors(IDictionary<Guid, IList<MediaItemAspect>> aspects)

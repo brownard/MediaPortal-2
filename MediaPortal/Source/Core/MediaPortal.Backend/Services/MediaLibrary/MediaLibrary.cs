@@ -1620,32 +1620,6 @@ namespace MediaPortal.Backend.Services.MediaLibrary
       return false;
     }
 
-    private void TransferTransientAspects(IEnumerable<MediaItemAspect> sourceMediaItemAspects, MediaItem destinationMediaItem)
-    {
-      foreach (MediaItemAspect mia in sourceMediaItemAspects)
-      {
-        if (mia.Metadata.IsTransientAspect)
-        {
-          if (!destinationMediaItem.Aspects.ContainsKey(mia.Metadata.AspectId))
-            destinationMediaItem.Aspects.Add(mia.Metadata.AspectId, new List<MediaItemAspect>());
-          destinationMediaItem.Aspects[mia.Metadata.AspectId].Add(mia);
-        }
-      }
-    }
-
-    private IDictionary<Guid, IList<MediaItemAspect>> ConvertAspects(IEnumerable<MediaItemAspect> mediaItemAspects)
-    {
-      IDictionary<Guid, IList<MediaItemAspect>> extractedAspects = new Dictionary<Guid, IList<MediaItemAspect>>();
-      foreach (MediaItemAspect aspect in mediaItemAspects)
-      {
-        if (!extractedAspects.ContainsKey(aspect.Metadata.AspectId))
-          extractedAspects.Add(aspect.Metadata.AspectId, new List<MediaItemAspect>());
-
-        extractedAspects[aspect.Metadata.AspectId].Add(aspect);
-      }
-      return extractedAspects;
-    }
-
     private Guid AddOrUpdateMediaItem(Guid parentDirectoryId, string systemId, ResourcePath path, Guid? existingMediaItemId, Guid? newMediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, bool isRefresh)
     {
       Stopwatch swImport = new Stopwatch();
@@ -1661,7 +1635,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
         if (isRefresh)
         {
           Guid? refreshMediaItemId = existingMediaItemId.HasValue ? existingMediaItemId : GetMediaItemId(transaction, systemId, path);
-          IDictionary<Guid, IList<MediaItemAspect>> extractedAspects = ConvertAspects(mediaItemAspects);
+          IDictionary<Guid, IList<MediaItemAspect>> extractedAspects = MediaItemAspect.GetAspects(mediaItemAspects);
           bool dirty = false;
           if (extractedAspects.ContainsKey(ImporterAspect.ASPECT_ID))
             dirty = extractedAspects[ImporterAspect.ASPECT_ID][0].GetAttributeValue<bool>(ImporterAspect.ATTR_DIRTY);
@@ -1732,7 +1706,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
 
           //  MediaLibraryMessaging.SendMediaItemAddedOrUpdatedMessage(item);
           //}
-          MediaLibraryMessaging.SendMediaItemAddedOrUpdatedMessage(new MediaItem(mediaItemId.Value, ConvertAspects(mediaItemAspects)));
+          MediaLibraryMessaging.SendMediaItemAddedOrUpdatedMessage(new MediaItem(mediaItemId.Value, MediaItemAspect.GetAspects(mediaItemAspects)));
           Logger.Info("Media item {0} with name {1} ({2}) imported ({3} ms)", mediaItemId.Value, name, Path.GetFileName(path.FileName), swImport.ElapsedMilliseconds);
         }
         return mediaItemId.Value;
@@ -1747,7 +1721,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
 
     public IList<MediaItem> ReconcileMediaItem(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems)
     {
-      IDictionary<Guid, IList<MediaItemAspect>> aspects = ConvertAspects(mediaItemAspects);
+      IDictionary<Guid, IList<MediaItemAspect>> aspects = MediaItemAspect.GetAspects(mediaItemAspects);
 
       bool isVirtual;
       if (!MediaItemAspect.TryGetAttribute(aspects, MediaAspect.ATTR_ISVIRTUAL, out isVirtual))
@@ -2048,7 +2022,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
 
     protected virtual Guid? MergeWithExisting(ISQLDatabase database, ITransaction transaction, Guid? extractedMediaItemId, IEnumerable<MediaItemAspect> extractedAspectList, MediaItemAspect extractedProviderResourceAspects)
     {
-      IDictionary<Guid, IList<MediaItemAspect>> extractedAspects = ConvertAspects(extractedAspectList);
+      IDictionary<Guid, IList<MediaItemAspect>> extractedAspects = MediaItemAspect.GetAspects(extractedAspectList);
       IList<MultipleMediaItemAspect> providerResourceAspects = null;
       if (MediaItemAspect.TryGetAspects(extractedAspects, ProviderResourceAspect.Metadata, out providerResourceAspects))
       {
