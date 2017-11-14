@@ -96,7 +96,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       new ExecutionDataflowBlockOptions { CancellationToken = ct, BoundedCapacity = 1 },
       new ExecutionDataflowBlockOptions { CancellationToken = ct, MaxDegreeOfParallelism = Environment.ProcessorCount * 5, BoundedCapacity = 50 },
       new ExecutionDataflowBlockOptions { CancellationToken = ct },
-      BLOCK_NAME, false, parentImportJobController)
+      BLOCK_NAME, true, parentImportJobController)
     {
       _relationshipCache = new RelationshipCache();
       _ct = ct;
@@ -119,9 +119,8 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     {
       try
       {
-        //It's possible for the media item id to be empty, particularly in the case of subtitles where no mergable media item
-        //was found in the database. Don't process the item if that is the case
-        if (importResource.MediaItemId.HasValue && importResource.MediaItemId.Value != Guid.Empty)
+        //Check if we can extract relations for this import resource
+        if (await ValidateImportResource(importResource))
         {
           //Cache the resource as a matching item might get extracted later, e.g. the SeriesEpisodeExtractor
           //might extract a matching episode and we should avoid processing the item again.
@@ -146,6 +145,30 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       }
     }
 
+    /// <summary>
+    /// Determines whether the specified <paramref name="importResource"/> has a valid media item id, and in the case
+    /// of an import resource restored from disk attempts to load its aspects from the media library.
+    /// </summary>
+    /// <param name="importResource">The <see cref="PendingImportResourceNewGen"/> to validate.</param>
+    /// <returns>True if the import resource has a valid media item id and aspects.</returns>
+    private async Task<bool> ValidateImportResource(PendingImportResourceNewGen importResource)
+    {
+      //It's possible for the media item id to be empty, particularly in the case of subtitles where no mergable media item
+      //was found in the database. Don't process the item if that is the case
+      if (!importResource.MediaItemId.HasValue || importResource.MediaItemId.Value == Guid.Empty)
+        return false;
+
+      //Can be the case if this import resource was restored from disk, try and load the aspects from the DB
+      if (importResource.Aspects == null)
+      {
+        MediaItem loadItem = await LoadLocalItem(importResource.MediaItemId.Value, null, await GetAllManagedMediaItemAspectTypes());
+        if (loadItem == null)
+          return false;
+        importResource.Aspects = loadItem.Aspects;
+      }
+      return true;
+    }
+
     #endregion
 
     #region Protected methods
@@ -159,6 +182,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     /// <returns></returns>
     protected async Task ExtractRelationships(Guid mediaItemId, IDictionary<Guid, IList<MediaItemAspect>> aspects, bool isRefresh)
     {
+      //Get the relations
       ICollection<ExtractedRelation> relations = ExtractRelationshipMetadata(mediaItemId, aspects, isRefresh);
 
       if (relations.Count == 0)
@@ -364,7 +388,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
 
       IList<MediaItemAspect> aspect;
       foreach (Guid aspectId in RECONCILE_MIA_ID_ENUMERATION)
-        if (aspects.TryGetValue(RelationshipAspect.ASPECT_ID, out aspect))
+        if (aspects.TryGetValue(aspectId, out aspect))
           result.AddRange(aspect);
 
       return result;
