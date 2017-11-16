@@ -36,7 +36,7 @@ using System.Linq;
 
 namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 {
-  class SeriesProductionRelationshipExtractor : ISeriesRelationshipExtractor, IRelationshipRoleExtractor
+  class SeriesProductionRelationshipExtractor : IRelationshipRoleExtractor
   {
     private static readonly Guid[] ROLE_ASPECTS = { SeriesAspect.ASPECT_ID };
     private static readonly Guid[] LINKED_ROLE_ASPECTS = { CompanyAspect.ASPECT_ID };

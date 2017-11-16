@@ -32,7 +32,7 @@ using System.Collections.Generic;
 
 namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 {
-  class SeasonSeriesRelationshipExtractor : ISeriesRelationshipExtractor, IRelationshipRoleExtractor
+  class SeasonSeriesRelationshipExtractor : IRelationshipRoleExtractor
   {
     private static readonly Guid[] ROLE_ASPECTS = { SeasonAspect.ASPECT_ID };
     private static readonly Guid[] LINKED_ROLE_ASPECTS = { SeriesAspect.ASPECT_ID };

@@ -215,15 +215,6 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
                 fanartHandler.ClearCache();
             }
             break;
-          case ImporterWorkerMessaging.MessageType.ImportCompleted:
-            if (Interlocked.Decrement(ref _importerCount) == 0)
-            {
-              IRelationshipExtractor relationshipExtractor;
-              if (ServiceRegistration.Get<IMediaAccessor>().LocalRelationshipExtractors.TryGetValue(AudioRelationshipExtractor.METADATAEXTRACTOR_ID, out relationshipExtractor))
-                foreach (IAudioRelationshipExtractor extractor in relationshipExtractor.RoleExtractors)
-                  extractor.ClearCache();
-            }
-            break;
         }
       }
     }
@@ -540,7 +531,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
               trackInfo.Album = !string.IsNullOrEmpty(tag.Tag.Album) ? tag.Tag.Album.Trim() : null;
               if (!string.IsNullOrEmpty(tag.Tag.AlbumSort))
               {
-                IAudioRelationshipExtractor.StoreAlbum(extractedAspectData, tag.Tag.Album, tag.Tag.AlbumSort.Trim());
+                AudioRelationshipExtractor.StoreAlbum(extractedAspectData, tag.Tag.Album, tag.Tag.AlbumSort.Trim());
               }
 
               if (trackNo.HasValue)
@@ -777,12 +768,12 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
           //Store metadata for the Relationship Extractors
           if (IncludeArtistDetails)
           {
-            IAudioRelationshipExtractor.StorePersons(extractedAspectData, trackInfo.Artists, false);
-            IAudioRelationshipExtractor.StorePersons(extractedAspectData, trackInfo.AlbumArtists, true);
+            AudioRelationshipExtractor.StorePersons(extractedAspectData, trackInfo.Artists, false);
+            AudioRelationshipExtractor.StorePersons(extractedAspectData, trackInfo.AlbumArtists, true);
           }
           if (IncludeComposerDetails)
           {
-            IAudioRelationshipExtractor.StorePersons(extractedAspectData, trackInfo.Composers, false);
+            AudioRelationshipExtractor.StorePersons(extractedAspectData, trackInfo.Composers, false);
           }
         }
 

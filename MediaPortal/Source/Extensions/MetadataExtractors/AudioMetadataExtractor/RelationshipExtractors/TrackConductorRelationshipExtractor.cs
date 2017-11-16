@@ -35,7 +35,7 @@ using System.Linq;
 
 namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
 {
-  class TrackConductorRelationshipExtractor : IAudioRelationshipExtractor, IRelationshipRoleExtractor
+  class TrackConductorRelationshipExtractor : IRelationshipRoleExtractor
   {
     private static readonly Guid[] ROLE_ASPECTS = { AudioAspect.ASPECT_ID };
     private static readonly Guid[] LINKED_ROLE_ASPECTS = { PersonAspect.ASPECT_ID };

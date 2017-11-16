@@ -34,7 +34,7 @@ using System.Collections.Generic;
 
 namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
 {
-  class MovieCollectionMovieRelationshipExtractor : IMovieRelationshipExtractor, IRelationshipRoleExtractor
+  class MovieCollectionMovieRelationshipExtractor : IRelationshipRoleExtractor
   {
     private static readonly Guid[] ROLE_ASPECTS = { MovieCollectionAspect.ASPECT_ID };
     private static readonly Guid[] LINKED_ROLE_ASPECTS = { MovieAspect.ASPECT_ID };

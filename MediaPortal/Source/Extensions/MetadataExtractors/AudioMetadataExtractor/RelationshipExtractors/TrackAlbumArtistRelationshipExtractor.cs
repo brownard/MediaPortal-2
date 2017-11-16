@@ -36,7 +36,7 @@ using System.Linq;
 
 namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
 {
-  class TrackAlbumArtistRelationshipExtractor : IAudioRelationshipExtractor, IRelationshipRoleExtractor
+  class TrackAlbumArtistRelationshipExtractor : IRelationshipRoleExtractor
   {
     private static readonly Guid[] ROLE_ASPECTS = { AudioAspect.ASPECT_ID };
     private static readonly Guid[] LINKED_ROLE_ASPECTS = { PersonAspect.ASPECT_ID };
@@ -99,7 +99,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       if (!trackInfo.FromMetadata(aspects))
         return false;
 
-      UpdatePersons(aspects, trackInfo.AlbumArtists, true);
+      AudioRelationshipExtractor.UpdatePersons(aspects, trackInfo.AlbumArtists, true);
 
       int count = 0;
       if (!AudioMetadataExtractor.SkipOnlineSearches)

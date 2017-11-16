@@ -36,7 +36,7 @@ using System.Linq;
 
 namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 {
-  class SeriesEpisodeRelationshipExtractor : ISeriesRelationshipExtractor, IRelationshipRoleExtractor
+  class SeriesEpisodeRelationshipExtractor : IRelationshipRoleExtractor
   {
     private static readonly Guid[] ROLE_ASPECTS = { SeriesAspect.ASPECT_ID };
     private static readonly Guid[] LINKED_ROLE_ASPECTS = { EpisodeAspect.ASPECT_ID };
@@ -74,26 +74,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 
     public IFilter GetSearchFilter(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)
     {
-      SingleMediaItemAspect episodeAspect;
-      if (!MediaItemAspect.TryGetAspect(extractedAspects, EpisodeAspect.Metadata, out episodeAspect))
-        return null;
-
-      IFilter episodeFilter = RelationshipExtractorUtils.CreateExternalItemFilter(extractedAspects, ExternalIdentifierAspect.TYPE_EPISODE);
-      IFilter seriesFilter = RelationshipExtractorUtils.CreateExternalItemFilter(extractedAspects, ExternalIdentifierAspect.TYPE_SERIES);
-      if (seriesFilter == null)
-        return episodeFilter;
-
-      int? seasonNumber = episodeAspect.GetAttributeValue<int?>(EpisodeAspect.ATTR_SEASON);
-      IFilter seasonNumberFilter = seasonNumber.HasValue ?
-        new RelationalFilter(EpisodeAspect.ATTR_SEASON, RelationalOperator.EQ, seasonNumber.Value) : null;
-
-      IEnumerable<int> episodeNumbers = episodeAspect.GetCollectionAttribute<int>(EpisodeAspect.ATTR_EPISODE);
-      IFilter episodeNumberFilter = episodeNumbers != null && episodeNumbers.Any() ?
-        new RelationalFilter(EpisodeAspect.ATTR_EPISODE, RelationalOperator.EQ, episodeNumbers.First()) : null;
-
-      seriesFilter = BooleanCombinationFilter.CombineFilters(BooleanOperator.And, seriesFilter, seasonNumberFilter, episodeNumberFilter);
-
-      return BooleanCombinationFilter.CombineFilters(BooleanOperator.Or, episodeFilter, seriesFilter);
+      return SeriesRelationshipExtractor.GetEpisodeSearchFilter(extractedAspects);
     }
 
     public ICollection<string> GetExternalIdentifiers(IDictionary<Guid, IList<MediaItemAspect>> extractedAspects)

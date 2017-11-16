@@ -36,7 +36,7 @@ using MediaPortal.Utilities.Collections;
 
 namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
 {
-  class AlbumLabelRelationshipExtractor : IAudioRelationshipExtractor, IRelationshipRoleExtractor
+  class AlbumLabelRelationshipExtractor : IRelationshipRoleExtractor
   {
     private static readonly Guid[] ROLE_ASPECTS = { AudioAlbumAspect.ASPECT_ID };
     private static readonly Guid[] LINKED_ROLE_ASPECTS = { CompanyAspect.ASPECT_ID };

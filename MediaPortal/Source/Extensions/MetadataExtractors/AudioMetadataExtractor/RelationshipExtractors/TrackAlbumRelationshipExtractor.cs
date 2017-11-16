@@ -32,7 +32,7 @@ using System.Collections.Generic;
 
 namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
 {
-  class TrackAlbumRelationshipExtractor : IAudioRelationshipExtractor, IRelationshipRoleExtractor
+  class TrackAlbumRelationshipExtractor : IRelationshipRoleExtractor
   {
     private static readonly Guid[] ROLE_ASPECTS = { AudioAspect.ASPECT_ID };
     private static readonly Guid[] LINKED_ROLE_ASPECTS = { AudioAlbumAspect.ASPECT_ID };
@@ -91,22 +91,12 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
 
       IList<Guid> linkedIds;
       Guid albumId = BaseInfo.TryGetLinkedIds(aspects, LinkedRole, out linkedIds) ? linkedIds[0] : Guid.Empty;
-
-      AlbumInfo cachedAlbum;
-      Guid cachedId;
+      
       AlbumInfo albumInfo = trackInfo.CloneBasicInstance<AlbumInfo>();
-      UpdateAlbum(aspects, albumInfo);
-      UpdatePersons(aspects, albumInfo.Artists, true);
-      if (TryGetInfoFromCache(albumInfo, out cachedAlbum, out cachedId))
-      {
-        albumInfo = cachedAlbum;
-        if (albumId == Guid.Empty)
-          albumId = cachedId;
-      }
-      else if (!AudioMetadataExtractor.SkipOnlineSearches)
-      {
+      AudioRelationshipExtractor.UpdateAlbum(aspects, albumInfo);
+      AudioRelationshipExtractor.UpdatePersons(aspects, albumInfo.Artists, true);
+      if (!AudioMetadataExtractor.SkipOnlineSearches)
         OnlineMatcherService.Instance.UpdateAlbum(albumInfo, false, importOnly);
-      }
 
       if (!BaseInfo.HasRelationship(aspects, LinkedRole))
         albumInfo.HasChanged = true; //Force save if no relationship exists
@@ -120,9 +110,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
 
       bool trackVirtual = true;
       if (MediaItemAspect.TryGetAttribute(aspects, MediaAspect.ATTR_ISVIRTUAL, false, out trackVirtual))
-      {
         MediaItemAspect.SetAttribute(albumAspects, MediaAspect.ATTR_ISVIRTUAL, trackVirtual);
-      }
 
       byte[] data;
       if (MediaItemAspect.TryGetAttribute(aspects, ThumbnailLargeAspect.ATTR_THUMBNAIL, out data))
@@ -132,7 +120,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       }
 
       if (importOnly)
-        StorePersons(albumAspects, albumInfo.Artists, true);
+        AudioRelationshipExtractor.StorePersons(albumAspects, albumInfo.Artists, true);
 
       if (!albumAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
         return false;

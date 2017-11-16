@@ -128,15 +128,6 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
                 fanartHandler.ClearCache();
             }
             break;
-          case ImporterWorkerMessaging.MessageType.ImportCompleted:
-            if (Interlocked.Decrement(ref _importerCount) == 0)
-            {
-              IRelationshipExtractor relationshipExtractor;
-              if (ServiceRegistration.Get<IMediaAccessor>().LocalRelationshipExtractors.TryGetValue(MovieRelationshipExtractor.METADATAEXTRACTOR_ID, out relationshipExtractor))
-                foreach (IMovieRelationshipExtractor extractor in relationshipExtractor.RoleExtractors)
-                  extractor.ClearCache();
-            }
-            break;
         }
       }
     }

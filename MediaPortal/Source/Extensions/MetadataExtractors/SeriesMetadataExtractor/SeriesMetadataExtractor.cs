@@ -22,22 +22,22 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
-using MediaPortal.Common.ResourceAccess;
-using MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor.NameMatchers;
-using MediaPortal.Extensions.OnlineLibraries;
-using MediaPortal.Common.Services.Settings;
-using MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor.Settings;
-using MediaPortal.Common.Messaging;
-using System.Threading;
 using MediaPortal.Common.MediaManagement.TransientAspects;
+using MediaPortal.Common.Messaging;
+using MediaPortal.Common.ResourceAccess;
+using MediaPortal.Common.Services.Settings;
+using MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor.NameMatchers;
+using MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor.Settings;
+using MediaPortal.Extensions.OnlineLibraries;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 {
@@ -132,15 +132,6 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
                 fanartHandler.ClearCache();
             }
             break;
-          case ImporterWorkerMessaging.MessageType.ImportCompleted:
-            if (Interlocked.Decrement(ref _importerCount) == 0)
-            {
-              IRelationshipExtractor relationshipExtractor;
-              if (ServiceRegistration.Get<IMediaAccessor>().LocalRelationshipExtractors.TryGetValue(SeriesRelationshipExtractor.METADATAEXTRACTOR_ID, out relationshipExtractor))
-                foreach (ISeriesRelationshipExtractor extractor in relationshipExtractor.RoleExtractors)
-                  extractor.ClearCache();
-            }
-            break;
         }
       }
     }
@@ -203,7 +194,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
       {
         episodeInfo.FromMetadata(extractedAspectData);
       }
-      ISeriesRelationshipExtractor.UpdateEpisodeSeries(extractedAspectData, episodeInfo);
+      SeriesRelationshipExtractor.UpdateEpisodeSeries(extractedAspectData, episodeInfo);
       if (!episodeInfo.IsBaseInfoPresent)
       {
         string title = null;
