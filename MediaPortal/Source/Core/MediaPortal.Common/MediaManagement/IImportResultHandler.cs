@@ -53,15 +53,16 @@ namespace MediaPortal.Common.MediaManagement
     /// <returns>Id of the media item which has been added or updated.</returns>
     /// <exception cref="DisconnectedException">If the connection to the media library was disconnected.</exception>
     Guid UpdateMediaItem(Guid parentDirectoryId, ResourcePath path, Guid mediaItemId, IEnumerable<MediaItemAspect> updatedAspects, bool isRefresh, ResourcePath basePath);
-    
+
     /// <summary>
-    /// 
+    /// Reconciles the relationshipItems and adds a RelationshipAspect for each reconciled item to aspects and adds them to
+    /// the database.
     /// </summary>
-    /// <param name="mediaItemId"></param>
-    /// <param name="mediaItemAspects"></param>
-    /// <param name="relationshipItems"></param>
+    /// <param name="mediaItemId">Id of the media item to add the relationships to.</param>
+    /// <param name="mediaItemAspects">Aspects to add the relationships to.</param>
+    /// <param name="relationshipItems">Enumeration of relations to reconcile and add relationships for.</param>
     /// <returns></returns>
-    IList<MediaItem> ReconcileMediaItem(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems);
+    IList<MediaItem> ReconcileMediaItemRelationships(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems);
 
     /// <summary>
     /// Deletes the media item of the given location located on the local system.

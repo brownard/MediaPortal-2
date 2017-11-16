@@ -27,7 +27,6 @@ using MediaPortal.Common.General;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.Helpers;
-using MediaPortal.Common.MediaManagement.MLQueries;
 using MediaPortal.Common.Messaging;
 using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Common.Services.MediaManagement;
@@ -156,6 +155,18 @@ namespace MediaPortal.UI.Services.ServerCommunication
         }
       }
 
+      public IList<MediaItem> ReconcileMediaItemRelationships(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems)
+      {
+        try
+        {
+          return _contentDirectory.ReconcileMediaItemRelationships(mediaItemId, mediaItemAspects, relationshipItems);
+        }
+        catch (Exception)
+        {
+          throw new DisconnectedException();
+        }
+      }
+
       public void DeleteMediaItem(ResourcePath path)
       {
         try
@@ -182,16 +193,6 @@ namespace MediaPortal.UI.Services.ServerCommunication
 
       public void MarkUpdatableMediaItems()
       {
-      }
-
-      public IList<MediaItem> Search(MediaItemQuery query, bool filterOnlyOnline, Guid? userProfileId, bool includeVirtual)
-      {
-        throw new NotImplementedException();
-      }
-
-      public IList<MediaItem> ReconcileMediaItem(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems)
-      {
-        throw new NotImplementedException();
       }
 
       #endregion

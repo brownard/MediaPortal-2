@@ -77,8 +77,6 @@ namespace MediaPortal.Common.MediaManagement
     /// <exception cref="DisconnectedException">If the connection to the media library was disconnected.</exception>
     void MarkUpdatableMediaItems();
 
-    IList<MediaItem> Search(MediaItemQuery query, bool filterOnlyOnline, Guid? userProfileId, bool includeVirtual);
-
     /// <summary>
     /// Loads the creation dates of all managed MIAs in the MediaLibrary
     /// </summary>

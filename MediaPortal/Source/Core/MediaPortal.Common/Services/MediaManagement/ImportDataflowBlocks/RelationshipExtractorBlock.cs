@@ -158,7 +158,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       if (!importResource.MediaItemId.HasValue || importResource.MediaItemId.Value == Guid.Empty)
         return false;
 
-      //Can be the case if this import resource was restored from disk, try and load the aspects from the DB
+      //Aspects will be null if this import resource was restored from disk, try and load the aspects from the DB
       if (importResource.Aspects == null)
       {
         MediaItem loadItem = await LoadLocalItem(importResource.MediaItemId.Value, null, await GetAllManagedMediaItemAspectTypes());
@@ -281,8 +281,8 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
 
         //Add new relations to the MediaLibrary and update the relationship aspects of the parent item.
         //The MediaLibrary will handle adding the relationship aspects for the new relations. 
-        newMediaItems = await ReconcileMediaItem(mediaItemId, reconcileAspects,
-          newRelations.Select(r => new RelationshipItem(r.Aspects, r.Extractor.Role, r.Extractor.LinkedRole)));
+        newMediaItems = await ReconcileMediaItemRelationships(mediaItemId, reconcileAspects,
+          newRelations.Select(r => new RelationshipItem(r.Extractor.Role, r.Extractor.LinkedRole, r.Aspects)));
 
         //Cache all newly added/updated relations
         foreach (MediaItem updatedMediaItem in newMediaItems)

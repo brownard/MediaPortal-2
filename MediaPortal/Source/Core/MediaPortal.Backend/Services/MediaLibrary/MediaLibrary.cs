@@ -112,18 +112,6 @@ namespace MediaPortal.Backend.Services.MediaLibrary
         }
       }
 
-      public IList<MediaItem> Search(MediaItemQuery query, bool filterOnlyOnline, Guid? userProfileId, bool includeVirtual)
-      {
-        try
-        {
-          return _parent.Search(query, filterOnlyOnline, userProfileId, includeVirtual);
-        }
-        catch (Exception)
-        {
-          throw new DisconnectedException();
-        }
-      }
-
       public IDictionary<Guid, DateTime> GetManagedMediaItemAspectCreationDates()
       {
         try
@@ -200,11 +188,11 @@ namespace MediaPortal.Backend.Services.MediaLibrary
         }
       }
 
-      public IList<MediaItem> ReconcileMediaItem(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems)
+      public IList<MediaItem> ReconcileMediaItemRelationships(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems)
       {
         try
         {
-          return _parent.ReconcileMediaItem(mediaItemId, mediaItemAspects, relationshipItems);
+          return _parent.ReconcileMediaItemRelationships(mediaItemId, mediaItemAspects, relationshipItems);
         }
         catch (Exception)
         {
@@ -1719,7 +1707,8 @@ namespace MediaPortal.Backend.Services.MediaLibrary
       }
     }
 
-    public IList<MediaItem> ReconcileMediaItem(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems)
+    public IList<MediaItem> ReconcileMediaItemRelationships(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects,
+      IEnumerable<RelationshipItem> relationshipItems)
     {
       IDictionary<Guid, IList<MediaItemAspect>> aspects = MediaItemAspect.GetAspects(mediaItemAspects);
 
@@ -1762,7 +1751,8 @@ namespace MediaPortal.Backend.Services.MediaLibrary
             Logger.Debug("Adding new media item for extracted item {0}", linkedId);
             bool merged;
             IEnumerable<MediaItemAspect> extractedAspects = item.Aspects.Values.SelectMany(x => x);
-            linkedId = AddOrUpdateMediaItem(database, transaction, Guid.Empty, _localSystemId, VirtualResourceProvider.ToResourcePath(linkedId), null, linkedId, extractedAspects, out merged);
+            linkedId = AddOrUpdateMediaItem(database, transaction, Guid.Empty, _localSystemId, VirtualResourceProvider.ToResourcePath(linkedId),
+              null, linkedId, extractedAspects, out merged);
             if (linkedId != Guid.Empty)
               result.Add(new MediaItem(linkedId, item.Aspects));
           }

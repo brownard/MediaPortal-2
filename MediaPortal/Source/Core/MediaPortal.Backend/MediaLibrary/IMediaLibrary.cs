@@ -319,7 +319,7 @@ namespace MediaPortal.Backend.MediaLibrary
     /// <param name="relationshipItems"></param>
     /// <param name="updateParents"></param>
     /// <returns></returns>
-    IList<MediaItem> ReconcileMediaItem(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems);
+    IList<MediaItem> ReconcileMediaItemRelationships(Guid mediaItemId, IEnumerable<MediaItemAspect> mediaItemAspects, IEnumerable<RelationshipItem> relationshipItems);
 
     /// <summary>
     /// Writes some media item aspects of an existing media item to the media library.
