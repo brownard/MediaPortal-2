@@ -133,7 +133,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
         importResource.IsValid = false;
         return importResource;
       }
-      catch (TaskCanceledException)
+      catch (OperationCanceledException)
       {
         return importResource;
       }
@@ -201,7 +201,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     /// </summary>
     /// <remarks>
     /// Multiple tasks created by this method will be awaited with Task.WhenAll. To avoid that an AggregateException
-    /// is thrown with a TaskCancelledException for each task when an import is cancelled we swallow the OperationCanceledException,
+    /// is thrown with a OperationCanceledException for each task when an import is cancelled we swallow the OperationCanceledException,
     /// The exception is still thrown in the parent task where it is handled appropriately.
     /// </remarks>
     /// <param name="mediaItemId">The id of the media item.</param>
@@ -214,9 +214,9 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       {
         await ExtractRelationships(mediaItemId, aspects, isRefresh);
       }
-      catch (TaskCanceledException)
+      catch (OperationCanceledException)
       {
-        //Task cancelled is handled by the parent task, we don't want to
+        //Operation cancelled is handled by the parent task, we don't want to
         //throw it again from child tasks
       }
     }
