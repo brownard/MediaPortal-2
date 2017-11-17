@@ -513,11 +513,11 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       return Task.FromResult(ServiceRegistration.Get<IMediaAccessor>().IsStubResource(mediaItemAccessor));
     }
 
-    protected Task<IDictionary<Guid, IList<MediaItemAspect>>> ExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> existingAspects, 
-      bool importOnly, bool forceQuickMode)
+    protected Task<IDictionary<Guid, IList<MediaItemAspect>>> ExtractMetadata(IResourceAccessor mediaItemAccessor,
+      IDictionary<Guid, IList<MediaItemAspect>> existingAspects, bool forceQuickMode)
     {
       // ToDo: This is a workaround. MetadataExtractors should have an async ExtractMetadata method that returns a Task.
-      return Task.FromResult(ServiceRegistration.Get<IMediaAccessor>().ExtractMetadata(mediaItemAccessor, ImportJobInformation.MetadataExtractorIds, existingAspects, importOnly, forceQuickMode));
+      return Task.FromResult(ServiceRegistration.Get<IMediaAccessor>().ExtractMetadata(mediaItemAccessor, ImportJobInformation.MetadataExtractorIds, existingAspects, forceQuickMode));
     }
 
     protected Task<IEnumerable<IDictionary<Guid, IList<MediaItemAspect>>>> ExtractStubItems(IResourceAccessor mediaItemAccessor)

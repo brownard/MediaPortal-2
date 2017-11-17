@@ -414,7 +414,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       get { return _metadata; }
     }
 
-    public virtual bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly, bool forceQuickMode)
+    public virtual bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       IFileSystemResourceAccessor fsra = mediaItemAccessor as IFileSystemResourceAccessor;
       if (fsra == null)
@@ -426,17 +426,10 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       if (!HasAudioExtension(fileName) && !isStub)
         return false;
 
-      bool refresh = false;
-      if (extractedAspectData.ContainsKey(AudioAspect.ASPECT_ID))
-        refresh = true;
-
       try
       {
         TrackInfo trackInfo = new TrackInfo();
-        if (refresh)
-        {
-          trackInfo.FromMetadata(extractedAspectData);
-        }
+        trackInfo.FromMetadata(extractedAspectData);
         if (!trackInfo.IsBaseInfoPresent)
         {
           if (!isStub)
@@ -492,24 +485,21 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
               if (tag.Tag.Track != 0)
                 trackNo = tag.Tag.Track;
 
-              if (importOnly)
-              {
-                MultipleMediaItemAspect providerResourceAspect = MediaItemAspect.CreateAspect(extractedAspectData, ProviderResourceAspect.Metadata);
-                providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_INDEX, 0);
-                providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_TYPE, ProviderResourceAspect.TYPE_PRIMARY);
-                providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_SIZE, fsra.Size);
-                providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, fsra.CanonicalLocalResourcePath.Serialize());
-                // FIXME Albert: tag.MimeType returns taglib/mp3 for an MP3 file. This is not what we want and collides with the
-                // mimetype handling in the BASS player, which expects audio/xxx.
-                if (!string.IsNullOrWhiteSpace(tag.MimeType))
-                  providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_MIME_TYPE, tag.MimeType.Replace("taglib/", "audio/"));
+              MultipleMediaItemAspect providerResourceAspect = MediaItemAspect.CreateAspect(extractedAspectData, ProviderResourceAspect.Metadata);
+              providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_INDEX, 0);
+              providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_TYPE, ProviderResourceAspect.TYPE_PRIMARY);
+              providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_SIZE, fsra.Size);
+              providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, fsra.CanonicalLocalResourcePath.Serialize());
+              // FIXME Albert: tag.MimeType returns taglib/mp3 for an MP3 file. This is not what we want and collides with the
+              // mimetype handling in the BASS player, which expects audio/xxx.
+              if (!string.IsNullOrWhiteSpace(tag.MimeType))
+                providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_MIME_TYPE, tag.MimeType.Replace("taglib/", "audio/"));
 
-                MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_TITLE, title);
-                MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_SORT_TITLE, sortTitle);
-                MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_ISVIRTUAL, false);
-                MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_COMMENT, StringUtils.TrimToNull(tag.Tag.Comment));
-                MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_RECORDINGTIME, fsra.LastChanged);
-              }
+              MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_TITLE, title);
+              MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_SORT_TITLE, sortTitle);
+              MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_ISVIRTUAL, false);
+              MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_COMMENT, StringUtils.TrimToNull(tag.Tag.Comment));
+              MediaItemAspect.SetAttribute(extractedAspectData, MediaAspect.ATTR_RECORDINGTIME, fsra.LastChanged);
 
               trackInfo.TrackName = title;
               trackInfo.TrackNameSort = sortTitle;
@@ -669,7 +659,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
                 else
                 {
                   // In quick mode only allow thumbs taken from cache.
-                  bool cachedOnly = importOnly || forceQuickMode;
+                  bool cachedOnly = forceQuickMode;
 
                   // Thumbnail extraction
                   fileName = mediaItemAccessor.ResourcePathName;
@@ -693,7 +683,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
         }
 
         //Determine compilation
-        if (importOnly && !trackInfo.Compilation)
+        if (!trackInfo.Compilation)
         {
           if (trackInfo.AlbumArtists.Count > 0 &&
               (trackInfo.AlbumArtists[0].Name.IndexOf("Various", StringComparison.InvariantCultureIgnoreCase) >= 0 ||
@@ -708,13 +698,13 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
             var albumMediaItemDirectoryPath = ResourcePathHelper.Combine(mediaItemPath, "../");
             var artistMediaItemDirectoryPath = ResourcePathHelper.Combine(mediaItemPath, "../../");
 
-            if (albumMediaItemDirectoryPath.FileName != null && 
+            if (albumMediaItemDirectoryPath.FileName != null &&
               IsDiscFolder(trackInfo.Album, albumMediaItemDirectoryPath.FileName))
             {
               //Probably a CD folder so try next parent
               artistMediaItemDirectoryPath = ResourcePathHelper.Combine(mediaItemPath, "../../../");
             }
-            if (artistMediaItemDirectoryPath.FileName != null && 
+            if (artistMediaItemDirectoryPath.FileName != null &&
               artistMediaItemDirectoryPath.FileName.IndexOf("Compilation", StringComparison.InvariantCultureIgnoreCase) >= 0)
             {
               trackInfo.Compilation = true;
@@ -722,12 +712,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
           }
         }
 
-        if (!refresh)
-        {
-          //Check artists
-          trackInfo.Artists = GetCorrectedArtistsList(trackInfo, trackInfo.Artists);
-          trackInfo.AlbumArtists = GetCorrectedArtistsList(trackInfo, trackInfo.AlbumArtists);
-        }
+        //Check artists
+        trackInfo.Artists = GetCorrectedArtistsList(trackInfo, trackInfo.Artists);
+        trackInfo.AlbumArtists = GetCorrectedArtistsList(trackInfo, trackInfo.AlbumArtists);
 
         trackInfo.AssignNameId();
 
@@ -738,32 +725,22 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
           if (SkipOnlineSearches && !SkipFanArtDownload)
           {
             TrackInfo tempInfo = trackInfo.Clone();
-            OnlineMatcherService.Instance.FindAndUpdateTrack(tempInfo, importOnly);
+            OnlineMatcherService.Instance.FindAndUpdateTrack(tempInfo, false);
             trackInfo.CopyIdsFrom(tempInfo);
             trackInfo.HasChanged = tempInfo.HasChanged;
           }
           else if (!SkipOnlineSearches)
           {
-            OnlineMatcherService.Instance.FindAndUpdateTrack(trackInfo, importOnly);
+            OnlineMatcherService.Instance.FindAndUpdateTrack(trackInfo, false);
           }
         }
 
-        if (refresh)
-        {
-          if ((IncludeArtistDetails && !BaseInfo.HasRelationship(extractedAspectData, PersonAspect.ROLE_ARTIST) && trackInfo.Artists.Count > 0) ||
-            (IncludeArtistDetails && !BaseInfo.HasRelationship(extractedAspectData, PersonAspect.ROLE_ALBUMARTIST) && trackInfo.AlbumArtists.Count > 0) ||
-            (IncludeComposerDetails && !BaseInfo.HasRelationship(extractedAspectData, PersonAspect.ROLE_COMPOSER) && trackInfo.Composers.Count > 0))
-          {
-            trackInfo.HasChanged = true;
-          }
-        }
-
-        if (!trackInfo.HasChanged && !importOnly)
+        if (!trackInfo.HasChanged)
           return false;
 
         trackInfo.SetMetadata(extractedAspectData);
 
-        if (importOnly && !forceQuickMode)
+        if (!forceQuickMode)
         {
           //Store metadata for the Relationship Extractors
           if (IncludeArtistDetails)

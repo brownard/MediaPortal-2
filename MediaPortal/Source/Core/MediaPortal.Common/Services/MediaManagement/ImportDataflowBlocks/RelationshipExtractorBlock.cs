@@ -201,7 +201,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     /// </summary>
     /// <remarks>
     /// Multiple tasks created by this method will be awaited with Task.WhenAll. To avoid that an AggregateException
-    /// is thrown with a TaskCancelledException for each task when an import is cancelled we swallow the TaskCancelledException,
+    /// is thrown with a TaskCancelledException for each task when an import is cancelled we swallow the OperationCanceledException,
     /// The exception is still thrown in the parent task where it is handled appropriately.
     /// </remarks>
     /// <param name="mediaItemId">The id of the media item.</param>
@@ -248,7 +248,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     {
       int extractedCount = 0;
       IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedItems;
-      if (roleExtractor.TryExtractRelationships(aspects, !isRefresh, out extractedItems))
+      if (roleExtractor.TryExtractRelationships(aspects, false, out extractedItems))
       {
         extractedCount = extractedItems.Count;
         foreach (IDictionary<Guid, IList<MediaItemAspect>> extractedItem in extractedItems)
