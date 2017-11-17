@@ -376,10 +376,29 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
       if (!roleExtractor.TryGetRelationshipIndex(aspects, extractedAspects, out index))
         index = 0;
 
+      Guid role;
+      Guid linkedRole;
+      IDictionary<Guid, IList<MediaItemAspect>> roleAspects;
+      //Reverse the role, linked role and aspects if adding to the linked item
       if (addToLinkedItem)
-        MediaItemAspect.AddOrUpdateRelationship(extractedAspects, roleExtractor.LinkedRole, roleExtractor.Role, linkedId, false, index);
+      {
+        role = roleExtractor.LinkedRole;
+        linkedRole = roleExtractor.Role;
+        roleAspects = extractedAspects;
+      }
       else
-        MediaItemAspect.AddOrUpdateRelationship(aspects, roleExtractor.Role, roleExtractor.LinkedRole, linkedId, false, index);
+      {
+        role = roleExtractor.Role;
+        linkedRole = roleExtractor.LinkedRole;
+        roleAspects = aspects;
+      }
+
+      //Get whether this relationship will update the parent's play percentage
+      IRelationshipTypeRegistration rtr = ServiceRegistration.Get<IRelationshipTypeRegistration>();
+      RelationshipType rt = rtr.LocallyKnownRelationshipTypes.FirstOrDefault(r => r.ChildRole == role && r.ParentRole == linkedRole);
+      bool playable = rt != null ? rt.UpdatePlayPercentage : false;
+
+      MediaItemAspect.AddOrUpdateRelationship(roleAspects, role, linkedRole, linkedId, playable, index);
     }
 
     private static IList<MediaItemAspect> GetReconcileAspects(IDictionary<Guid, IList<MediaItemAspect>> aspects)
