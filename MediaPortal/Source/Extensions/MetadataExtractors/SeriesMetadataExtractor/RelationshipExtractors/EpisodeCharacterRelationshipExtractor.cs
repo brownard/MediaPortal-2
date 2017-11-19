@@ -91,14 +91,11 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
       return identifiers;
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
       if (!SeriesMetadataExtractor.IncludeCharacterDetails)
-        return false;
-
-      if (importOnly)
         return false;
 
       if (BaseInfo.IsVirtualResource(aspects))
@@ -111,7 +108,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
       int count = 0;
       if (!SeriesMetadataExtractor.SkipOnlineSearches)
       {
-        OnlineMatcherService.Instance.UpdateEpisodeCharacters(episodeInfo, importOnly);
+        OnlineMatcherService.Instance.UpdateEpisodeCharacters(episodeInfo, false);
         count = episodeInfo.Characters.Where(p => p.HasExternalId).Count();
         if (!episodeInfo.IsRefreshed)
           episodeInfo.HasChanged = true; //Force save to update external Ids for metadata found by other MDEs

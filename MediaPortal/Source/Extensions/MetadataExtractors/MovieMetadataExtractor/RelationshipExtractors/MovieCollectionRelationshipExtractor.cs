@@ -83,7 +83,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
       return RelationshipExtractorUtils.CreateExternalItemIdentifiers(extractedAspects, ExternalIdentifierAspect.TYPE_COLLECTION);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
@@ -104,7 +104,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
       if (!BaseInfo.HasRelationship(aspects, LinkedRole) && hasId)
         collectionInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!collectionInfo.HasChanged && !importOnly)
+      if (!collectionInfo.HasChanged)
         return false;
 
       extractedLinkedAspects = new List<IDictionary<Guid, IList<MediaItemAspect>>>();

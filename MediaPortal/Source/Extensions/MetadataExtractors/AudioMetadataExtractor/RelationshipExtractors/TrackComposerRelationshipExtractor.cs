@@ -85,14 +85,11 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       return RelationshipExtractorUtils.CreateExternalItemIdentifiers(extractedAspects, ExternalIdentifierAspect.TYPE_PERSON);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
       if (!AudioMetadataExtractor.IncludeComposerDetails)
-        return false;
-
-      if (importOnly)
         return false;
 
       if (BaseInfo.IsVirtualResource(aspects))
@@ -107,7 +104,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       int count = 0;
       if (!AudioMetadataExtractor.SkipOnlineSearches)
       {
-        OnlineMatcherService.Instance.UpdateTrackPersons(trackInfo, PersonAspect.OCCUPATION_COMPOSER, false, importOnly);
+        OnlineMatcherService.Instance.UpdateTrackPersons(trackInfo, PersonAspect.OCCUPATION_COMPOSER, false, false);
         count = trackInfo.Composers.Where(p => p.HasExternalId).Count();
         if (!trackInfo.IsRefreshed)
           trackInfo.HasChanged = true; //Force save to update external Ids for metadata found by other MDEs

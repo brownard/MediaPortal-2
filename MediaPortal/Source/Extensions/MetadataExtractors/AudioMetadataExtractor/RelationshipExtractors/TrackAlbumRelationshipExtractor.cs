@@ -81,7 +81,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       return RelationshipExtractorUtils.CreateExternalItemIdentifiers(extractedAspects, ExternalIdentifierAspect.TYPE_ALBUM);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
@@ -91,17 +91,17 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
 
       IList<Guid> linkedIds;
       Guid albumId = BaseInfo.TryGetLinkedIds(aspects, LinkedRole, out linkedIds) ? linkedIds[0] : Guid.Empty;
-      
+
       AlbumInfo albumInfo = trackInfo.CloneBasicInstance<AlbumInfo>();
       AudioRelationshipExtractor.UpdateAlbum(aspects, albumInfo);
       AudioRelationshipExtractor.UpdatePersons(aspects, albumInfo.Artists, true);
       if (!AudioMetadataExtractor.SkipOnlineSearches)
-        OnlineMatcherService.Instance.UpdateAlbum(albumInfo, false, importOnly);
+        OnlineMatcherService.Instance.UpdateAlbum(albumInfo, false, false);
 
       if (!BaseInfo.HasRelationship(aspects, LinkedRole))
         albumInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!albumInfo.HasChanged && !importOnly)
+      if (!albumInfo.HasChanged)
         return false;
 
       extractedLinkedAspects = new List<IDictionary<Guid, IList<MediaItemAspect>>>();
@@ -119,8 +119,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
         MediaItemAspect.SetAttribute(albumAspects, ThumbnailLargeAspect.ATTR_THUMBNAIL, data);
       }
 
-      if (importOnly)
-        AudioRelationshipExtractor.StorePersons(albumAspects, albumInfo.Artists, true);
+      AudioRelationshipExtractor.StorePersons(albumAspects, albumInfo.Artists, true);
 
       if (!albumAspects.ContainsKey(ExternalIdentifierAspect.ASPECT_ID))
         return false;

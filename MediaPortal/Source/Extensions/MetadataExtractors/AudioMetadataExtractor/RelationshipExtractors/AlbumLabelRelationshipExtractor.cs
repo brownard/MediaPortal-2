@@ -85,14 +85,11 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       return RelationshipExtractorUtils.CreateExternalItemIdentifiers(extractedAspects, ExternalIdentifierAspect.TYPE_COMPANY);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
       if (!AudioMetadataExtractor.IncludeMusicLabelDetails)
-        return false;
-
-      if (importOnly)
         return false;
 
       AlbumInfo albumInfo = new AlbumInfo();
@@ -102,7 +99,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.AudioMetadataExtractor
       int count = 0;
       if (!AudioMetadataExtractor.SkipOnlineSearches)
       {
-        OnlineMatcherService.Instance.UpdateAlbumCompanies(albumInfo, CompanyAspect.COMPANY_MUSIC_LABEL, importOnly);
+        OnlineMatcherService.Instance.UpdateAlbumCompanies(albumInfo, CompanyAspect.COMPANY_MUSIC_LABEL, false);
         count = albumInfo.MusicLabels.Where(c => c.HasExternalId).Count();
         if (!albumInfo.IsRefreshed)
           albumInfo.HasChanged = true; //Force save to update external Ids for metadata found by other MDEs

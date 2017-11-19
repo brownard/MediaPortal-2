@@ -85,12 +85,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
       return RelationshipExtractorUtils.CreateExternalItemIdentifiers(extractedAspects, ExternalIdentifierAspect.TYPE_MOVIE);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
-
-      if (importOnly)
-        return false;
 
       if (MovieMetadataExtractor.OnlyLocalMedia)
         return false;
@@ -100,7 +97,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         return false;
 
       if (!MovieMetadataExtractor.SkipOnlineSearches && collectionInfo.HasExternalId)
-        OnlineMatcherService.Instance.UpdateCollection(collectionInfo, true, importOnly);
+        OnlineMatcherService.Instance.UpdateCollection(collectionInfo, true, false);
 
       if (collectionInfo.Movies.Count == 0)
         return false;

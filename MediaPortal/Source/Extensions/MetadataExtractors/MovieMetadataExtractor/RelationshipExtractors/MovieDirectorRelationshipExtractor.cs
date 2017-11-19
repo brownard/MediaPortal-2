@@ -85,14 +85,11 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
       return RelationshipExtractorUtils.CreateExternalItemIdentifiers(extractedAspects, ExternalIdentifierAspect.TYPE_PERSON);
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
       if (!MovieMetadataExtractor.IncludeDirectorDetails)
-        return false;
-
-      if (importOnly)
         return false;
 
       if (BaseInfo.IsVirtualResource(aspects))
@@ -105,7 +102,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
       int count = 0;
       if (!MovieMetadataExtractor.SkipOnlineSearches)
       {
-        OnlineMatcherService.Instance.UpdatePersons(movieInfo, PersonAspect.OCCUPATION_DIRECTOR, importOnly);
+        OnlineMatcherService.Instance.UpdatePersons(movieInfo, PersonAspect.OCCUPATION_DIRECTOR, false);
         count = movieInfo.Directors.Where(p => p.HasExternalId).Count();
         if (!movieInfo.IsRefreshed)
           movieInfo.HasChanged = true; //Force save to update external Ids for metadata found by other MDEs

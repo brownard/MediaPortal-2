@@ -111,7 +111,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
       return seasonIdentifiers;
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
@@ -121,7 +121,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 
       SeasonInfo seasonInfo = episodeInfo.CloneBasicInstance<SeasonInfo>();
       if (!SeriesMetadataExtractor.SkipOnlineSearches)
-        OnlineMatcherService.Instance.UpdateSeason(seasonInfo, importOnly);
+        OnlineMatcherService.Instance.UpdateSeason(seasonInfo, false);
 
       if (seasonInfo.SeriesName.IsEmpty)
         return false;
@@ -129,7 +129,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
       if (!BaseInfo.HasRelationship(aspects, LinkedRole))
         seasonInfo.HasChanged = true; //Force save if no relationship exists
 
-      if (!seasonInfo.HasChanged && !importOnly)
+      if (!seasonInfo.HasChanged)
         return false;
 
       extractedLinkedAspects = new List<IDictionary<Guid, IList<MediaItemAspect>>>();

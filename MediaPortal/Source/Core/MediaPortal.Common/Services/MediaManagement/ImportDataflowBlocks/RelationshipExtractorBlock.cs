@@ -248,7 +248,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     {
       int extractedCount = 0;
       IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedItems;
-      if (roleExtractor.TryExtractRelationships(aspects, false, out extractedItems))
+      if (roleExtractor.TryExtractRelationships(aspects, out extractedItems))
       {
         extractedCount = extractedItems.Count;
         foreach (IDictionary<Guid, IList<MediaItemAspect>> extractedItem in extractedItems)

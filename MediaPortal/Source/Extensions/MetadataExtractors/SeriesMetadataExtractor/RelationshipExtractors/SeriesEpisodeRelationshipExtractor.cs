@@ -101,12 +101,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
       return episodeIdentifiers;
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
-
-      if (importOnly)
-        return false;
 
       if (SeriesMetadataExtractor.OnlyLocalMedia)
         return false;

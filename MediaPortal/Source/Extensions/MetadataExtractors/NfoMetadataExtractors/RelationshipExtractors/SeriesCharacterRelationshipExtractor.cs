@@ -89,14 +89,11 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors
       return identifiers;
     }
 
-    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, bool importOnly, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
+    public bool TryExtractRelationships(IDictionary<Guid, IList<MediaItemAspect>> aspects, out IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedLinkedAspects)
     {
       extractedLinkedAspects = null;
 
       if (!NfoSeriesMetadataExtractor.IncludeCharacterDetails)
-        return false;
-
-      if (!importOnly) //Only during import
         return false;
 
       SeriesInfo seriesInfo = new SeriesInfo();
