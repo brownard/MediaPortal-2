@@ -125,7 +125,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
         return false;
 
       extractedLinkedAspects = new List<IDictionary<Guid, IList<MediaItemAspect>>>();
-      foreach (CharacterInfo character in seriesInfo.Characters)
+      foreach (CharacterInfo character in seriesInfo.Characters.Take(SeriesMetadataExtractor.MaximumCharacterCount))
       {
         character.AssignNameId();
         character.HasChanged = seriesInfo.HasChanged;

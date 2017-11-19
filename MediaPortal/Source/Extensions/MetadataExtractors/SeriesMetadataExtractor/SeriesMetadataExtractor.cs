@@ -145,7 +145,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
     public static bool CacheOfflineFanArt { get; private set; }
     public static bool CacheLocalFanArt { get; private set; }
     public static bool IncludeActorDetails { get; private set; }
+    public static int MaximumActorCount { get; private set; }
     public static bool IncludeCharacterDetails { get; private set; }
+    public static int MaximumCharacterCount { get; private set; }
     public static bool IncludeDirectorDetails { get; private set; }
     public static bool IncludeWriterDetails { get; private set; }
     public static bool IncludeProductionCompanyDetails { get; private set; }
@@ -154,17 +156,20 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
 
     private void LoadSettings()
     {
-      SkipOnlineSearches = _settingWatcher.Settings.SkipOnlineSearches;
-      SkipFanArtDownload = _settingWatcher.Settings.SkipFanArtDownload;
-      CacheOfflineFanArt = _settingWatcher.Settings.CacheOfflineFanArt;
-      CacheLocalFanArt = _settingWatcher.Settings.CacheLocalFanArt;
-      IncludeActorDetails = _settingWatcher.Settings.IncludeActorDetails;
-      IncludeCharacterDetails = _settingWatcher.Settings.IncludeCharacterDetails;
-      IncludeDirectorDetails = _settingWatcher.Settings.IncludeDirectorDetails;
-      IncludeWriterDetails = _settingWatcher.Settings.IncludeWriterDetails;
-      IncludeProductionCompanyDetails = _settingWatcher.Settings.IncludeProductionCompanyDetails;
-      IncludeTVNetworkDetails = _settingWatcher.Settings.IncludeTVNetworkDetails;
-      OnlyLocalMedia = _settingWatcher.Settings.OnlyLocalMedia;
+      SeriesMetadataExtractorSettings settings = _settingWatcher.Settings;
+      SkipOnlineSearches = settings.SkipOnlineSearches;
+      SkipFanArtDownload = settings.SkipFanArtDownload;
+      CacheOfflineFanArt = settings.CacheOfflineFanArt;
+      CacheLocalFanArt = settings.CacheLocalFanArt;
+      IncludeActorDetails = settings.IncludeActorDetails;
+      MaximumActorCount = settings.MaximumActorCount;
+      IncludeCharacterDetails = settings.IncludeCharacterDetails;
+      MaximumCharacterCount = settings.MaximumCharacterCount;
+      IncludeDirectorDetails = settings.IncludeDirectorDetails;
+      IncludeWriterDetails = settings.IncludeWriterDetails;
+      IncludeProductionCompanyDetails = settings.IncludeProductionCompanyDetails;
+      IncludeTVNetworkDetails = settings.IncludeTVNetworkDetails;
+      OnlyLocalMedia = settings.OnlyLocalMedia;
     }
 
     private void SettingsChanged(object sender, EventArgs e)

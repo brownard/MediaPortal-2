@@ -122,7 +122,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor
         return false;
 
       extractedLinkedAspects = new List<IDictionary<Guid, IList<MediaItemAspect>>>();
-      foreach (PersonInfo person in episodeInfo.Actors)
+      foreach (PersonInfo person in episodeInfo.Actors.Take(SeriesMetadataExtractor.MaximumActorCount))
       {
         person.AssignNameId();
         person.HasChanged = episodeInfo.HasChanged;
