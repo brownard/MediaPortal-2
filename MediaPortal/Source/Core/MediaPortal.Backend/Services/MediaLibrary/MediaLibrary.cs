@@ -715,7 +715,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
     protected bool IsMiaTypeRequested(Guid maybeRequestedMIATypeId, IEnumerable<Guid> necessaryRequestedMIATypeIDs, IEnumerable<Guid> optionalRequestedMIATypeIDs)
     {
       return (necessaryRequestedMIATypeIDs != null && necessaryRequestedMIATypeIDs.Contains(maybeRequestedMIATypeId)) ||
-        (optionalRequestedMIATypeIDs != null && optionalRequestedMIATypeIDs.Contains(maybeRequestedMIATypeId)); 
+        (optionalRequestedMIATypeIDs != null && optionalRequestedMIATypeIDs.Contains(maybeRequestedMIATypeId));
     }
 
     protected ICollection<string> GetShareMediaCategories(ITransaction transaction, Guid shareId)
@@ -1633,7 +1633,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
 
             if (extractedAspects.ContainsKey(DirectoryAspect.ASPECT_ID))
               return refreshMediaItemId.Value;
-            
+
             //Set media item as refreshed
             using (transaction = database.BeginTransaction())
             {
@@ -1645,7 +1645,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
             }
 
             Logger.Info("Refreshed media item {0} ({1}) ({2} ms)", refreshMediaItemId.Value, Path.GetFileName(path.FileName), swImport.ElapsedMilliseconds);
-            MediaLibraryMessaging.SendMediaItemAddedOrUpdatedMessage(new MediaItem(refreshMediaItemId.Value, extractedAspects));
+            MediaLibraryMessaging.SendMediaItemsAddedOrUpdatedMessage(new MediaItem(refreshMediaItemId.Value, extractedAspects));
             return refreshMediaItemId.Value;
           }
         }
@@ -1662,39 +1662,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
 
         if (!merged)
         {
-          //MediaItem item = Search(new MediaItemQuery(null, GetManagedMediaItemAspectMetadata().Keys, new MediaItemIdFilter(mediaItemId.Value)), false, null, true).FirstOrDefault();
-          //if (item != null)
-          //{
-          //  //Transfer any transient aspects
-          //  TransferTransientAspects(mediaItemAspects, item);
-
-          //  bool cancel = cancelToken.IsCancellationRequested;
-          //  try
-          //  {
-          //    if (reconcile && !cancel)
-          //      Reconcile(item.MediaItemId, item.Aspects, isRefresh, cancelToken);
-          //  }
-          //  catch (Exception e)
-          //  {
-          //    Logger.Error("MediaLibrary: Error reconciling media item(s) in path '{0}'", e, (path != null ? path.Serialize() : null));
-          //    cancel = true;
-          //  }
-          //  if (cancelToken.IsCancellationRequested)
-          //    cancel = true;
-          //  if (cancel)
-          //  {
-          //    //Delete media item so it can be reimported later
-          //    transaction = database.BeginTransaction();
-          //    _relationshipManagement.DeleteMediaItemAndRelationships(transaction, mediaItemId.Value);
-          //    transaction.Commit();
-          //    MediaLibraryMessaging.SendMediaItemsDeletedMessage();
-          //    Logger.Info("Deleted media item {0} with name {1} ({2}) so it can be reimported ({3} ms)", mediaItemId.Value, name, Path.GetFileName(path.FileName), swImport.ElapsedMilliseconds);
-          //    return Guid.Empty;
-          //  }
-
-          //  MediaLibraryMessaging.SendMediaItemAddedOrUpdatedMessage(item);
-          //}
-          MediaLibraryMessaging.SendMediaItemAddedOrUpdatedMessage(new MediaItem(mediaItemId.Value, MediaItemAspect.GetAspects(mediaItemAspects)));
+          MediaLibraryMessaging.SendMediaItemsAddedOrUpdatedMessage(new MediaItem(mediaItemId.Value, MediaItemAspect.GetAspects(mediaItemAspects)));
           Logger.Info("Media item {0} with name {1} ({2}) imported ({3} ms)", mediaItemId.Value, name, Path.GetFileName(path.FileName), swImport.ElapsedMilliseconds);
         }
         return mediaItemId.Value;
@@ -1756,7 +1724,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
             if (linkedId != Guid.Empty)
               result.Add(new MediaItem(linkedId, item.Aspects));
           }
-          
+
           AddRelationshipAspect(itemMatcher, linkedId, aspects, item.Aspects);
         }
 
@@ -1772,9 +1740,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
         result.AddRange(items);
       }
 
-      foreach (MediaItem item in result)
-        MediaLibraryMessaging.SendMediaItemAddedOrUpdatedMessage(item);
-
+      MediaLibraryMessaging.SendMediaItemsAddedOrUpdatedMessage(result);
       return result;
     }
 
@@ -2407,7 +2373,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
               }
               Logger.Debug("MediaLibrary: Set parent media item {0} watch count = {1}", key.Key, valueParam.Value);
 
-              if(updateWatchedDate)
+              if (updateWatchedDate)
               {
                 keyParam.Value = UserDataKeysKnown.KEY_PLAY_COUNT;
                 valueParam.Value = key.Value > 0 ? UserDataKeysKnown.GetSortablePlayDateString(DateTime.Now) : null;
@@ -2703,7 +2669,7 @@ namespace MediaPortal.Backend.Services.MediaLibrary
     {
       _miaManagement.AddRelationship(relationshipType, isChildPrimaryResource);
     }
-    
+
     public ICollection<RelationshipType> GetManagedRelationshipTypes()
     {
       return _miaManagement.LocallyKnownRelationshipTypes;
