@@ -59,7 +59,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
     public static Guid METADATAEXTRACTOR_ID = new Guid(METADATAEXTRACTOR_ID_STR);
 
     protected const string MEDIA_CATEGORY_NAME_MOVIE = "Movie";
-    public const  double MINIMUM_HOUR_AGE_BEFORE_UPDATE = 0.5;
+    public const double MINIMUM_HOUR_AGE_BEFORE_UPDATE = 0.5;
 
     #endregion
 
@@ -181,7 +181,8 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
         return false;
 
       MovieInfo movieInfo = new MovieInfo();
-      movieInfo.FromMetadata(extractedAspectData);
+      if (extractedAspectData.ContainsKey(MovieAspect.ASPECT_ID))
+        movieInfo.FromMetadata(extractedAspectData);
 
       if (movieInfo.MovieName.IsEmpty)
       {
@@ -249,6 +250,14 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor
 
         /* Clear the names from unwanted strings */
         MovieNameMatcher.CleanupTitle(movieInfo);
+      }
+
+      if (!movieInfo.ReleaseDate.HasValue && !movieInfo.HasExternalId)
+      {
+        // When searching movie title, the year can be relevant for multiple titles with same name but different years
+        DateTime recordingDate;
+        if (MediaItemAspect.TryGetAttribute(extractedAspectData, MediaAspect.ATTR_RECORDINGTIME, out recordingDate))
+          movieInfo.ReleaseDate = recordingDate;
       }
 
       // Allow the online lookup to choose best matching language for metadata
