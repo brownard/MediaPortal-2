@@ -108,12 +108,6 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
           if (importResource.IsSingleResource && importResource.Aspects.ContainsKey(DirectoryAspect.ASPECT_ID))
             await DeleteUnderPath(importResource.PendingResourcePath);
         }
-
-        //if(importResource.ExistingAspects != null)
-          //importResource.ExistingAspects.Clear();
-        //if (importResource.Aspects != null)
-        //importResource.Aspects.Clear();
-        //importResource.IsValid = false;
         return importResource;
       }
       catch (TaskCanceledException)
