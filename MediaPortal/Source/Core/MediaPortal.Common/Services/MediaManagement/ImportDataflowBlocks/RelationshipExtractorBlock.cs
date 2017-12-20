@@ -122,12 +122,12 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
         //Check if we can extract relations for this import resource
         if (await ValidateImportResource(importResource))
         {
-          //Cache the resource as a matching item might get extracted later, e.g. the SeriesEpisodeExtractor
+          //Try to cache the resource as a matching item might get extracted later, e.g. the SeriesEpisodeExtractor
           //might extract a matching episode and we should avoid processing the item again.
-          await CacheImportResource(importResource);
-
-          //Extract the relationships and update the processed media item
-          await ExtractRelationships(importResource.MediaItemId.Value, importResource.Aspects, ImportJobInformation.JobType == ImportJobType.Refresh);
+          //If CacheImportResource returns false then an item with the same media item id has already been cached/processed
+          //so we can just ignore it, this can happen if an external subtitle is merged into an existing media item.
+          if (await CacheImportResource(importResource))
+            await ExtractRelationships(importResource.MediaItemId.Value, importResource.Aspects, ImportJobInformation.JobType == ImportJobType.Refresh);
         }
 
         importResource.IsValid = false;
@@ -342,19 +342,21 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     /// </summary>
     /// <param name="importResource">The <see cref="PendingImportResourceNewGen"/> containing the aspects to cache.</param>
     /// <returns>A Task that completes when the item has been cached.</returns>
-    protected async Task CacheImportResource(PendingImportResourceNewGen importResource)
+    protected async Task<bool> CacheImportResource(PendingImportResourceNewGen importResource)
     {
       MediaItem item = new MediaItem(importResource.MediaItemId.Value, importResource.Aspects);
+      bool result = false;
       await _cacheSync.WaitAsync();
       try
       {
         foreach (IRelationshipRoleExtractor roleExtractor in GetLinkedRoleExtractors(importResource.Aspects))
-          _relationshipCache.TryAddExternalItem(item, roleExtractor);
+          result |= _relationshipCache.TryAddExternalItem(item, roleExtractor);
       }
       finally
       {
         _cacheSync.Release();
       }
+      return result;
     }
 
     #endregion
