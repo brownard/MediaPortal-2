@@ -36,11 +36,10 @@ using System.Threading.Tasks.Dataflow;
 namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
 {
   /// <summary>
-  /// Takes MediaItems and extracts and saves their relations to the media library.
+  /// Takes MediaItems, extracts their relations, adds RelationshipAspects and reconciles the extracted relations in the media library.
   /// </summary>
   /// <remarks>
-  /// This DataflowBlock expects that the <see cref="PendingImportResourceNewGen"/>s passed to it have a valid media item id
-  /// and do not have a <c>null</c> value in their Aspects property.
+  /// This DataflowBlock expects that the <see cref="PendingImportResourceNewGen"/>s passed to it have a valid media item id.
   /// </remarks>
   class RelationshipExtractorBlock : ImporterWorkerDataflowBlockBase
   {
@@ -125,9 +124,10 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
           //Try to cache the resource as a matching item might get extracted later, e.g. the SeriesEpisodeExtractor
           //might extract a matching episode and we should avoid processing the item again.
           //If CacheImportResource returns false then an item with the same media item id has already been cached/processed
-          //so we can just ignore it, this can happen if an external subtitle is merged into an existing media item.
+          //so we can just ignore it, this can happen if an external subtitle is merged into an existing media item and therefore
+          //has the same media item id as the existing item.
           if (await CacheImportResource(importResource))
-            await ExtractRelationships(importResource.MediaItemId.Value, importResource.Aspects, ImportJobInformation.JobType == ImportJobType.Refresh);
+            await ExtractRelationships(importResource.MediaItemId.Value, importResource.Aspects);
         }
 
         importResource.IsValid = false;
@@ -178,12 +178,11 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     /// </summary>
     /// <param name="mediaItemId">The id of the media item.</param>
     /// <param name="aspects">The aspects of the media item.</param>
-    /// <param name="isRefresh">Whether this is a refresh import.</param>
     /// <returns></returns>
-    protected async Task ExtractRelationships(Guid mediaItemId, IDictionary<Guid, IList<MediaItemAspect>> aspects, bool isRefresh)
+    protected async Task ExtractRelationships(Guid mediaItemId, IDictionary<Guid, IList<MediaItemAspect>> aspects)
     {
       //Get the relations
-      ICollection<ExtractedRelation> relations = ExtractRelationshipMetadata(mediaItemId, aspects, isRefresh);
+      ICollection<ExtractedRelation> relations = ExtractRelationshipMetadata(mediaItemId, aspects);
 
       if (relations.Count == 0)
         return;
@@ -193,7 +192,7 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
 
       //Extract relationships for any new relations
       if (updatedMediaItems != null && updatedMediaItems.Count > 0)
-        await Task.WhenAll(updatedMediaItems.Select(i => ExtractChildRelationships(i.MediaItemId, i.Aspects, isRefresh)));
+        await Task.WhenAll(updatedMediaItems.Select(i => ExtractChildRelationships(i.MediaItemId, i.Aspects)));
     }
 
     /// <summary>
@@ -206,13 +205,12 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     /// </remarks>
     /// <param name="mediaItemId">The id of the media item.</param>
     /// <param name="aspects">The aspects of the media item.</param>
-    /// <param name="isRefresh">Whether this is a refresh import.</param>
     /// <returns></returns>
-    protected async Task ExtractChildRelationships(Guid mediaItemId, IDictionary<Guid, IList<MediaItemAspect>> aspects, bool isRefresh)
+    protected async Task ExtractChildRelationships(Guid mediaItemId, IDictionary<Guid, IList<MediaItemAspect>> aspects)
     {
       try
       {
-        await ExtractRelationships(mediaItemId, aspects, isRefresh);
+        await ExtractRelationships(mediaItemId, aspects);
       }
       catch (OperationCanceledException)
       {
@@ -226,13 +224,12 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     /// </summary>
     /// <param name="mediaItemId">The id of the media item.</param>
     /// <param name="aspects">The aspects of the media item.</param>
-    /// <param name="isRefresh">Whether this is a refresh import.</param>
     /// <returns></returns>
-    protected ICollection<ExtractedRelation> ExtractRelationshipMetadata(Guid mediaItemId, IDictionary<Guid, IList<MediaItemAspect>> aspects, bool isRefresh)
+    protected ICollection<ExtractedRelation> ExtractRelationshipMetadata(Guid mediaItemId, IDictionary<Guid, IList<MediaItemAspect>> aspects)
     {
       ICollection<ExtractedRelation> relations = new List<ExtractedRelation>();
       foreach (IRelationshipRoleExtractor extractor in GetRoleExtractors(aspects))
-        ExtractRelationshipMetadata(extractor, mediaItemId, aspects, isRefresh, relations);
+        ExtractRelationshipMetadata(extractor, mediaItemId, aspects, relations);
       return relations;
     }
 
@@ -242,9 +239,8 @@ namespace MediaPortal.Common.Services.MediaManagement.ImportDataflowBlocks
     /// <param name="roleExtractor">The extractor to use to extract relations.</param>
     /// <param name="mediaItemId">The id of the media item.</param>
     /// <param name="aspects">The aspects of the media item.</param>
-    /// <param name="isRefresh">Whether this is a refresh import.</param>
     /// <param name="relations">Collection of relations to add any extracted relations.</param>
-    protected void ExtractRelationshipMetadata(IRelationshipRoleExtractor roleExtractor, Guid mediaItemId, IDictionary<Guid, IList<MediaItemAspect>> aspects, bool isRefresh, ICollection<ExtractedRelation> relations)
+    protected void ExtractRelationshipMetadata(IRelationshipRoleExtractor roleExtractor, Guid mediaItemId, IDictionary<Guid, IList<MediaItemAspect>> aspects, ICollection<ExtractedRelation> relations)
     {
       int extractedCount = 0;
       IList<IDictionary<Guid, IList<MediaItemAspect>>> extractedItems;
