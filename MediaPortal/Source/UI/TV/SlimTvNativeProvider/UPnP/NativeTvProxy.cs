@@ -23,6 +23,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using MediaPortal.Common;
@@ -52,7 +53,7 @@ namespace MediaPortal.Plugins.SlimTv.Providers.UPnP
     protected readonly IChannel[] _channels = new IChannel[2];
     protected readonly object _syncObj = new object();
     protected readonly ProgramCache _programCache = new ProgramCache();
-    protected Dictionary<int, IChannel> _channelCache = new Dictionary<int, IChannel>();
+    protected IDictionary<int, IChannel> _channelCache = new ConcurrentDictionary<int, IChannel>();
 
     #endregion
 
@@ -631,6 +632,26 @@ namespace MediaPortal.Plugins.SlimTv.Providers.UPnP
         NotifyException(ex);
         return false;
       }
+    }
+
+    public bool IsCurrentlyRecording(string fileName, out ISchedule schedule)
+    {
+      schedule = null;
+      try
+      {
+        CpAction action = GetAction(Consts.ACTION_GET_IS_CURRENT_REC);
+        IList<object> inParameters = new List<object> { fileName };
+        IList<object> outParameters = action.InvokeAction(inParameters);
+        bool success = (bool)outParameters[0];
+        schedule = (Schedule)outParameters[1];
+        return success;
+      }
+      catch (Exception ex)
+      {
+        NotifyException(ex);
+        return false;
+      }
+
     }
 
     #region Exeption handling

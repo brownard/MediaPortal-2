@@ -46,6 +46,7 @@ using MediaPortal.UI.Presentation.Players;
 using MediaPortal.UI.Presentation.Screens;
 using MediaPortal.UI.Presentation.Workflow;
 using MediaPortal.UiComponents.Media.General;
+using MediaPortal.UiComponents.Media.Models;
 using MediaPortal.UiComponents.SkinBase.Models;
 using MediaPortal.UI.ServerCommunication;
 using MediaPortal.UI.SkinEngine.MpfElements;
@@ -84,6 +85,7 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
     protected AbstractProperty _selectedCurrentProgramProperty = null;
     protected AbstractProperty _selectedNextProgramProperty = null;
     protected AbstractProperty _selectedChannelNameProperty = null;
+    protected AbstractProperty _selectedChannelLogoTypeProperty = null;
     protected AbstractProperty _selectedProgramProgressProperty = null;
 
     // properties for playing channel and program (OSD)
@@ -92,16 +94,11 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
     protected AbstractProperty _programProgressProperty = null;
     protected AbstractProperty _timeshiftProgressProperty = null;
     protected AbstractProperty _currentChannelNameProperty = null;
+    protected AbstractProperty _currentChannelLogoTypeProperty = null;
 
     // PiP Control properties
     protected AbstractProperty _piPAvailableProperty = null;
     protected AbstractProperty _piPEnabledProperty = null;
-
-    // OSD Control properties
-    private AbstractProperty _isOSDVisibleProperty = null;
-    private AbstractProperty _isOSDLevel0Property = null;
-    private AbstractProperty _isOSDLevel1Property = null;
-    private AbstractProperty _isOSDLevel2Property = null;
 
     // Channel zapping
     protected DelayedEvent _zapTimer;
@@ -185,6 +182,23 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
     }
 
     /// <summary>
+    /// Exposes the current channel logo type to the skin.
+    /// </summary>
+    public string ChannelLogoType
+    {
+      get { return (string)_currentChannelLogoTypeProperty.GetValue(); }
+      set { _currentChannelLogoTypeProperty.SetValue(value); }
+    }
+
+    /// <summary>
+    /// Exposes the current channel logo type to the skin.
+    /// </summary>
+    public AbstractProperty ChannelLogoTypeProperty
+    {
+      get { return _currentChannelLogoTypeProperty; }
+    }
+
+    /// <summary>
     /// Exposes the selected channel name to the skin.
     /// </summary>
     public string SelectedChannelName
@@ -199,6 +213,23 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
     public AbstractProperty SelectedChannelNameProperty
     {
       get { return _selectedChannelNameProperty; }
+    }
+
+    /// <summary>
+    /// Exposes the selected channel logo type to the skin.
+    /// </summary>
+    public string SelectedChannelLogoType
+    {
+      get { return (string)_selectedChannelLogoTypeProperty.GetValue(); }
+      set { _selectedChannelLogoTypeProperty.SetValue(value); }
+    }
+
+    /// <summary>
+    /// Exposes the selected channel logo type to the skin.
+    /// </summary>
+    public AbstractProperty SelectedChannelLogoTypeProperty
+    {
+      get { return _selectedChannelLogoTypeProperty; }
     }
 
     /// <summary>
@@ -350,50 +381,6 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
       get { return _piPEnabledProperty; }
     }
 
-    public bool IsOSDVisible
-    {
-      get { return (bool)_isOSDVisibleProperty.GetValue(); }
-      set { _isOSDVisibleProperty.SetValue(value); }
-    }
-
-    public AbstractProperty IsOSDVisibleProperty
-    {
-      get { return _isOSDVisibleProperty; }
-    }
-
-    public bool IsOSDLevel0
-    {
-      get { return (bool)_isOSDLevel0Property.GetValue(); }
-      set { _isOSDLevel0Property.SetValue(value); }
-    }
-
-    public AbstractProperty IsOSDLevel0Property
-    {
-      get { return _isOSDLevel0Property; }
-    }
-
-    public bool IsOSDLevel1
-    {
-      get { return (bool)_isOSDLevel1Property.GetValue(); }
-      set { _isOSDLevel1Property.SetValue(value); }
-    }
-
-    public AbstractProperty IsOSDLevel1Property
-    {
-      get { return _isOSDLevel1Property; }
-    }
-
-    public bool IsOSDLevel2
-    {
-      get { return (bool)_isOSDLevel2Property.GetValue(); }
-      set { _isOSDLevel2Property.SetValue(value); }
-    }
-
-    public AbstractProperty IsOSDLevel2Property
-    {
-      get { return _isOSDLevel2Property; }
-    }
-
     public void UpdateProgram(object sender, SelectionChangedEventArgs e)
     {
       var channelItem = e.FirstAddedItem as ChannelProgramListItem;
@@ -410,6 +397,7 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
               nextProgram = channelItem.Programs[1].AdditionalProperties["PROGRAM"] as IProgram;
             }
           SelectedChannelName = channelItem.Channel.Name;
+          SelectedChannelLogoType = channelItem.Channel.GetFanArtMediaType();
           SelectedCurrentProgram.SetProgram(currentProgram, channelItem.Channel);
           SelectedNextProgram.SetProgram(nextProgram, channelItem.Channel);
           double progress = currentProgram != null ?
@@ -427,55 +415,6 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
         return;
       }
       PiPEnabled = !PiPEnabled;
-    }
-
-    public void ShowVideoInfo()
-    {
-      if (!IsOSDVisible)
-      {
-        IsOSDVisible = IsOSDLevel0 = true;
-        IsOSDLevel1 = IsOSDLevel2 = false;
-        Update();
-        return;
-      }
-
-      if (IsOSDLevel0)
-      {
-        IsOSDVisible = IsOSDLevel1 = true;
-        IsOSDLevel0 = IsOSDLevel2 = false;
-        Update();
-        return;
-      }
-
-      if (IsOSDLevel1)
-      {
-        IsOSDVisible = IsOSDLevel2 = true;
-        IsOSDLevel0 = IsOSDLevel1 = false;
-        Update();
-        return;
-      }
-
-      if (IsOSDLevel2)
-      {
-        // Hide OSD
-        IsOSDVisible = IsOSDLevel0 = IsOSDLevel1 = IsOSDLevel2 = false;
-
-        // Pressing the info button twice will bring up the context menu
-        PlayerConfigurationDialogModel.OpenPlayerConfigurationDialog();
-      }
-      Update();
-    }
-
-    public void CloseOSD()
-    {
-      // Makes sure to always have model initialized first and the property created
-      InitModel();
-      if (IsOSDVisible)
-      {
-        // Hide OSD
-        IsOSDVisible = IsOSDLevel0 = IsOSDLevel1 = IsOSDLevel2 = false;
-        Update();
-      }
     }
 
     #endregion
@@ -627,6 +566,28 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
       }
     }
 
+    private void ShowOSD()
+    {
+      IWorkflowManager workflowManager = ServiceRegistration.Get<IWorkflowManager>();
+      VideoPlayerModel model = workflowManager.GetModel(VideoPlayerModel.MODEL_ID) as VideoPlayerModel;
+      if (model == null)
+        return;
+
+      if (!model.IsOSDVisible)
+        model.ToggleOSD();
+    }
+
+    private void CloseOSD()
+    {
+      IWorkflowManager workflowManager = ServiceRegistration.Get<IWorkflowManager>();
+      VideoPlayerModel model = workflowManager.GetModel(VideoPlayerModel.MODEL_ID) as VideoPlayerModel;
+      if (model == null)
+        return;
+
+      if (model.IsOSDVisible)
+        model.CloseOSD();
+    }
+
     private bool InitActionsList()
     {
       _dialogActionsList.Clear();
@@ -663,13 +624,7 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
       {
         item = new ListItem(Consts.KEY_NAME, "[SlimTvClient.RecordManual]")
         {
-          Command = new MethodDelegateCommand(() => CreateOrDeleteSchedule(new Program
-          {
-            Title = localization.ToString("[SlimTvClient.ManualRecordingTitle]"),
-            ChannelId = context.Channel.ChannelId,
-            StartTime = DateTime.Now,
-            EndTime = DateTime.Now.AddDays(1)
-          }))
+          Command = new MethodDelegateCommand(() => CreateOrDeleteScheduleByTime(context.Channel, DateTime.Now, DateTime.Now.AddDays(1)))
         };
         _dialogActionsList.Add(item);
       }
@@ -682,11 +637,7 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
     /// </summary>
     private void ReSetSkipTimer()
     {
-      IsOSDVisible = true;
-      IsOSDLevel0 = true;
-      IsOSDLevel1 = false;
-      IsOSDLevel2 = false;
-
+      ShowOSD();
       UpdateRunningChannelPrograms(ChannelContext.Instance.Channels[_zapChannelIndex]);
 
       if (_zapTimer == null)
@@ -702,13 +653,11 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
     private void ZapTimerElapsed(object sender, EventArgs e)
     {
       CloseOSD();
-
       if (!ChannelContext.IsSameChannel(ChannelContext.Instance.Channels[_zapChannelIndex], _lastTunedChannel))
       {
         ChannelContext.Instance.Channels.SetIndex(_zapChannelIndex);
         Tune(ChannelContext.Instance.Channels[_zapChannelIndex]);
       }
-
       // When not zapped the previous channel information is restored during the next Update() call
     }
 
@@ -753,11 +702,13 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
         _currentGroupNameProperty = new WProperty(typeof(string), string.Empty);
 
         _selectedChannelNameProperty = new WProperty(typeof(string), string.Empty);
+        _selectedChannelLogoTypeProperty = new WProperty(typeof(string), string.Empty);
         _selectedCurrentProgramProperty = new WProperty(typeof(ProgramProperties), new ProgramProperties());
         _selectedNextProgramProperty = new WProperty(typeof(ProgramProperties), new ProgramProperties());
         _selectedProgramProgressProperty = new WProperty(typeof(double), 0d);
 
         _currentChannelNameProperty = new WProperty(typeof(string), string.Empty);
+        _currentChannelLogoTypeProperty = new WProperty(typeof(string), string.Empty);
         _currentProgramProperty = new WProperty(typeof(ProgramProperties), new ProgramProperties());
         _nextProgramProperty = new WProperty(typeof(ProgramProperties), new ProgramProperties());
         _programProgressProperty = new WProperty(typeof(double), 0d);
@@ -765,11 +716,6 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
 
         _piPAvailableProperty = new WProperty(typeof(bool), false);
         _piPEnabledProperty = new WProperty(typeof(bool), false);
-
-        _isOSDVisibleProperty = new WProperty(typeof(bool), false);
-        _isOSDLevel0Property = new WProperty(typeof(bool), false);
-        _isOSDLevel1Property = new WProperty(typeof(bool), false);
-        _isOSDLevel2Property = new WProperty(typeof(bool), false);
 
         //Get current Tv Server state
         var ssm = ServiceRegistration.Get<IServerStateManager>();
@@ -888,6 +834,7 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
           {
             channel = context.Channel;
             ChannelName = channel.Name;
+            ChannelLogoType = channel.GetFanArtMediaType();
             if (_tvHandler.ProgramInfo != null && _tvHandler.ProgramInfo.GetNowNextProgram(channel, out currentProgram, out nextProgram) && currentProgram != null)
             {
               double progress = (DateTime.Now - currentProgram.StartTime).TotalSeconds /
@@ -997,8 +944,11 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
 
     protected void GetNowAndNextProgramsList_Async()
     {
-      IThreadPool threadPool = ServiceRegistration.Get<IThreadPool>();
-      threadPool.Add(GetNowAndNextProgramsList);
+      //IThreadPool threadPool = ServiceRegistration.Get<IThreadPool>();
+      //threadPool.Add(GetNowAndNextProgramsList);
+      // Morpheus_xx, 2017-12-06: temporary load programs synchronously to fix initial empty program infos.
+      // This part will be reworked completely to a real "async" pattern.
+      GetNowAndNextProgramsList();
     }
 
     protected void GetNowAndNextProgramsList()

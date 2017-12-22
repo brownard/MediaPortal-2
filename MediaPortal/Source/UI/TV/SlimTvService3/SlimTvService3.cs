@@ -247,13 +247,25 @@ namespace MediaPortal.Plugins.SlimTv.Service
 
     #endregion
 
-    #region Recordings / MediaLibrary synchronization
+    #region Server state
 
     protected void UpdateServerState()
     {
-      var state = new TvServerState { IsRecording = _tvControl.IsAnyCardRecording() };
+      IList<ISchedule> currentlyRecordingSchedules = Recording.ListAllActive().Where(r => r.IsRecording)
+        .Select(r => r.ReferencedSchedule().ToSchedule()).ToList();
+
+      TvServerState state = new TvServerState
+      {
+        IsRecording = _tvControl.IsAnyCardRecording(),
+        CurrentlyRecordingSchedules = currentlyRecordingSchedules
+      };
+
       ServiceRegistration.Get<IServerStateService>().UpdateState(TvServerState.STATE_ID, state);
     }
+
+    #endregion
+
+    #region Recordings / MediaLibrary synchronization
 
     protected override bool RegisterEvents()
     {
@@ -616,7 +628,12 @@ namespace MediaPortal.Plugins.SlimTv.Service
       // delete canceled schedules first
       foreach (var cs in CanceledSchedule.ListAll().Where(x => x.IdSchedule == tvSchedule.IdSchedule))
         cs.Remove();
-      tvSchedule.Remove();
+      try
+      {
+        // can fail if "StopRecordingSchedule" already deleted the entry
+        tvSchedule.Remove();
+      }
+      catch { }
       _tvControl.OnNewSchedule(); // I don't think this is needed, but doesn't hurt either
       return true;
     }
@@ -639,9 +656,26 @@ namespace MediaPortal.Plugins.SlimTv.Service
       return true;
     }
 
+    public override bool IsCurrentlyRecording(string fileName, out ISchedule schedule)
+    {
+      Recording recording;
+      schedule = null;
+      if (!GetRecording(fileName, out recording) || recording.Idschedule <= 0)
+        return false;
+
+      schedule = TvDatabase.Schedule.ListAll().FirstOrDefault(s => s.IdSchedule == recording.Idschedule).ToSchedule();
+      return schedule != null;
+    }
+
     private static bool GetRecording(IProgram program, out Recording recording)
     {
-      recording = Recording.ListAll().FirstOrDefault(r => r.IsRecording && r.IdChannel == program.ChannelId && r.Title == program.Title);
+      recording = Recording.ListAllActive().FirstOrDefault(r => r.IsRecording && r.IdChannel == program.ChannelId && r.Title == program.Title);
+      return recording != null;
+    }
+
+    private static bool GetRecording(string filename, out Recording recording)
+    {
+      recording = Recording.ListAllActive().FirstOrDefault(r => r.IsRecording && string.Equals(r.FileName, filename, StringComparison.OrdinalIgnoreCase));
       return recording != null;
     }
 
