@@ -15,6 +15,7 @@
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\..\</SolutionDir>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -41,23 +42,13 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\Packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\Packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Device" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel.Web" />
-    <Reference Include="System.Threading.Tasks.Dataflow, Version=4.5.24.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\Packages\Microsoft.Tpl.Dataflow.4.5.24\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
@@ -99,6 +90,13 @@
     <Compile Include="Libraries\MusicBrainzV2\Data\TrackRecording.cs" />
     <Compile Include="Libraries\MusicBrainzV2\Data\TrackReleaseSearchResult.cs" />
     <Compile Include="Libraries\MusicBrainzV2\MusicBrainzDownloader.cs" />
+    <Compile Include="Libraries\SimApiV1\Data\SimApiPerson.cs" />
+    <Compile Include="Libraries\SimApiV1\Data\SimApiMovie.cs" />
+    <Compile Include="Libraries\SimApiV1\Data\SimApiPersonSearchResult.cs" />
+    <Compile Include="Libraries\SimApiV1\Data\SimApiPersonSearchItem.cs" />
+    <Compile Include="Libraries\SimApiV1\Data\SimApiMovieSearchItem.cs" />
+    <Compile Include="Libraries\SimApiV1\Data\SimApiMovieSearchResult.cs" />
+    <Compile Include="Libraries\SimApiV1\SimApiV1.cs" />
     <Compile Include="Libraries\OmDbV1\Data\OmDbBaseResponse.cs" />
     <Compile Include="Libraries\OmDbV1\Data\OmDbSearchItem.cs" />
     <Compile Include="Libraries\OmDbV1\Data\OmDbSearchResult.cs" />
@@ -300,6 +298,7 @@
     <Compile Include="Libraries\IMovieMatcher.cs" />
     <Compile Include="Libraries\ISeriesMatcher.cs" />
     <Compile Include="Libraries\IMusicMatcher.cs" />
+    <Compile Include="Matchers\MovieSimApiMatcher.cs" />
     <Compile Include="Matchers\MusicMatcher.cs" />
     <Compile Include="Matchers\IdMapper.cs" />
     <Compile Include="Matchers\SimpleNameMatcher.cs" />
@@ -311,12 +310,10 @@
     <Compile Include="Matches\IdMatch.cs" />
     <Compile Include="Matches\SimpleNameMatch.cs" />
     <Compile Include="OnlineMatcherService.cs" />
-    <Compile Include="MetadataUpdater.cs" />
-    <Compile Include="SerializableRegex.cs" />
-    <Compile Include="Settings\GenreMapping.cs" />
     <Compile Include="Settings\MatcherSetting.cs" />
     <Compile Include="Settings\OnlineLibrarySettings.cs" />
     <Compile Include="Wrappers\ApiWrapperImageCollection.cs" />
+    <Compile Include="Wrappers\SimApiWrapper.cs" />
     <Compile Include="Wrappers\OmDbWrapper.cs" />
     <Compile Include="Matchers\SeriesOmDbMatcher.cs" />
     <Compile Include="Matchers\SeriesTvMazeMatcher.cs" />
@@ -464,7 +461,6 @@
     <Compile Include="Libraries\MovieDbV3\Data\MovieSearchResult.cs" />
     <Compile Include="Libraries\MovieDbV3\Data\PagedMovieSearchResult.cs" />
     <Compile Include="Wrappers\TheAudioDbWrapper.cs" />
-    <Compile Include="Matches\BaseFanArtMatch.cs" />
     <Compile Include="Matches\SeriesMatch.cs" />
     <Compile Include="Libraries\Common\Settings.cs" />
     <Compile Include="Wrappers\TheMovieDbWrapper.cs" />
@@ -488,7 +484,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="build.targets" />
-    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Tpl.Dataflow">
+      <Version>4.5.24</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>10.0.3</Version>
+    </PackageReference>
+    <PackageReference Include="SharpZipLib">
+      <Version>0.86.0</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="build.targets" />

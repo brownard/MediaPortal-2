@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
+using System.Linq;
 
 namespace MediaPortal.Common.MediaManagement.Helpers
 {
@@ -90,6 +91,24 @@ namespace MediaPortal.Common.MediaManagement.Helpers
       return CloneProperties(this);
     }
 
+    public void MergeWith(MovieCollectionInfo other, bool overwriteShorterStrings = true, bool updateMovieList = false)
+    {
+      HasChanged |= MetadataUpdater.SetOrUpdateId(ref MovieDbId, other.MovieDbId);
+
+      HasChanged |= MetadataUpdater.SetOrUpdateString(ref CollectionName, other.CollectionName, overwriteShorterStrings);
+
+      if (TotalMovies < other.TotalMovies)
+      {
+        HasChanged = true;
+        TotalMovies = other.TotalMovies;
+      }
+
+      if (updateMovieList) //Comparing all movies can be quite time consuming
+      {
+        MetadataUpdater.SetOrUpdateList(Movies, other.Movies.Distinct().ToList(), true, overwriteShorterStrings);
+      }
+    }
+
     #region Members
 
     /// <summary>
@@ -100,6 +119,7 @@ namespace MediaPortal.Common.MediaManagement.Helpers
     {
       if (CollectionName.IsEmpty) return false;
 
+      AssignNameId();
       SetMetadataChanged(aspectData);
 
       MediaItemAspect.SetAttribute(aspectData, MediaAspect.ATTR_TITLE, ToString());

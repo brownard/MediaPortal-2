@@ -22,20 +22,22 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text.RegularExpressions;
-using System.Xml.Serialization;
 using MediaPortal.Common;
+using MediaPortal.Common.Genres;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Extensions.MetadataExtractors.Aspects;
-using MediaPortal.Utilities;
 using MediaPortal.Extensions.OnlineLibraries;
+using MediaPortal.Utilities;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace MediaPortal.Extensions.MetadataExtractors
 {
@@ -76,7 +78,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         });
     }
 
-    public override bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly, bool forceQuickMode)
+    public override async Task<bool> TryExtractMetadataAsync(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       try
       {
@@ -98,7 +100,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         if (episodeInfo.IsBaseInfoPresent)
         {
           if(!forceQuickMode)
-            OnlineMatcherService.Instance.FindAndUpdateEpisode(episodeInfo, importOnly);
+            await OnlineMatcherService.Instance.FindAndUpdateEpisodeAsync(episodeInfo).ConfigureAwait(false);
           if (episodeInfo.IsBaseInfoPresent)
             episodeInfo.SetMetadata(extractedAspectData);
         }
@@ -188,7 +190,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
 
       // All non-default media item aspects must be registered
       IMediaItemAspectTypeRegistration miatr = ServiceRegistration.Get<IMediaItemAspectTypeRegistration>();
-      miatr.RegisterLocallyKnownMediaItemAspectType(RecordingAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectTypeAsync(RecordingAspect.Metadata);
     }
 
     public Tve3RecordingMetadataExtractor()
@@ -234,7 +236,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
       if (TryGet(extractedTags, TAG_GENRE, out tmpString))
       {
         episodeInfo.Genres = new List<GenreInfo>(new GenreInfo[] { new GenreInfo { Name = tmpString } });
-        OnlineMatcherService.Instance.AssignMissingSeriesGenreIds(episodeInfo.Genres);
+        GenreMapper.AssignMissingSeriesGenreIds(episodeInfo.Genres);
       }
 
       episodeInfo.HasChanged = true;
@@ -259,13 +261,13 @@ namespace MediaPortal.Extensions.MetadataExtractors
       get { return _metadata; }
     }
 
-    public virtual bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly, bool forceQuickMode)
+    public virtual Task<bool> TryExtractMetadataAsync(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       try
       {
         IResourceAccessor metaFileAccessor;
         if (!CanExtract(mediaItemAccessor, extractedAspectData, out metaFileAccessor))
-          return false;
+          return Task.FromResult(false);
 
         Tags tags;
         using (metaFileAccessor)
@@ -287,7 +289,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         if (TryGet(tags, TAG_GENRE, out value))
         {
           List<GenreInfo> genreList = new List<GenreInfo>(new GenreInfo[] { new GenreInfo { Name = value } });
-          OnlineMatcherService.Instance.AssignMissingMovieGenreIds(genreList);
+          GenreMapper.AssignMissingMovieGenreIds(genreList);
           MultipleMediaItemAspect genreAspect = MediaItemAspect.CreateAspect(extractedAspectData, GenreAspect.Metadata);
           genreAspect.SetAttribute(GenreAspect.ATTR_ID, genreList[0].Id);
           genreAspect.SetAttribute(GenreAspect.ATTR_GENRE, genreList[0].Name);
@@ -314,7 +316,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         if (TryGet(tags, TAG_ENDTIME, out value) && DateTime.TryParse(value, out recordingEnd))
           MediaItemAspect.SetAttribute(extractedAspectData, RecordingAspect.ATTR_ENDTIME, recordingEnd);
 
-        return true;
+        return Task.FromResult(true);
       }
       catch (Exception e)
       {
@@ -322,7 +324,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         // couldn't perform our task here.
         ServiceRegistration.Get<ILogger>().Info("Tve3RecordingMetadataExtractor: Exception reading resource '{0}' (Text: '{1}')", mediaItemAccessor.CanonicalLocalResourcePath, e.Message);
       }
-      return false;
+      return Task.FromResult(false);
     }
 
     protected static bool CanExtract(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, out IResourceAccessor metaFileAccessor)
@@ -344,6 +346,21 @@ namespace MediaPortal.Extensions.MetadataExtractors
       if (!ResourcePath.Deserialize(metaFilePath).TryCreateLocalResourceAccessor(out metaFileAccessor))
         return false;
       return true;
+    }
+
+    public bool IsDirectorySingleResource(IResourceAccessor mediaItemAccessor)
+    {
+      return false;
+    }
+
+    public bool IsStubResource(IResourceAccessor mediaItemAccessor)
+    {
+      return false;
+    }
+
+    public bool TryExtractStubItems(IResourceAccessor mediaItemAccessor, ICollection<IDictionary<Guid, IList<MediaItemAspect>>> extractedStubAspectData)
+    {
+      return false;
     }
 
     #endregion

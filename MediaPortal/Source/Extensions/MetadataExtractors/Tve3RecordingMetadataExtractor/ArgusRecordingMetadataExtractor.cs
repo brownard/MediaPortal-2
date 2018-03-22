@@ -22,20 +22,22 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text.RegularExpressions;
-using System.Xml.Serialization;
 using MediaPortal.Common;
+using MediaPortal.Common.Genres;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Extensions.MetadataExtractors.Aspects;
-using MediaPortal.Utilities;
 using MediaPortal.Extensions.OnlineLibraries;
+using MediaPortal.Utilities;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace MediaPortal.Extensions.MetadataExtractors
 {
@@ -76,7 +78,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         });
     }
 
-    public override bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly, bool forceQuickMode)
+    public override async Task<bool> TryExtractMetadataAsync(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       try
       {
@@ -98,7 +100,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         if (episodeInfo.IsBaseInfoPresent)
         {
           if(!forceQuickMode)
-            OnlineMatcherService.Instance.FindAndUpdateEpisode(episodeInfo, importOnly);
+            await OnlineMatcherService.Instance.FindAndUpdateEpisodeAsync(episodeInfo).ConfigureAwait(false);
           if (episodeInfo.IsBaseInfoPresent)
             episodeInfo.SetMetadata(extractedAspectData);
         }
@@ -154,7 +156,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
 
       // All non-default media item aspects must be registered
       IMediaItemAspectTypeRegistration miatr = ServiceRegistration.Get<IMediaItemAspectTypeRegistration>();
-      miatr.RegisterLocallyKnownMediaItemAspectType(RecordingAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectTypeAsync(RecordingAspect.Metadata);
     }
 
     public ArgusRecordingMetadataExtractor()
@@ -206,7 +208,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
       if (!string.IsNullOrEmpty(recording.Category))
       {
         episodeInfo.Genres.Add(new GenreInfo { Name = recording.Category });
-        OnlineMatcherService.Instance.AssignMissingSeriesGenreIds(episodeInfo.Genres);
+        GenreMapper.AssignMissingSeriesGenreIds(episodeInfo.Genres);
       }
 
       episodeInfo.HasChanged = true;
@@ -220,13 +222,13 @@ namespace MediaPortal.Extensions.MetadataExtractors
       get { return _metadata; }
     }
 
-    public virtual bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly, bool forceQuickMode)
+    public virtual Task<bool> TryExtractMetadataAsync(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       try
       {
         IResourceAccessor metaFileAccessor;
         if (!CanExtract(mediaItemAccessor, extractedAspectData, out metaFileAccessor))
-          return false;
+          return Task.FromResult(false);
 
         Argus.Recording recording;
         using (metaFileAccessor)
@@ -252,7 +254,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         if (!string.IsNullOrEmpty(recording.Category))
         {
           List<GenreInfo> genreList = new List<GenreInfo>(new GenreInfo[] { new GenreInfo { Name = recording.Category } });
-          OnlineMatcherService.Instance.AssignMissingMovieGenreIds(genreList);
+          GenreMapper.AssignMissingMovieGenreIds(genreList);
 
           if (genreList.Count > 0)
           {
@@ -281,7 +283,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         if (!string.IsNullOrWhiteSpace(recording.Actors))
           MediaItemAspect.SetCollectionAttribute(extractedAspectData, VideoAspect.ATTR_ACTORS, recording.Actors.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
 
-        return true;
+        return Task.FromResult(true);
       }
       catch (Exception e)
       {
@@ -289,7 +291,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         // couldn't perform our task here.
         ServiceRegistration.Get<ILogger>().Info("ArgusRecordingMetadataExtractor: Exception reading resource '{0}' (Text: '{1}')", mediaItemAccessor.CanonicalLocalResourcePath, e.Message);
       }
-      return false;
+      return Task.FromResult(false);
     }
 
     protected static bool CanExtract(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, out IResourceAccessor metaFileAccessor)
@@ -311,6 +313,21 @@ namespace MediaPortal.Extensions.MetadataExtractors
       if (!ResourcePath.Deserialize(metaFilePath).TryCreateLocalResourceAccessor(out metaFileAccessor))
         return false;
       return true;
+    }
+
+    public bool IsDirectorySingleResource(IResourceAccessor mediaItemAccessor)
+    {
+      return false;
+    }
+
+    public bool IsStubResource(IResourceAccessor mediaItemAccessor)
+    {
+      return false;
+    }
+
+    public bool TryExtractStubItems(IResourceAccessor mediaItemAccessor, ICollection<IDictionary<Guid, IList<MediaItemAspect>>> extractedStubAspectData)
+    {
+      return false;
     }
 
     #endregion

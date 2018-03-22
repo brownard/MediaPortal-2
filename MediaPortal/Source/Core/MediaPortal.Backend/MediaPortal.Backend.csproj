@@ -77,6 +77,8 @@
     <Compile Include="Services\MediaLibrary\BindVar.cs" />
     <Compile Include="Services\MediaLibrary\FirstCharGroupingFunction.cs" />
     <Compile Include="Services\MediaLibrary\IGroupingFunctionImpl.cs" />
+    <Compile Include="Services\MediaLibrary\MediaLibraryMessaging.cs" />
+    <Compile Include="Services\MediaLibrary\PreparedStatements.cs" />
     <Compile Include="Services\MediaLibrary\QueryEngine\BaseQueryBuilder.cs" />
     <Compile Include="Services\MediaLibrary\QueryEngine\CompiledGroupedAttributeValueQuery.cs" />
     <Compile Include="Services\MediaLibrary\QueryEngine\CompiledFilter.cs" />
@@ -101,6 +103,8 @@
     <Compile Include="Services\MediaLibrary\MediaLibrary.cs" />
     <Compile Include="Services\MediaLibrary\MediaLibrary_SubSchema.cs" />
     <Compile Include="Services\MediaLibrary\MIA_Management.cs" />
+    <Compile Include="Services\MediaLibrary\RelationshipManagement.cs" />
+    <Compile Include="Services\MediaManagement\RelationshipTypeRegistration.cs" />
     <Compile Include="Services\MediaManagement\MediaItemAspectTypeRegistration.cs" />
     <Compile Include="Services\Database\DBUtils.cs" />
     <Compile Include="Services\SystemResolver\SystemResolver.cs" />
@@ -109,11 +113,6 @@
     <Compile Include="Services\UserProfileDataManagement\UserProfileDataManagement_SubSchema.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\HttpServer\HttpServer.csproj">
-      <Project>{B1C97BB7-8E27-4C1B-B086-A1204EF8FB79}</Project>
-      <Name>HttpServer</Name>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\MediaPortal.Common\MediaPortal.Common.csproj">
       <Project>{ECF060E7-CAA1-4466-851F-F80B857641EA}</Project>
       <Name>MediaPortal.Common</Name>

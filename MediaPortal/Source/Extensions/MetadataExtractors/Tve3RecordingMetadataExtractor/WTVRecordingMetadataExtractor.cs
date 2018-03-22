@@ -22,21 +22,23 @@
 
 #endregion
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using MCEBuddy.MetaData;
 using MediaPortal.Common;
+using MediaPortal.Common.Genres;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Extensions.MetadataExtractors.Aspects;
-using MediaPortal.Utilities;
 using MediaPortal.Extensions.OnlineLibraries;
+using MediaPortal.Utilities;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace MediaPortal.Extensions.MetadataExtractors
 {
@@ -91,14 +93,14 @@ namespace MediaPortal.Extensions.MetadataExtractors
       if (TryGet(metadata, TAG_GENRE, out tmpString))
       {
         episodeInfo.Genres = new List<GenreInfo>(tmpString.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries).Select(s => new GenreInfo { Name = s }));
-        OnlineMatcherService.Instance.AssignMissingSeriesGenreIds(episodeInfo.Genres);
+        GenreMapper.AssignMissingSeriesGenreIds(episodeInfo.Genres);
       }
 
       episodeInfo.HasChanged = true;
       return episodeInfo;
     }
 
-    protected override bool ExtractMetadata(ILocalFsResourceAccessor lfsra, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly, bool forceQuickMode)
+    protected override async Task<bool> ExtractMetadataAsync(ILocalFsResourceAccessor lfsra, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       if (!CanExtract(lfsra, extractedAspectData))
         return false;
@@ -116,7 +118,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
       if (episodeInfo.IsBaseInfoPresent)
       {
         if (!forceQuickMode)
-          OnlineMatcherService.Instance.FindAndUpdateEpisode(episodeInfo, importOnly);
+          await OnlineMatcherService.Instance.FindAndUpdateEpisodeAsync(episodeInfo).ConfigureAwait(false);
         if (episodeInfo.IsBaseInfoPresent)
           episodeInfo.SetMetadata(extractedAspectData);
       }
@@ -171,7 +173,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
 
       // All non-default media item aspects must be registered
       IMediaItemAspectTypeRegistration miatr = ServiceRegistration.Get<IMediaItemAspectTypeRegistration>();
-      miatr.RegisterLocallyKnownMediaItemAspectType(RecordingAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectTypeAsync(RecordingAspect.Metadata);
     }
 
     public WTVRecordingMetadataExtractor()
@@ -215,7 +217,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
       get { return _metadata; }
     }
 
-    public bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly, bool forceQuickMode)
+    public async Task<bool> TryExtractMetadataAsync(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       try
       {
@@ -225,7 +227,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
           return false;
 
         using (LocalFsResourceAccessorHelper rah = new LocalFsResourceAccessorHelper(mediaItemAccessor))
-          return ExtractMetadata(rah.LocalFsResourceAccessor, extractedAspectData, importOnly, forceQuickMode);
+          return await ExtractMetadataAsync(rah.LocalFsResourceAccessor, extractedAspectData, forceQuickMode).ConfigureAwait(false);
 
       }
       catch (Exception e)
@@ -237,10 +239,10 @@ namespace MediaPortal.Extensions.MetadataExtractors
       return false;
     }
 
-    protected virtual bool ExtractMetadata(ILocalFsResourceAccessor lfsra, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly, bool forceQuickMode)
+    protected virtual Task<bool> ExtractMetadataAsync(ILocalFsResourceAccessor lfsra, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       if (!CanExtract(lfsra, extractedAspectData))
-        return false;
+        return Task.FromResult(false);
 
       using (var rec = new MCRecMetadataEditor(lfsra.LocalFileSystemPath))
       {
@@ -268,7 +270,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         if (TryGet(tags, TAG_GENRE, out value))
         {
           List<GenreInfo> genreList = new List<GenreInfo>(value.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries).Select(s => new GenreInfo { Name = s }));
-          OnlineMatcherService.Instance.AssignMissingMovieGenreIds(genreList);
+          GenreMapper.AssignMissingMovieGenreIds(genreList);
           foreach (GenreInfo genre in genreList)
           {
             MultipleMediaItemAspect genreAspect = MediaItemAspect.CreateAspect(extractedAspectData, GenreAspect.Metadata);
@@ -298,7 +300,7 @@ namespace MediaPortal.Extensions.MetadataExtractors
         if (TryGet(tags, TAG_ENDTIME, out lValue))
           MediaItemAspect.SetAttribute(extractedAspectData, RecordingAspect.ATTR_ENDTIME, FromMCEFileTime(lValue));
       }
-      return true;
+      return Task.FromResult(true);
     }
 
     protected static bool CanExtract(ILocalFsResourceAccessor lfsra, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData)
@@ -315,6 +317,21 @@ namespace MediaPortal.Extensions.MetadataExtractors
       if (lowerExtension != ".wtv" && lowerExtension != ".dvr-ms")
         return false;
       return true;
+    }
+
+    public bool IsDirectorySingleResource(IResourceAccessor mediaItemAccessor)
+    {
+      return false;
+    }
+
+    public bool IsStubResource(IResourceAccessor mediaItemAccessor)
+    {
+      return false;
+    }
+
+    public bool TryExtractStubItems(IResourceAccessor mediaItemAccessor, ICollection<IDictionary<Guid, IList<MediaItemAspect>>> extractedStubAspectData)
+    {
+      return false;
     }
 
     #endregion
