@@ -1,13 +1,11 @@
-﻿using MediaPortal.Common.MediaManagement;
+﻿using Emulators.Common.GoodMerge;
+using MediaPortal.Common;
+using MediaPortal.Common.Logging;
+using MediaPortal.Common.MediaManagement;
+using MediaPortal.Common.ResourceAccess;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using MediaPortal.Common.ResourceAccess;
-using MediaPortal.Common.Logging;
-using MediaPortal.Common;
-using Emulators.Common.GoodMerge;
 
 namespace Emulators.Common
 {
@@ -32,7 +30,7 @@ namespace Emulators.Common
       MEDIA_CATEGORIES.Add(_goodmergeCategory);
       // All non-default media item aspects must be registered
       IMediaItemAspectTypeRegistration miatr = ServiceRegistration.Get<IMediaItemAspectTypeRegistration>();
-      miatr.RegisterLocallyKnownMediaItemAspectType(GoodMergeAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectTypeAsync(GoodMergeAspect.Metadata);
     }
 
     public GoodMergeMetadataExtractor()
@@ -46,16 +44,16 @@ namespace Emulators.Common
       get { return _metadata; }
     }
 
-    public bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly, bool forceQuickMode)
+    public Task<bool> TryExtractMetadataAsync(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       try
       {
         IFileSystemResourceAccessor fsra = mediaItemAccessor as IFileSystemResourceAccessor;
         if (fsra == null || !fsra.IsFile)
-          return false;
+          return Task.FromResult(false);
 
         using (LocalFsResourceAccessorHelper rah = new LocalFsResourceAccessorHelper(mediaItemAccessor))
-          return ExtractGoodMergeData(rah.LocalFsResourceAccessor.LocalFileSystemPath, extractedAspectData);
+          return Task.FromResult(ExtractGoodMergeData(rah.LocalFsResourceAccessor.LocalFileSystemPath, extractedAspectData));
       }
       catch (Exception e)
       {
@@ -63,7 +61,7 @@ namespace Emulators.Common
         // couldn't perform our task here.
         Logger.Info("GoodMergeMetadataExtractor: Exception reading resource '{0}' (Text: '{1}')", mediaItemAccessor.CanonicalLocalResourcePath, e.Message);
       }
-      return false;
+      return Task.FromResult(false);
     }
 
     protected static bool ExtractGoodMergeData(string path, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData)
@@ -85,6 +83,21 @@ namespace Emulators.Common
       {
         Logger.Warn("GoodMergeMetadataExtractor: File '{0}' is empty or not a valid archive", path);
       }
+      return false;
+    }
+
+    public bool IsDirectorySingleResource(IResourceAccessor mediaItemAccessor)
+    {
+      return false;
+    }
+
+    public bool IsStubResource(IResourceAccessor mediaItemAccessor)
+    {
+      return false;
+    }
+
+    public bool TryExtractStubItems(IResourceAccessor mediaItemAccessor, ICollection<IDictionary<Guid, IList<MediaItemAspect>>> extractedStubAspectData)
+    {
       return false;
     }
   }

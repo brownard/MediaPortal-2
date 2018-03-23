@@ -5,7 +5,6 @@ using Emulators.Common.WebRequests;
 using MediaPortal.Common;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.PathManager;
-using MediaPortal.Common.Settings;
 using MediaPortal.Extensions.OnlineLibraries.Matches;
 using System;
 using System.Collections.Generic;
@@ -22,7 +21,7 @@ using System.Xml.Serialization;
 
 namespace Emulators.Common.TheGamesDb
 {
-  public class TheGamesDbWrapper : BaseMatcher<GameMatch<int>, int>, IOnlineMatcher
+  public class TheGamesDbWrapper : BaseMatcher<GameMatch<int>, int, string, string>, IOnlineMatcher
   {
     #region Logger
     protected static ILogger Logger
@@ -105,34 +104,10 @@ namespace Emulators.Common.TheGamesDb
     #endregion
 
     #region Public Methods
-    public override bool Init()
-    {
-      if (_storage == null)
-      {
-        //This is a workaround for the fact that more image types were added after the initial release of this plugin.
-        //Force all images to be redownloaded if the they were completed before the changes.
-        var settingsManager = ServiceRegistration.Get<ISettingsManager>();
-        var settings = settingsManager.Load<TheGamesDbSettings>();
-        if (settings.APIVersion < API_VERSION)
-        {
-          _storage = new MatchStorage<GameMatch<int>, int>(MatchesSettingsFile);
-          var results = _storage.GetMatches();
-          foreach (var result in results)
-          {
-            result.FanArtDownloadStarted = null;
-            result.FanArtDownloadFinished = null;
-          }
-          _storage.SaveMatches();
-          settings.APIVersion = API_VERSION;
-          settingsManager.Save(settings);
-        }
-      }
-      return base.Init();
-    }
 
-    public bool FindAndUpdateGame(GameInfo gameInfo)
+    public async Task<bool> FindAndUpdateGameAsync(GameInfo gameInfo)
     {
-      if (!Init())
+      if (!await InitAsync().ConfigureAwait(false))
         return false;
 
       Game game;
@@ -153,8 +128,6 @@ namespace Emulators.Common.TheGamesDb
       DateTime releaseDate;
       if (DateTime.TryParse(game.ReleaseDate, DATE_CULTURE, DateTimeStyles.None, out releaseDate))
         gameInfo.ReleaseDate = releaseDate;
-      if (game.Id > 0)
-        ScheduleDownload(game.Id, game.Id.ToString());
       return true;
     }
 
@@ -197,7 +170,7 @@ namespace Emulators.Common.TheGamesDb
       GameResult result;
       try
       {
-        if (gameInfo.GamesDbId > 0 && Get(gameInfo.GamesDbId, out result))
+        if (gameInfo.GamesDbId > 0 && GetAsync(gameInfo.GamesDbId, out result))
         {
           game = result.Games[0];
           AddToStorage(game.GameTitle, game.Platform, game.Id);
@@ -207,7 +180,7 @@ namespace Emulators.Common.TheGamesDb
         GameMatch<int> match;
         if (TryGetFromStorage(gameInfo, out match))
         {
-          if (match.Id > 0 && Get(match.Id, out result))
+          if (match.Id > 0 && GetAsync(match.Id, out result))
           {
             game = result.Games[0];
             return true;
@@ -250,7 +223,7 @@ namespace Emulators.Common.TheGamesDb
       return false;
     }
 
-    protected bool Get(int id, out GameResult result)
+    protected bool GetAsync(int id, out GameResult result)
     {
       result = null;
       if (id < 1)
@@ -299,7 +272,7 @@ namespace Emulators.Common.TheGamesDb
       if (Search(gameInfo.GameName, gameInfo.Platform, out results))
       {
         results = results.FindAll(r => NameProcessor.AreStringsEqual(r.GameTitle, gameInfo.GameName, MAX_SEARCH_DISTANCE));
-        if (results.Count > 0 && Get(results[0].Id, out result))
+        if (results.Count > 0 && GetAsync(results[0].Id, out result))
         {
           game = result.Games[0];
           Logger.Debug("TheGamesDb: Matched '{0}' to '{1}'", gameInfo.GameName, game.GameTitle);
@@ -316,53 +289,59 @@ namespace Emulators.Common.TheGamesDb
       return result != null && result.Games != null && result.Games.Length > 0;
     }
 
-    protected override void DownloadFanArt(FanartDownload<int> fanartDownload)
+    public Task DownloadFanArtAsync(string itemId)
     {
-      int itemId = fanartDownload.Id;
+      int gamesDbId;
+      if (!int.TryParse(itemId, out gamesDbId))
+        return Task.FromResult(false);
+      return DownloadFanArtAsync(gamesDbId);
+    }
+
+    public async Task DownloadFanArtAsync(int itemId)
+    {
       GameResult result;
-      if (!Get(itemId, out result))
+      if (!GetAsync(itemId, out result))
         return;
       GameImages images = result.Games[0].Images;
       if (images == null)
         return;
       string baseUrl = result.BaseImgUrl;
       ServiceRegistration.Get<ILogger>().Debug("GameTheGamesDbWrapper Download: Begin saving images for IDd{0}", itemId);
-      DownloadImages(itemId, images.Boxart, baseUrl, COVERS_DIRECTORY);
-      DownloadImages(itemId, images.Fanart, baseUrl, FANART_DIRECTORY);
-      DownloadImages(itemId, images.Banner, baseUrl, BANNERS_DIRECTORY);
-      DownloadImages(itemId, images.ClearLogo, baseUrl, CLEARLOGO_DIRECTORY);
-      DownloadImages(itemId, images.Screenshot, baseUrl, SCREENSHOT_DIRECTORY);
+      await DownloadImagesAsync(itemId, images.Boxart, baseUrl, COVERS_DIRECTORY).ConfigureAwait(false);
+      await DownloadImagesAsync(itemId, images.Fanart, baseUrl, FANART_DIRECTORY).ConfigureAwait(false);
+      await DownloadImagesAsync(itemId, images.Banner, baseUrl, BANNERS_DIRECTORY).ConfigureAwait(false);
+      await DownloadImagesAsync(itemId, images.ClearLogo, baseUrl, CLEARLOGO_DIRECTORY).ConfigureAwait(false);
+      await DownloadImagesAsync(itemId, images.Screenshot, baseUrl, SCREENSHOT_DIRECTORY).ConfigureAwait(false);
       ServiceRegistration.Get<ILogger>().Debug("GameTheGamesDbWrapper Download: Finished saving images for IDd{0}", itemId);
-      FinishDownloadFanArt(fanartDownload);
     }
 
-    protected void DownloadImages(int id, IEnumerable<GameImageBoxart> images, string baseUrl, string category)
+    protected async Task DownloadImagesAsync(int id, IEnumerable<GameImageBoxart> images, string baseUrl, string category)
     {
       if (images != null)
         foreach (GameImageBoxart image in images)
-          DownloadImage(id, image, baseUrl, Path.Combine(category, image.Side));
+          await DownloadImageAsync(id, image, baseUrl, Path.Combine(category, image.Side)).ConfigureAwait(false);
     }
 
-    protected void DownloadImages(int id, IEnumerable<GameImage> images, string baseUrl, string category)
+    protected async Task DownloadImagesAsync(int id, IEnumerable<GameImage> images, string baseUrl, string category)
     {
       if (images != null)
         foreach (GameImage image in images)
-          DownloadImage(id, image.Original, baseUrl, category);
+          await DownloadImageAsync(id, image.Original, baseUrl, category).ConfigureAwait(false);
     }
 
-    protected void DownloadImages(int id, IEnumerable<GameImageOriginal> images, string baseUrl, string category)
+    protected async Task DownloadImagesAsync(int id, IEnumerable<GameImageOriginal> images, string baseUrl, string category)
     {
       if (images != null)
         foreach (GameImageOriginal image in images)
-          DownloadImage(id, image, baseUrl, category);
+          await DownloadImageAsync(id, image, baseUrl, category).ConfigureAwait(false);
     }
 
-    protected void DownloadImage(int id, GameImageOriginal image, string baseUrl, string category)
+    protected Task DownloadImageAsync(int id, GameImageOriginal image, string baseUrl, string category)
     {
       string url = baseUrl + image.Value;
       string filename = Path.GetFileName(new Uri(url).LocalPath);
       string downloadFile = CreateAndGetCacheName(id, category, filename);
-      _downloader.DownloadFile(url, downloadFile);
+      return _downloader.DownloadFileAsync(url, downloadFile);
     }
     #endregion
 

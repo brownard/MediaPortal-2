@@ -13,7 +13,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Emulators.Common
@@ -44,7 +43,7 @@ namespace Emulators.Common
       MEDIA_CATEGORIES.Add(_gameCategory);
       // All non-default media item aspects must be registered
       IMediaItemAspectTypeRegistration miatr = ServiceRegistration.Get<IMediaItemAspectTypeRegistration>();
-      miatr.RegisterLocallyKnownMediaItemAspectType(GameAspect.Metadata);
+      miatr.RegisterLocallyKnownMediaItemAspectTypeAsync(GameAspect.Metadata);
     }
 
     public GameMetadataExtractor()
@@ -70,13 +69,10 @@ namespace Emulators.Common
       get { return _metadata; }
     }
 
-    public bool TryExtractMetadata(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool importOnly, bool forceQuickMode)
+    public async Task<bool> TryExtractMetadataAsync(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       try
       {
-        if (!importOnly)
-          return false;
-
         //Exclude mounted files contained within isos. The importer seems to try and import files in isos even if
         //we successfully import the iso file itself??
         if (mediaItemAccessor.ParentProvider.Metadata.ResourceProviderId == ISORESOURCEPROVIDER_ID)
@@ -87,7 +83,7 @@ namespace Emulators.Common
           return false;
 
         using (LocalFsResourceAccessorHelper rah = new LocalFsResourceAccessorHelper(mediaItemAccessor))
-          return ExtractGameData(rah.LocalFsResourceAccessor, extractedAspectData, forceQuickMode);
+          return await ExtractGameData(rah.LocalFsResourceAccessor, extractedAspectData, forceQuickMode).ConfigureAwait(false);
       }
       catch (Exception e)
       {
@@ -98,7 +94,7 @@ namespace Emulators.Common
       return false;
     }
 
-    static bool ExtractGameData(ILocalFsResourceAccessor lfsra, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
+    static async Task<bool> ExtractGameData(ILocalFsResourceAccessor lfsra, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
       var categories = ServiceRegistration.Get<IMediaCategoryHelper>().GetMediaCategories(lfsra.CanonicalLocalResourcePath);
       string platform = categories.FirstOrDefault(s => _platformCategories.ContainsKey(s));
@@ -121,7 +117,7 @@ namespace Emulators.Common
       };           
 
       GameMatcher matcher = GameMatcher.Instance;
-      if (!forceQuickMode && !matcher.FindAndUpdateGame(gameInfo))
+      if (!forceQuickMode && !await matcher.FindAndUpdateGameAsync(gameInfo).ConfigureAwait(false))
       {
         Logger.Debug("GamesMetadataExtractor: No match found for game: '{0}', '{1}'", lfsra.LocalFileSystemPath, platform);
         gameInfo.GameName = name;
@@ -155,6 +151,21 @@ namespace Emulators.Common
     {
       string ext = DosPathHelper.GetExtension(fileName).ToLowerInvariant();
       return configurations.Any(c => c.Platforms.Contains(platform) && (c.FileExtensions.Count == 0 || c.FileExtensions.Contains(ext, StringComparer.InvariantCultureIgnoreCase)));
+    }
+
+    public bool IsDirectorySingleResource(IResourceAccessor mediaItemAccessor)
+    {
+      return false;
+    }
+
+    public bool IsStubResource(IResourceAccessor mediaItemAccessor)
+    {
+      return false;
+    }
+
+    public bool TryExtractStubItems(IResourceAccessor mediaItemAccessor, ICollection<IDictionary<Guid, IList<MediaItemAspect>>> extractedStubAspectData)
+    {
+      return false;
     }
   }
 }

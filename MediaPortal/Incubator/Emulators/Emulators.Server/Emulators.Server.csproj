@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FanArtHandlers\GameFanArtHandler.cs" />
     <Compile Include="GameFanartProvider.cs" />
     <Compile Include="MediaCategoryHelper.cs">
       <SubType>Code</SubType>

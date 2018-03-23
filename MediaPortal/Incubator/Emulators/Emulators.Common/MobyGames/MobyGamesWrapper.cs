@@ -1,23 +1,22 @@
-﻿using Emulators.Common.Matchers;
+﻿using Emulators.Common.Games;
+using Emulators.Common.Matchers;
+using Emulators.Common.NameProcessing;
+using Emulators.Common.WebRequests;
+using MediaPortal.Common;
+using MediaPortal.Common.Logging;
+using MediaPortal.Common.PathManager;
 using MediaPortal.Extensions.OnlineLibraries.Matches;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Emulators.Common.Games;
-using MediaPortal.Common.Logging;
-using MediaPortal.Common;
-using MediaPortal.Common.PathManager;
-using System.IO;
 using System.Web;
-using System.Globalization;
-using Emulators.Common.NameProcessing;
-using Emulators.Common.WebRequests;
 
 namespace Emulators.Common.MobyGames
 {
-  class MobyGamesWrapper : BaseMatcher<GameMatch<string>, string>, IOnlineMatcher
+  class MobyGamesWrapper : BaseMatcher<GameMatch<string>, string, string, string>, IOnlineMatcher
   {
     #region Logger
     protected static ILogger Logger
@@ -50,9 +49,9 @@ namespace Emulators.Common.MobyGames
       get { return _matchesSettingsFile; }
     }
 
-    public bool FindAndUpdateGame(GameInfo gameInfo)
+    public async Task<bool> FindAndUpdateGameAsync(GameInfo gameInfo)
     {
-      if (!Init())
+      if (!await InitAsync().ConfigureAwait(false))
         return false;
 
       MobyGamesResult result;
@@ -103,28 +102,25 @@ namespace Emulators.Common.MobyGames
       }
     }
 
-    protected override void DownloadFanArt(FanartDownload<string> fanartDownload)
+    public async Task DownloadFanArtAsync(string itemId)
     {
-      string itemId = fanartDownload.Id;
       string cache = CreateAndGetCacheName(itemId, "covers");
       string url = string.Format("{0}/{1}/{2}/{3}", BASE_URL, GET_PATH, itemId, COVER_PATH);
       MobyGamesCoverArt result = _downloader.Download<MobyGamesCoverArt>(url, cache);
-      if (result != null)
-      {
-        DownloadCover(result.Front, itemId, COVERS_FRONT);
-        DownloadCover(result.Back, itemId, COVERS_BACK);
-      }
-      FinishDownloadFanArt(fanartDownload);
+      if (result == null)
+        return;
+      await DownloadCoverAsync(result.Front, itemId, COVERS_FRONT).ConfigureAwait(false);
+      await DownloadCoverAsync(result.Back, itemId, COVERS_BACK).ConfigureAwait(false);
     }
 
-    protected void DownloadCover(string url, string id, string side)
+    protected Task DownloadCoverAsync(string url, string id, string side)
     {
       if (string.IsNullOrEmpty(url))
-        return;
+        return Task.CompletedTask;
       url = string.Format("{0}{1}", BASE_URL, url);
       string filename = Path.GetFileName(new Uri(url).LocalPath);
       string downloadFile = CreateAndGetCacheName(id, Path.Combine(COVERS_DIRECTORY, side), filename);
-      _downloader.DownloadFile(url, downloadFile);
+      return _downloader.DownloadFileAsync(url, downloadFile);
     }
 
     protected bool Search(string searchTerm, string platform, out List<SearchResult> results)
@@ -161,7 +157,6 @@ namespace Emulators.Common.MobyGames
       DateTime releaseDate;
       if (DateTime.TryParse(game.ReleaseDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out releaseDate))
         gameInfo.ReleaseDate = releaseDate;
-      ScheduleDownload(game.Id, game.Id.ToString());
     }
 
     protected void AddToStorage(string searchTerm, string platform, string id)

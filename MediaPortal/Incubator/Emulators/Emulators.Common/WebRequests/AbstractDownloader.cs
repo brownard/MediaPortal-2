@@ -43,12 +43,12 @@ namespace Emulators.Common.WebRequests
       return default(T);
     }
 
-    public virtual bool DownloadFile(string url, string downloadFile)
+    public virtual Task<bool> DownloadFileAsync(string url, string downloadFile)
     {
-      return DownloadFile(url, downloadFile, false);
+      return DownloadFileAsync(url, downloadFile, false);
     }
 
-    public virtual bool DownloadFile(string url, string downloadFile, bool overwrite)
+    public virtual async Task<bool> DownloadFileAsync(string url, string downloadFile, bool overwrite)
     {
       if (! overwrite && File.Exists(downloadFile))
         return true;
@@ -56,7 +56,7 @@ namespace Emulators.Common.WebRequests
       {
         WebClient webClient = new CompressionWebClient();
         webClient.Encoding = _encoding;
-        webClient.DownloadFile(url, downloadFile);
+        await webClient.DownloadFileTaskAsync(url, downloadFile).ConfigureAwait(false);
         return true;
       }
       catch (Exception ex)

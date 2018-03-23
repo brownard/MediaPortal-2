@@ -41,5 +41,9 @@
   <Register Location="/Fanart/Providers">
     <FanartProviderBuilder Id="{CD23AA74-57E8-4FFE-93DB-9AC4C701F19A}" MediaTypes="Game" ClassName="Emulators.Server.GameFanartProvider"/>
   </Register>
+
+  <Register Location="/Media/FanArtHandlers">
+    <Instance Id="GameFanArtHandler" ClassName="Emulators.Server.FanArtHandlers.GameFanArtHandler"/>
+  </Register>
   
 </Plugin>

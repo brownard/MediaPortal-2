@@ -1,8 +1,5 @@
 ﻿using Emulators.Common.Games;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Emulators.Common.Matchers
@@ -10,7 +7,8 @@ namespace Emulators.Common.Matchers
   interface IOnlineMatcher
   {
     Guid MatcherId { get; }
-    bool FindAndUpdateGame(GameInfo gameInfo);
+    Task<bool> FindAndUpdateGameAsync(GameInfo gameInfo);
+    Task DownloadFanArtAsync(string itemId);
     bool TryGetImagePath(string id, ImageType imageType, out string path);
   }
 }

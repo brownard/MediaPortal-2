@@ -4,9 +4,6 @@ using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.ResourceAccess;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Emulators.Common.Games
 {
@@ -42,7 +39,7 @@ namespace Emulators.Common.Games
       MediaItemAspect.GetOrCreateAspect(aspectData, GameAspect.Metadata);
       MultipleMediaItemAspect providerResourceAspect = MediaItemAspect.CreateAspect(aspectData, ProviderResourceAspect.Metadata);
       providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_INDEX, 0);
-      providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_PRIMARY, true);
+      providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_TYPE, ProviderResourceAspect.TYPE_PRIMARY);
       providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_MIME_TYPE, GameCategory.CategoryNameToMimeType(Platform));
       providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_SIZE, lfsra.Size);
       providerResourceAspect.SetAttribute(ProviderResourceAspect.ATTR_RESOURCE_ACCESSOR_PATH, lfsra.CanonicalLocalResourcePath.Serialize());

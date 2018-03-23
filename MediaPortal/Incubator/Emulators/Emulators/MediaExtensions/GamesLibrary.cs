@@ -32,9 +32,9 @@ namespace Emulators.MediaExtensions
       _necessaryMias = EmulatorsConsts.NECESSARY_GAME_MIAS;
     }
 
-    protected override void Prepare()
+    protected override async Task PrepareAsync()
     {
-      base.Prepare();
+      await base.PrepareAsync().ConfigureAwait(false);
 
       AbstractItemsScreenData.PlayableItemCreatorDelegate picd = mi => new GameItem(mi)
       {

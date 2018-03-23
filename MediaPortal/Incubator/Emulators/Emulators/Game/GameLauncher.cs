@@ -173,7 +173,7 @@ namespace Emulators.Game
       if (!MediaItemAspect.TryGetAttribute(mediaItem.Aspects, ProviderResourceAspect.ATTR_PARENT_DIRECTORY_ID, out parentDirectoryIds))
         return;
       MediaItemAspect.SetAttribute(mediaItem.Aspects, attribute, value);
-      cd.AddOrUpdateMediaItem(parentDirectoryIds.First(), rl.NativeSystemId, rl.NativeResourcePath, MediaItemAspect.GetAspects(mediaItem.Aspects));
+      cd.AddOrUpdateMediaItemAsync(parentDirectoryIds.First(), rl.NativeSystemId, rl.NativeResourcePath, MediaItemAspect.GetAspects(mediaItem.Aspects));
     }
 
     protected void ShowErrorDialog(string text)

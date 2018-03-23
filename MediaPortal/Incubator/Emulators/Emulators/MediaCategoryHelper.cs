@@ -25,7 +25,7 @@ namespace Emulators
       if (cd == null)
         return categories;
 
-      ICollection<Share> shares = cd.GetShares(systemResolver.LocalSystemId, SharesFilter.All);
+      ICollection<Share> shares = cd.GetSharesAsync(systemResolver.LocalSystemId, SharesFilter.All).Result;
       Share bestShare = SharesHelper.BestContainingPath(shares, path);
       if (bestShare != null)
         categories.AddRange(bestShare.MediaCategories);

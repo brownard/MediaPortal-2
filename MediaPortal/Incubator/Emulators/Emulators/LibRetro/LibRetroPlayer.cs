@@ -1,23 +1,16 @@
-﻿using MediaPortal.UI.SkinEngine.Players;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MediaPortal.UI.Presentation.Geometries;
-using SharpDX.Direct3D9;
-using MediaPortal.UI.Presentation.Players;
-using System.Drawing;
-using SharpRetro.LibRetro;
-using MediaPortal.UI.SkinEngine;
-using MediaPortal.Common;
-using MediaPortal.Common.PathManager;
-using MediaPortal.Common.ResourceAccess;
+﻿using MediaPortal.Common;
 using MediaPortal.Common.Logging;
-using MediaPortal.Common.MediaManagement;
-using MediaPortal.Common.MediaManagement.DefaultItemAspects;
-using MediaPortal.UI.Presentation.Screens;
+using MediaPortal.Common.ResourceAccess;
 using MediaPortal.Common.Threading;
+using MediaPortal.UI.Presentation.Geometries;
+using MediaPortal.UI.Presentation.Players;
+using MediaPortal.UI.Presentation.Screens;
+using MediaPortal.UI.SkinEngine;
+using MediaPortal.UI.SkinEngine.Players;
+using SharpDX.Direct3D9;
+using SharpRetro.LibRetro;
+using System;
+using System.Drawing;
 
 namespace Emulators.LibRetro
 {

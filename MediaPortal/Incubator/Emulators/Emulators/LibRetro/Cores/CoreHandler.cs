@@ -62,7 +62,7 @@ namespace Emulators.LibRetro.Cores
         return false;
 
       string path = Path.Combine(_coresDirectory, core.ArchiveName);
-      return _downloader.DownloadFile(core.Url, path, true) && ExtractCore(path);
+      return _downloader.DownloadFileAsync(core.Url, path, true).Result && ExtractCore(path);
     }
 
     public static CoreInfo LoadCoreInfo(string coreName, string infoDirectory)
@@ -152,7 +152,7 @@ namespace Emulators.LibRetro.Cores
         if (string.IsNullOrEmpty(customCore.InfoUrl))
           continue;
         string path = Path.Combine(_infoDirectory, Path.GetFileNameWithoutExtension(customCore.CoreName) + ".info");
-        _downloader.DownloadFile(customCore.InfoUrl, path);
+        _downloader.DownloadFileAsync(customCore.InfoUrl, path).Wait();
       }
 
       CoreInfoList infoList = _downloader.Download<CoreInfoList>(_baseUrl + _infoUrl);
@@ -165,7 +165,7 @@ namespace Emulators.LibRetro.Cores
         if (!TryCreateAbsoluteUrl(_baseUrl, infoUrl, out uri))
           continue;
         string path = Path.Combine(_infoDirectory, Path.GetFileName(uri.LocalPath));
-        _downloader.DownloadFile(uri.AbsoluteUri, path);
+        _downloader.DownloadFileAsync(uri.AbsoluteUri, path).Wait();
       }
     }
 

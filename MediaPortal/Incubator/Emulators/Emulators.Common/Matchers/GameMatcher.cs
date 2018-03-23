@@ -3,9 +3,6 @@ using Emulators.Common.NameProcessing;
 using Emulators.Common.TheGamesDb;
 using MediaPortal.Common;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Emulators.Common.Matchers
@@ -19,11 +16,16 @@ namespace Emulators.Common.Matchers
       get { return ServiceRegistration.Get<GameMatcher>(); }
     }
 
-    public bool FindAndUpdateGame(GameInfo gameInfo)
+    public Task<bool> FindAndUpdateGameAsync(GameInfo gameInfo)
     {
       TheGamesDbWrapper.TryGetTGDBId(gameInfo);
       NameProcessor.CleanupTitle(gameInfo);
-      return _onlineMatcher.FindAndUpdateGame(gameInfo);
+      return _onlineMatcher.FindAndUpdateGameAsync(gameInfo);
+    }
+
+    public Task DownloadFanArtAsync(string onlineId)
+    {
+      return _onlineMatcher.DownloadFanArtAsync(onlineId);
     }
 
     public bool TryGetImagePath(Guid matcherId, string onlineId, ImageType imageType, out string path)
