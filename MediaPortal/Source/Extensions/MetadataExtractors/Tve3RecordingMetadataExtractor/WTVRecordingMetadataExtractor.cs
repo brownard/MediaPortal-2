@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -24,12 +24,12 @@
 
 using MCEBuddy.MetaData;
 using MediaPortal.Common;
-using MediaPortal.Common.Genres;
 using MediaPortal.Common.Logging;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.ResourceAccess;
+using MediaPortal.Common.Services.GenreConverter;
 using MediaPortal.Extensions.MetadataExtractors.Aspects;
 using MediaPortal.Extensions.OnlineLibraries;
 using MediaPortal.Utilities;
@@ -92,8 +92,13 @@ namespace MediaPortal.Extensions.MetadataExtractors
 
       if (TryGet(metadata, TAG_GENRE, out tmpString))
       {
-        episodeInfo.Genres = new List<GenreInfo>(tmpString.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries).Select(s => new GenreInfo { Name = s }));
-        GenreMapper.AssignMissingSeriesGenreIds(episodeInfo.Genres);
+        episodeInfo.Genres = new List<GenreInfo>(tmpString.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries).Select(s => new GenreInfo { Name = s.Trim() }));
+        IGenreConverter converter = ServiceRegistration.Get<IGenreConverter>();
+        foreach (var genre in episodeInfo.Genres)
+        {
+          if (!genre.Id.HasValue && converter.GetGenreId(genre.Name, GenreCategory.Series, null, out int genreId))
+            genre.Id = genreId;
+        }
       }
 
       episodeInfo.HasChanged = true;
@@ -269,8 +274,13 @@ namespace MediaPortal.Extensions.MetadataExtractors
 
         if (TryGet(tags, TAG_GENRE, out value))
         {
-          List<GenreInfo> genreList = new List<GenreInfo>(value.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries).Select(s => new GenreInfo { Name = s }));
-          GenreMapper.AssignMissingMovieGenreIds(genreList);
+          List<GenreInfo> genreList = new List<GenreInfo>(value.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries).Select(s => new GenreInfo { Name = s.Trim() }));
+          IGenreConverter converter = ServiceRegistration.Get<IGenreConverter>();
+          foreach (var genre in genreList)
+          {
+            if (!genre.Id.HasValue && converter.GetGenreId(genre.Name, GenreCategory.Movie, null, out int genreId))
+              genre.Id = genreId;
+          }
           foreach (GenreInfo genre in genreList)
           {
             MultipleMediaItemAspect genreAspect = MediaItemAspect.CreateAspect(extractedAspectData, GenreAspect.Metadata);
@@ -332,6 +342,16 @@ namespace MediaPortal.Extensions.MetadataExtractors
     public bool TryExtractStubItems(IResourceAccessor mediaItemAccessor, ICollection<IDictionary<Guid, IList<MediaItemAspect>>> extractedStubAspectData)
     {
       return false;
+    }
+
+    public Task<IList<MediaItemSearchResult>> SearchForMatchesAsync(IDictionary<Guid, IList<MediaItemAspect>> searchAspectData, ICollection<string> searchCategories)
+    {
+      return Task.FromResult<IList<MediaItemSearchResult>>(null);
+    }
+
+    public Task<bool> AddMatchedAspectDetailsAsync(IDictionary<Guid, IList<MediaItemAspect>> matchedAspectData)
+    {
+      return Task.FromResult(false);
     }
 
     #endregion

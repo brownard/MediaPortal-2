@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -66,6 +66,7 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
     protected AbstractProperty _showChannelNamesProperty = null;
     protected AbstractProperty _showChannelNumbersProperty = null;
     protected AbstractProperty _showChannelLogosProperty = null;
+    protected AbstractProperty _showGenreColorsProperty = null;
 
     protected SettingsChangeWatcher<SlimTvClientSettings> _settings = null;
 
@@ -177,6 +178,23 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
     public AbstractProperty ShowChannelLogosProperty
     {
       get { return _showChannelLogosProperty; }
+    }
+
+    /// <summary>
+    /// Exposes whether EPG genre colors should be shown by the skin.
+    /// </summary>
+    public bool ShowGenreColors
+    {
+      get { return (bool)_showGenreColorsProperty.GetValue(); }
+      set { _showGenreColorsProperty.SetValue(value); }
+    }
+
+    /// <summary>
+    /// Exposes whether EPG genre colors should be shown by the skin.
+    /// </summary>
+    public AbstractProperty ShowGenreColorsProperty
+    {
+      get { return _showGenreColorsProperty; }
     }
 
     // this overload is used by MultiChannelGuide in got focus trigger
@@ -337,6 +355,7 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
         _showChannelNamesProperty = new WProperty(typeof(bool), true);
         _showChannelNumbersProperty = new WProperty(typeof(bool), true);
         _showChannelLogosProperty = new WProperty(typeof(bool), true);
+        _showGenreColorsProperty = new WProperty(typeof(bool), false);
         InitSettingsWatcher();
 
         BuildExtensions();
@@ -403,7 +422,7 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
     {
       if (_settings != null)
         return;
-      _settings = new SettingsChangeWatcher<SlimTvClientSettings>();
+      _settings = new SettingsChangeWatcher<SlimTvClientSettings>(true);
       UpdatePropertiesFromSettings(_settings.Settings);
       _settings.SettingsChanged = OnSettingsChanged;
     }
@@ -418,6 +437,7 @@ namespace MediaPortal.Plugins.SlimTv.Client.Models
       ShowChannelNames = settings.EpgShowChannelNames;
       ShowChannelNumbers = settings.EpgShowChannelNumbers;
       ShowChannelLogos = settings.EpgShowChannelLogos;
+      ShowGenreColors = settings.EpgShowGenreColors;
     }
 
     #endregion

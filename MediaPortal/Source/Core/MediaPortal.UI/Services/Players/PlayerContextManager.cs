@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -323,8 +323,10 @@ namespace MediaPortal.UI.Services.Players
       ISettingsManager settingsManager = ServiceRegistration.Get<ISettingsManager>();
       PlayerManagerSettings settings = settingsManager.Load<PlayerManagerSettings>();
       bool watched = playPercentage >= settings.WatchedPlayPercentage;
-      if (watched)
+      if (watched && mediaItem.IsLastPart)
         playPercentage = 100;
+      else if (watched && !mediaItem.IsLastPart)
+        playPercentage = 50;
 
       IServerConnectionManager scm = ServiceRegistration.Get<IServerConnectionManager>();
       IContentDirectory cd = scm.ContentDirectory;
@@ -997,6 +999,22 @@ namespace MediaPortal.UI.Services.Players
       if (playerContext == null)
         return;
       playerContext.SeekBackward();
+    }
+
+    public bool PreviousChapter()
+    {
+      IPlayerContext playerContext = CurrentPlayerContext;
+      if (playerContext == null)
+        return false;
+      return playerContext.PreviousChapter();
+    }
+
+    public bool NextChapter()
+    {
+      IPlayerContext playerContext = CurrentPlayerContext;
+      if (playerContext == null)
+        return false;
+      return playerContext.NextChapter();
     }
 
     public bool PreviousItem()

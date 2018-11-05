@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -82,6 +82,7 @@ namespace MediaPortal.Extensions.UserServices.FanArtService
 #if DEBUG
         ServiceRegistration.Get<ILogger>().Debug("No FanArt for {0} '{1}' of type '{2}'", name, fanArtType, mediaType);
 #endif
+        response.StatusCode = (int)HttpStatusCode.NotFound;
         return;
       }
 

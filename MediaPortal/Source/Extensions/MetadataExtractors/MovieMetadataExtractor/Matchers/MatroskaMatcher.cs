@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -22,11 +22,12 @@
 
 #endregion
 
-using MediaPortal.Common.Genres;
+using MediaPortal.Common;
 using MediaPortal.Common.MediaManagement;
 using MediaPortal.Common.MediaManagement.DefaultItemAspects;
 using MediaPortal.Common.MediaManagement.Helpers;
 using MediaPortal.Common.ResourceAccess;
+using MediaPortal.Common.Services.GenreConverter;
 using MediaPortal.Extensions.MetadataExtractors.MatroskaLib;
 using MediaPortal.Utilities;
 using System.Collections.Generic;
@@ -48,9 +49,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor.Match
       if (!MatroskaConsts.MATROSKA_VIDEO_EXTENSIONS.Contains(extensionLower))
         return null;
 
-      MatroskaInfoReader mkvReader = new MatroskaInfoReader(folderOrFileLfsra);
+      MatroskaBinaryReader mkvReader = new MatroskaBinaryReader(folderOrFileLfsra);
       // Add keys to be extracted to tags dictionary, matching results will returned as value
-      Dictionary<string, IList<string>> tagsToExtract = MatroskaConsts.DefaultTags;
+      Dictionary<string, IList<string>> tagsToExtract = MatroskaConsts.DefaultVideoTags;
       await mkvReader.ReadTagsAsync(tagsToExtract).ConfigureAwait(false);
 
       if (tagsToExtract[MatroskaConsts.TAG_MOVIE_IMDB_ID] != null)
@@ -72,9 +73,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor.Match
       if (!MatroskaConsts.MATROSKA_VIDEO_EXTENSIONS.Contains(extensionLower))
         return null;
 
-      MatroskaInfoReader mkvReader = new MatroskaInfoReader(folderOrFileLfsra);
+      MatroskaBinaryReader mkvReader = new MatroskaBinaryReader(folderOrFileLfsra);
       // Add keys to be extracted to tags dictionary, matching results will returned as value
-      Dictionary<string, IList<string>> tagsToExtract = MatroskaConsts.DefaultTags;
+      Dictionary<string, IList<string>> tagsToExtract = MatroskaConsts.DefaultVideoTags;
       await mkvReader.ReadTagsAsync(tagsToExtract).ConfigureAwait(false);
 
       if (tagsToExtract[MatroskaConsts.TAG_MOVIE_TMDB_ID] != null)
@@ -97,9 +98,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor.Match
         return false;
 
       // Try to get extended information out of matroska files)
-      MatroskaInfoReader mkvReader = new MatroskaInfoReader(folderOrFileLfsra);
+      MatroskaBinaryReader mkvReader = new MatroskaBinaryReader(folderOrFileLfsra);
       // Add keys to be extracted to tags dictionary, matching results will returned as value
-      Dictionary<string, IList<string>> tagsToExtract = MatroskaConsts.DefaultTags;
+      Dictionary<string, IList<string>> tagsToExtract = MatroskaConsts.DefaultVideoTags;
       await mkvReader.ReadTagsAsync(tagsToExtract).ConfigureAwait(false);
 
       // Read plot
@@ -112,8 +113,7 @@ namespace MediaPortal.Extensions.MetadataExtractors.MovieMetadataExtractor.Match
       tags = tagsToExtract[MatroskaConsts.TAG_SERIES_GENRE];
       if (tags != null)
       {
-        List<GenreInfo> genreList = tags.Select(s => new GenreInfo { Name = s }).ToList();
-        GenreMapper.AssignMissingMovieGenreIds(genreList);
+        List<GenreInfo> genreList = tags.Where(s => !string.IsNullOrEmpty(s?.Trim())).Select(s => new GenreInfo { Name = s.Trim() }).ToList();
         movieInfo.HasChanged |= MetadataUpdater.SetOrUpdateList(movieInfo.Genres, genreList, movieInfo.Genres.Count == 0);
       }
 

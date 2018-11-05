@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -54,7 +54,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
 
     #region Search
 
-    public override async Task<IList<MovieInfo>> SearchMovieAsync(MovieInfo movieSearch, string language)
+    public override async Task<List<MovieInfo>> SearchMovieAsync(MovieInfo movieSearch, string language)
     {
       List<SimApiMovieSearchItem> foundMovies = await _simApiHandler.SearchMovieAsync(movieSearch.MovieName.Text, 
         movieSearch.ReleaseDate.HasValue ? movieSearch.ReleaseDate.Value.Year : 0).ConfigureAwait(false);
@@ -111,7 +111,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
           MetadataUpdater.SetOrUpdateRatings(ref movie.Rating, new SimpleRating(movieDetail.ImdbRating, 1));
         }
 
-        movie.Genres = movieDetail.Genres.Select(s => new GenreInfo { Name = s }).ToList();
+        movie.Genres = movieDetail.Genres.Where(s => !string.IsNullOrEmpty(s?.Trim())).Select(s => new GenreInfo { Name = s.Trim() }).ToList();
 
         //Only use these if absolutely necessary because there is no way to ID them
         if (movie.Actors.Count == 0)

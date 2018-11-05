@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -201,7 +201,6 @@ namespace MediaPortal.Extensions.UserServices.FanArtService.Client
         if (!rris.GetFileHttpUrl(scm.HomeServerSystemId, ResourcePath.BuildBaseProviderPath(Guid.Empty, string.Empty), out resourceUrl, out localIpAddress))
           return false;
 
-        Uri uri = new Uri(resourceUrl);
         _baseUrl = resourceUrl.Substring(0, resourceUrl.IndexOf(ResourceHttpAccessUrlUtils.RESOURCE_ACCESS_PATH));
         return true;
       }

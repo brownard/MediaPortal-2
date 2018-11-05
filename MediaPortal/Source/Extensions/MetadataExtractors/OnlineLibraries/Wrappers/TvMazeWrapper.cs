@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -105,7 +105,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
           EpisodeName = episodeSearch.EpisodeName,
         };
         info.CopyIdsFrom(seriesSearch);
-        CollectionUtils.AddAll(info.EpisodeNumbers, episodeSearch.EpisodeNumbers);
+        info.EpisodeNumbers = info.EpisodeNumbers.Union(episodeSearch.EpisodeNumbers).ToList();
         episodes.Add(info);
       }
 
@@ -168,7 +168,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         series.FirstAired = seriesDetail.Premiered;
         series.Description = new SimpleTitle(seriesDetail.Summary, true);
         series.Rating = new SimpleRating(seriesDetail.Rating != null && seriesDetail.Rating.Rating.HasValue ? seriesDetail.Rating.Rating.Value : 0);
-        series.Genres = seriesDetail.Genres.Select(s => new GenreInfo { Name = s }).ToList();
+        series.Genres = seriesDetail.Genres.Where(s => !string.IsNullOrEmpty(s?.Trim())).Select(s => new GenreInfo { Name = s.Trim() }).ToList();
         series.Networks = ConvertToCompanies(seriesDetail.Network ?? seriesDetail.WebNetwork, CompanyAspect.COMPANY_TV_NETWORK);
         if (seriesDetail.Status.IndexOf("Ended", StringComparison.InvariantCultureIgnoreCase) >= 0)
         {
@@ -215,11 +215,11 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
                 FirstAired = episodeDetail.AirDate,
                 EpisodeName = new SimpleTitle(episodeDetail.Name, true),
                 Summary = new SimpleTitle(episodeDetail.Summary, true),
-                Genres = seriesDetail.Genres.Select(s => new GenreInfo { Name = s }).ToList(),
+                Genres = seriesDetail.Genres.Where(s => !string.IsNullOrEmpty(s?.Trim())).Select(s => new GenreInfo { Name = s.Trim() }).ToList(),
               };
 
-              info.Actors = series.Actors;
-              info.Characters = series.Characters;
+              info.Actors = series.Actors.ToList();
+              info.Characters = series.Characters.ToList();
 
               series.Episodes.Add(info);
             }
@@ -324,7 +324,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
               FirstAired = episodeDetail.AirDate,
               EpisodeName = new SimpleTitle(episodeDetail.Name, true),
               Summary = new SimpleTitle(episodeDetail.Summary, true),
-              Genres = seriesDetail.Genres.Select(s => new GenreInfo { Name = s }).ToList(),
+              Genres = seriesDetail.Genres.Where(s => !string.IsNullOrEmpty(s?.Trim())).Select(s => new GenreInfo { Name = s.Trim() }).ToList(),
             };
 
             if (seriesDetail.Embedded != null && seriesDetail.Embedded.Cast != null)

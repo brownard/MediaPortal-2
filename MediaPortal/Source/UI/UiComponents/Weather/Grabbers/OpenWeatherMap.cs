@@ -1,7 +1,7 @@
-﻿#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -30,16 +30,17 @@ using System.Threading.Tasks;
 using MediaPortal.Common;
 using MediaPortal.Common.Async;
 using MediaPortal.Common.Localization;
+using MediaPortal.Common.Services.Settings;
+using MediaPortal.UiComponents.Weather.Settings;
 using OpenWeatherMap;
 
 namespace MediaPortal.UiComponents.Weather.Grabbers
 {
-  public class OpenWeatherMapCatcher : IWeatherCatcher, IApiToken
+  public class OpenWeatherMapCatcher : IWeatherCatcher, IApiToken, IDisposable
   {
     public const string SERVICE_NAME = "OpenWeatherMap.com";
 
     internal static string[] KEYS = {
-      "cd1a6127cf06d016728590845cd6518d",
       "91bab7dff33dbb8f3b2ac644272188fa",
       "dd1ec26c30b60782b76b5cd4beb2cd0b",
       "c700353fc67ddb8e6dee46b7f6ab64eb"
@@ -57,14 +58,19 @@ namespace MediaPortal.UiComponents.Weather.Grabbers
     private SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
     private Dictionary<int, Tuple<City, DateTime>> _cache = new Dictionary<int, Tuple<City, DateTime>>();
     private TimeSpan MAX_CACHE_DURATION = TimeSpan.FromMinutes(30);
+    private SettingsChangeWatcher<WeatherSettings> _settings = new SettingsChangeWatcher<WeatherSettings>(true);
 
     public OpenWeatherMapCatcher()
     {
       CultureInfo currentCulture = ServiceRegistration.Get<ILocalization>().CurrentCulture;
       _dateFormat = currentCulture.DateTimeFormat;
-      _metricSystem = new RegionInfo(currentCulture.LCID).IsMetric ? MetricSystem.Metric : MetricSystem.Imperial;
+      _metricSystem = new RegionInfo(currentCulture.Name).IsMetric ? MetricSystem.Metric : MetricSystem.Imperial;
       if (!Enum.TryParse(currentCulture.TwoLetterISOLanguageName, true, out _language))
         _language = OpenWeatherMapLanguage.EN;
+
+      // Start with a random key
+      _keyIndex = new Random(DateTime.Now.Millisecond).Next(KEYS.Length);
+      _settings.SettingsChanged += (sender, args) => ApiToken = _settings.Settings.ApiKey;
 
       #region Weather code translation
 
@@ -373,6 +379,12 @@ namespace MediaPortal.UiComponents.Weather.Grabbers
     public static double ToFahrenheit(double tempKelvin)
     {
       return tempKelvin * 9 / 5 - 459.67;
+    }
+
+    public void Dispose()
+    {
+      _lock?.Dispose();
+      _settings?.Dispose();
     }
   }
 }

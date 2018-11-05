@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -235,6 +235,13 @@ namespace UPnP.Infrastructure.Dv
             continue;
           formattedAddress = $"http://[{bindableAddress}]:{port}{servicePrefix}";
         }
+        startOptions.Urls.Add(formattedAddress);
+      }
+
+      // If no explicit url bindings defined, use the wildcard binding
+      if (startOptions.Urls.Count == 0)
+      {
+        var formattedAddress = $"http://+:{port}{servicePrefix}";
         startOptions.Urls.Add(formattedAddress);
       }
 

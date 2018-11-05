@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -54,7 +54,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
 
     #region Search
 
-    public override async Task<IList<MovieInfo>> SearchMovieAsync(MovieInfo movieSearch, string language)
+    public override async Task<List<MovieInfo>> SearchMovieAsync(MovieInfo movieSearch, string language)
     {
       List<OmDbSearchItem> foundMovies = await _omDbHandler.SearchMovieAsync(movieSearch.MovieName.Text, 
         movieSearch.ReleaseDate.HasValue ? movieSearch.ReleaseDate.Value.Year : 0).ConfigureAwait(false);
@@ -117,7 +117,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
           EpisodeName = episodeSearch.EpisodeName,
         };
         info.CopyIdsFrom(seriesSearch);
-        CollectionUtils.AddAll(info.EpisodeNumbers, episodeSearch.EpisodeNumbers);
+        info.EpisodeNumbers = info.EpisodeNumbers.Union(episodeSearch.EpisodeNumbers).ToList();
         episodes.Add(info);
       }
 
@@ -185,7 +185,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
           {
             awards.Add("Golden Globe");
           }
-          movie.Awards = awards;
+          movie.Awards = awards.ToList();
         }
 
         if (movieDetail.ImdbRating.HasValue)
@@ -201,7 +201,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
           MetadataUpdater.SetOrUpdateRatings(ref movie.Rating, new SimpleRating(movieDetail.TomatoUserRating, movieDetail.TomatoUserTotalReviews));
         }
 
-        movie.Genres = movieDetail.Genres.Select(s => new GenreInfo { Name = s }).ToList();
+        movie.Genres = movieDetail.Genres.Where(s => !string.IsNullOrEmpty(s?.Trim())).Select(s => new GenreInfo { Name = s.Trim() }).ToList();
 
         //Only use these if absolutely necessary because there is no way to ID them
         if (movie.Actors.Count == 0)
@@ -258,7 +258,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
           {
             awards.Add("Golden Globe");
           }
-          series.Awards = awards;
+          series.Awards = awards.ToList();
         }
 
         if (seriesDetail.ImdbRating.HasValue)
@@ -273,7 +273,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
         {
           MetadataUpdater.SetOrUpdateRatings(ref series.Rating, new SimpleRating(seriesDetail.TomatoUserRating, seriesDetail.TomatoUserTotalReviews));
         }
-        series.Genres = seriesDetail.Genres.Select(s => new GenreInfo { Name = s }).ToList();
+        series.Genres = seriesDetail.Genres.Where(s => !string.IsNullOrEmpty(s?.Trim())).Select(s => new GenreInfo { Name = s.Trim() }).ToList();
 
         //Only use these if absolutely necessary because there is no way to ID them
         if (seriesDetail.Actors == null || seriesDetail.Actors.Count == 0)
@@ -400,7 +400,7 @@ namespace MediaPortal.Extensions.OnlineLibraries.Wrappers
               FirstAired = episodeDetail.Released,
               EpisodeName = new SimpleTitle(episodeDetail.Title, true),
               Summary = new SimpleTitle(episodeDetail.Plot, true),
-              Genres = episodeDetail.Genres.Select(s => new GenreInfo { Name = s }).ToList(),
+              Genres = episodeDetail.Genres.Where(s => !string.IsNullOrEmpty(s?.Trim())).Select(s => new GenreInfo { Name = s.Trim() }).ToList(),
             };
 
             if (episodeDetail.ImdbRating.HasValue)

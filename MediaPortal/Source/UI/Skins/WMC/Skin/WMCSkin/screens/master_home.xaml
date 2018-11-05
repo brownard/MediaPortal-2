@@ -36,6 +36,7 @@ Parameters which have to be accessible by a DynamicResource lookup:
     >
   <Screen.Resources>
     <Model x:Key="DefaultMenuModel" Id="9E9D0CD9-4FDB-4c0f-A0C4-F356E151BDE0"/>
+    <Model x:Key="HomeContentModel" Id="24BB1BBE-A3B3-474A-8D55-C37EBE182F6C"/>
   </Screen.Resources>
   
   <Screen.Triggers>
@@ -116,17 +117,21 @@ Parameters which have to be accessible by a DynamicResource lookup:
         <ColumnDefinition Width="450"/>
       </Grid.ColumnDefinitions>
       <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-        <StackPanel Orientation="Horizontal" Context="{Service Window}" IsVisible="{Binding Source={StaticResource MouseModel},Path=IsMouseUsed}" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Context="{Service Window}" IsVisible="{Binding Source={StaticResource MouseModel},Path=IsMouseUsed}" 
+                    IsEnabled="{Binding Source={StaticResource HomeContentModel}, Path=!IsContentFocused}" VerticalAlignment="Center">
           <Control Style="{ThemeResource NotificationControlStyle}" Margin="5,2,5,5" IsVisible="{Binding Source={StaticResource NotificationsModel},Path=IsNotificationsHintVisible}"
                      HorizontalAlignment="Left" VerticalAlignment="Center"/>
         </StackPanel>
+        <!-- User Indicator -->
         <Button Style="{ThemeResource UserButtonStyle}" Margin="0,0,5,0" IsVisible="{Binding Source={StaticResource LoginModel},Path=EnableUserLogin}" Focusable="False"
                 Command="{Command Source={Service WorkflowManager},Path=NavigatePush,Parameters=2529B0F0-8415-4A4E-971B-38D6CDD2406A}"/>
+
+        <!-- Importing Indicator -->
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,5,0"
                     DataContext="{Binding Source={StaticResource StateModel}, Path=[C37B62D0-8E87-42A4-877E-B41944DA9FC9]}"
                     IsVisible="{Binding Converter={StaticResource ReferenceToBoolConverter}}">
           <Label FontSize="{ThemeResource SmallerFontSize}" Margin="10,0,0,0"
-                     Color="{ThemeResource TextColor}" VerticalAlignment="Center" HorizontalAlignment="Right">
+                 Color="{ThemeResource TextColor}" VerticalAlignment="Center" HorizontalAlignment="Right">
             <Label.IsVisible>
               <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0}>=0">
                 <Binding Path="Progress"/>
@@ -138,11 +143,33 @@ Parameters which have to be accessible by a DynamicResource lookup:
           </Label>
           <Button Style="{ThemeResource ImportingButtonStyle}" IsVisible="{Binding IsImporting}"/>
         </StackPanel>
+
+        <!--Data Base Upgrade Indicator-->
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,5,0"
-                    DataContext="{Binding Source={StaticResource StateModel}, Path=[2A58935C-3363-4FA1-B48D-1EF0E81F830D]}"
+                    DataContext="{Binding Source={StaticResource StateModel}, Path=[431528C9-5610-45CD-9807-0130AE1761DA]}"
                     IsVisible="{Binding Converter={StaticResource ReferenceToBoolConverter}}">
+          <Label FontSize="{ThemeResource TinyFontSize}" Content="[Notifications.Upgrading]" Margin="10,-5,0,-10" 
+                 Color="{ThemeResource TextColor}" VerticalAlignment="Center" HorizontalAlignment="Right">
+            <Label.IsVisible>
+              <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0}>=0">
+                <Binding Path="Progress"/>
+              </MultiBinding>
+            </Label.IsVisible>
+            <Label.Content>
+              <Binding Path="Progress" Converter="{StaticResource StringFormatConverter}" ConverterParameter="{}{0}%"/>
+            </Label.Content>
+          </Label>
+          <Button Style="{ThemeResource UpgradingButtonStyle}" IsVisible="{Binding IsUpgrading}"/>
+        </StackPanel>
+
+        <!-- Recording Indicator -->
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,5,0"
+                        DataContext="{Binding Source={StaticResource StateModel}, Path=[2A58935C-3363-4FA1-B48D-1EF0E81F830D]}"
+                        IsVisible="{Binding Converter={StaticResource ReferenceToBoolConverter}}">
           <Button Style="{ThemeResource RecordingButtonStyle}" IsVisible="{Binding IsRecording}"/>
         </StackPanel>
+
+        <!-- Currently Playing Indicator -->
         <mp_special_controls:PlayerControl Style="{ThemeResource CPPlayerControlStyle}" VerticalAlignment="Center"
                   AutoVisibility="True" HorizontalAlignment="Left">
         </mp_special_controls:PlayerControl>
@@ -154,18 +181,21 @@ Parameters which have to be accessible by a DynamicResource lookup:
       <StackPanel Orientation="Horizontal">
         <StackPanel Margin="0,0,0,0" Orientation="Horizontal" Context="{Service Window}"  IsVisible="{Binding Source={StaticResource MouseModel},Path=IsMouseUsed}">
           <Button x:Name="WindowedButton" Style="{ThemeResource MinMaxButtonStyle}" Margin="5,2,0,0" HorizontalAlignment="Right"
+                  IsEnabled="{Binding Source={StaticResource HomeContentModel}, Path=!IsContentFocused}"
                   Command="{Command Source={Service Window},Path=SwitchMode,Parameters=NormalWindowed}">
             <Button.IsVisible>
               <Binding Source="{StaticResource ScreenModeModel}" Path="CurrentScreenMode" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {ScreenMode}.{FullScreen}"/>
             </Button.IsVisible>
           </Button>
           <Button x:Name="MaximizedButton" Style="{ThemeResource MinMaxButtonStyle}" Margin="5,2,0,0" HorizontalAlignment="Right"
+                  IsEnabled="{Binding Source={StaticResource HomeContentModel}, Path=!IsContentFocused}"
                   Command="{Command Source={Service Window},Path=SwitchMode,Parameters=FullScreen}">
             <Button.IsVisible>
               <Binding Source="{StaticResource ScreenModeModel}" Path="CurrentScreenMode" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} != {ScreenMode}.{FullScreen}"/>
             </Button.IsVisible>
           </Button>
           <Button x:Name="ExitButton" Style="{ThemeResource ExitButtonStyle}" Margin="5,2,0,0" HorizontalAlignment="Right"
+                  IsEnabled="{Binding Source={StaticResource HomeContentModel}, Path=!IsContentFocused}"
                   Command="{Command Source={Service Window},Path=Shutdown}">
             <Button.IsVisible>
               <Binding Source="{StaticResource ScreenModeModel}" Path="CurrentScreenMode" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {ScreenMode}.{FullScreen}"/>

@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -60,9 +60,9 @@ namespace MediaPortal.Extensions.MetadataExtractors.SeriesMetadataExtractor.Name
         return false;
       }
 
-      MatroskaInfoReader mkvReader = new MatroskaInfoReader(folderOrFileLfsra);
+      MatroskaBinaryReader mkvReader = new MatroskaBinaryReader(folderOrFileLfsra);
       // Add keys to be extracted to tags dictionary, matching results will returned as value
-      Dictionary<string, IList<string>> tagsToExtract = MatroskaConsts.DefaultTags;
+      Dictionary<string, IList<string>> tagsToExtract = MatroskaConsts.DefaultVideoTags;
       await mkvReader.ReadTagsAsync(tagsToExtract).ConfigureAwait(false);
 
       IList<string> tags = tagsToExtract[MatroskaConsts.TAG_EPISODE_SUMMARY];

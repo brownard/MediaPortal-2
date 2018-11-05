@@ -654,6 +654,7 @@
     <Content Include="Skin\BlueVision\themes\Win10\theme.xml" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Skin\BlueVision\settings\configuration\" />
     <Folder Include="Skin\BlueVision\sounds\" />
   </ItemGroup>
   <ItemGroup>
@@ -1101,6 +1102,9 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Skin\BlueVision\themes\Win10\screens\dialogWeatherSetup.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Skin\BlueVision\themes\Win10\screens\FullScreenContentDVD.xaml">
       <SubType>Designer</SubType>
     </Content>
     <Page Include="Skin\BlueVision\themes\Win10\screens\SimpleFilterItems.xaml">

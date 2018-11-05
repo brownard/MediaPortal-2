@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -371,7 +371,7 @@ namespace MediaPortal.UiComponents.Media.Models
     {
       WorkflowState newState = WorkflowState.CreateTransientState(
           "View: " + subViewSpecification.ViewDisplayName, subViewSpecification.ViewDisplayName,
-          false, null, true, WorkflowType.Workflow);
+          false, null, true, WorkflowType.Workflow, null);
 
       ScreenConfig nextScreenConfig;
       LoadLayoutSettings(visibleScreen.ToString(), out nextScreenConfig);
@@ -408,7 +408,7 @@ namespace MediaPortal.UiComponents.Media.Models
 
       WorkflowState newState = WorkflowState.CreateTransientState(
           "View: " + subViewSpecification.ViewDisplayName, subViewSpecification.ViewDisplayName,
-          false, null, false, WorkflowType.Workflow);
+          false, null, false, WorkflowType.Workflow, null);
 
       string nextScreenName;
       AbstractScreenData nextScreen = null;

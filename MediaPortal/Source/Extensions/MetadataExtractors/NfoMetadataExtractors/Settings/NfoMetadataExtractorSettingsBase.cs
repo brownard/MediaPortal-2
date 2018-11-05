@@ -1,7 +1,7 @@
-﻿#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -104,16 +104,6 @@ namespace MediaPortal.Extensions.MetadataExtractors.NfoMetadataExtractors.Settin
     /// </summary>
     [Setting(SettingScope.Global, false)]
     public bool WriteStubObjectIntoDebugLog { get; set; }
-
-    /// <summary>
-    /// Language culture for the language in the nfo files.
-    /// </summary>
-    [Setting(SettingScope.Global)]
-    public string LanguageCulture
-    {
-      get { return _languageCulture; }
-      set { _languageCulture = value; }
-    }
 
     #endregion
   }

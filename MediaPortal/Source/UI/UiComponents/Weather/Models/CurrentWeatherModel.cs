@@ -1,7 +1,7 @@
-#region Copyright (C) 2007-2017 Team MediaPortal
+#region Copyright (C) 2007-2018 Team MediaPortal
 
 /*
-    Copyright (C) 2007-2017 Team MediaPortal
+    Copyright (C) 2007-2018 Team MediaPortal
     http://www.team-mediaportal.com
 
     This file is part of MediaPortal 2
@@ -45,7 +45,7 @@ namespace MediaPortal.UiComponents.Weather.Models
     /// </summary>
     private const int WEATHER_UPDATE_INTERVAL = 30 * 60 * 1000;
 
-    protected readonly SettingsChangeWatcher<WeatherSettings> _settings = new SettingsChangeWatcher<WeatherSettings>();
+    protected readonly SettingsChangeWatcher<WeatherSettings> _settings = new SettingsChangeWatcher<WeatherSettings>(true);
 
     protected readonly AbstractProperty _currentLocationProperty = new WProperty(typeof(City), City.NoData);
 
@@ -62,7 +62,7 @@ namespace MediaPortal.UiComponents.Weather.Models
     /// </summary>
     public City CurrentLocation
     {
-      get { return (City) _currentLocationProperty.GetValue(); }
+      get { return (City)_currentLocationProperty.GetValue(); }
       set { _currentLocationProperty.SetValue(value); }
     }
 
@@ -86,7 +86,7 @@ namespace MediaPortal.UiComponents.Weather.Models
     private void OnMessageReceived(AsynchronousMessageQueue queue, SystemMessage message)
     {
       if (message.ChannelName == LocalizationMessaging.CHANNEL &&
-          (LocalizationMessaging.MessageType) message.MessageType == LocalizationMessaging.MessageType.LanguageChanged)
+          (LocalizationMessaging.MessageType)message.MessageType == LocalizationMessaging.MessageType.LanguageChanged)
         Update();
     }
 
@@ -112,19 +112,14 @@ namespace MediaPortal.UiComponents.Weather.Models
         return;
 
       bool result = false;
+      City newLocation = new City(city);
       try
       {
-        City newLocation = new City(city);
-        if (await ServiceRegistration.Get<IWeatherCatcher>().GetLocationData(newLocation).ConfigureAwait(false))
-        {
-          CurrentLocation.Copy(newLocation);
-          result = true;
-        }
+        result = await ServiceRegistration.Get<IWeatherCatcher>().GetLocationData(newLocation).ConfigureAwait(false);
       }
-      catch (Exception)
-      {
-      }
+      catch (Exception) { }
 
+      CurrentLocation.Copy(newLocation);
       ServiceRegistration.Get<ILogger>().Info(result
                                                 ? "CurrentWeatherModel: Loaded weather data for {0}, {1}"
                                                 : "CurrentWeatherModel: Failed to load weather data for {0}, {1}",
