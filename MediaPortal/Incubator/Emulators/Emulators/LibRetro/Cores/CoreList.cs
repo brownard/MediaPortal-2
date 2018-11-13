@@ -23,13 +23,15 @@ namespace Emulators.LibRetro.Cores
 
     public bool Deserialize(string html)
     {
-      MatchCollection matches = URLS_REGEX.Matches(html);
-      if (matches.Count == 0)
-        return false;
-
-      foreach (Match match in matches)
-        _coreUrls.Add(new OnlineCore { Url = match.Groups[1].Value, Name = match.Groups[2].Value });
-      return true;
+      string line = null;
+      using (StringReader sr = new StringReader(html))
+        while ((line = sr.ReadLine()) != null)
+        {
+          string[] coreInfo = line.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+          if (coreInfo.Length > 2)
+          _coreUrls.Add(new OnlineCore { Date = coreInfo[0], Name = coreInfo[2] });
+        }
+      return _coreUrls.Count > 0;
     }
   }
 }

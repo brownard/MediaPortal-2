@@ -50,7 +50,6 @@ namespace Emulators.LibRetro.Cores
     public void Update()
     {
       UpdateCustomCores();
-      DownloadCoreInfos();
       UpdateCores();
     }
 
@@ -83,15 +82,41 @@ namespace Emulators.LibRetro.Cores
     protected void UpdateCores()
     {
       List<OnlineCore> onlineCores = new List<OnlineCore>();
-      CoreList coreList = _downloader.Download<CoreList>(_baseUrl + _latestUrl);
+      string url = _baseUrl + _latestUrl + ".index-extended";
+      CoreList coreList = _downloader.Download<CoreList>(url);
       if (coreList != null)
-        onlineCores.AddRange(coreList.CoreUrls);
+        onlineCores.AddRange(coreList.CoreUrls.OrderBy(c => c.Name));
+
+
+      if (!TryCreateDirectory(_infoDirectory))
+        return;
+
+      foreach (OnlineCore core in onlineCores)
+      {
+        string coreName = core.Name.EndsWith(".zip") ? Path.GetFileNameWithoutExtension(core.Name) : core.Name;
+        coreName = Path.GetFileNameWithoutExtension(coreName) + ".info";
+        string infoUrl = _baseUrl + _infoUrl + coreName;
+        string path = Path.Combine(_infoDirectory, coreName);
+        _downloader.DownloadFileAsync(infoUrl, path).Wait();
+      }
+
       CreateLocalCores(onlineCores);
     }
 
     protected void UpdateCustomCores()
     {
       _customCores = CustomCoreHandler.GetCustomCores(_customCoresUrl);
+
+      if (!TryCreateDirectory(_infoDirectory))
+        return;
+
+      foreach (CustomCore customCore in _customCores)
+      {
+        if (string.IsNullOrEmpty(customCore.InfoUrl))
+          continue;
+        string path = Path.Combine(_infoDirectory, Path.GetFileNameWithoutExtension(customCore.CoreName) + ".info");
+        _downloader.DownloadFileAsync(customCore.InfoUrl, path).Wait();
+      }
     }
 
     protected void CreateLocalCores(IEnumerable<OnlineCore> onlineCores)
@@ -112,7 +137,7 @@ namespace Emulators.LibRetro.Cores
       foreach (OnlineCore onlineCore in onlineCores)
       {
         Uri uri;
-        if (!TryCreateAbsoluteUrl(_baseUrl, onlineCore.Url, out uri))
+        if (!TryCreateAbsoluteUrl(_baseUrl, _latestUrl + onlineCore.Name, out uri))
           continue;
 
         string coreName = Path.GetFileNameWithoutExtension(onlineCore.Name);
@@ -140,33 +165,6 @@ namespace Emulators.LibRetro.Cores
       if (extracted)
         TryDeleteFile(path);
       return extracted;
-    }
-
-    protected void DownloadCoreInfos()
-    {
-      if (!TryCreateDirectory(_infoDirectory))
-        return;
-
-      foreach (CustomCore customCore in _customCores)
-      {
-        if (string.IsNullOrEmpty(customCore.InfoUrl))
-          continue;
-        string path = Path.Combine(_infoDirectory, Path.GetFileNameWithoutExtension(customCore.CoreName) + ".info");
-        _downloader.DownloadFileAsync(customCore.InfoUrl, path).Wait();
-      }
-
-      CoreInfoList infoList = _downloader.Download<CoreInfoList>(_baseUrl + _infoUrl);
-      if (infoList == null)
-        return;
-
-      foreach (string infoUrl in infoList.CoreInfoUrls)
-      {
-        Uri uri;
-        if (!TryCreateAbsoluteUrl(_baseUrl, infoUrl, out uri))
-          continue;
-        string path = Path.Combine(_infoDirectory, Path.GetFileName(uri.LocalPath));
-        _downloader.DownloadFileAsync(uri.AbsoluteUri, path).Wait();
-      }
     }
 
     protected static bool TryCreateAbsoluteUrl(string baseUrl, string url, out Uri uri)

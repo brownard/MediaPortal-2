@@ -29,7 +29,7 @@ namespace Emulators.Common.WebRequests
           return Deserialize<T>(responseString);
 
         responseString = GetResponseString(url);
-        if (responseString == null)
+        if (string.IsNullOrEmpty(responseString))
           return default(T);
 
         T response = Deserialize<T>(responseString);
