@@ -10,8 +10,6 @@ using MediaPortal.UiComponents.SkinBase.General;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Emulators.Models
 {
@@ -334,7 +332,7 @@ namespace Emulators.Models
 
     protected IEnumerable<string> GetGameMediaCategories()
     {
-      return TheGamesDbWrapper.Platforms.Select(p => p.Name);
+      return TheGamesDbWrapperV2.Platforms.Select(p => p.Name);
     }
 
     protected void UpdateSelectedGameCategories()

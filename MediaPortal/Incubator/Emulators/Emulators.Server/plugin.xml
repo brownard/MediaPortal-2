@@ -17,6 +17,7 @@
   </Runtime>
 
   <DependsOn>
+    <PluginReference PluginId="{B32504F3-4374-4640-94A1-16E1DEE84C3C}" CompatibleAPI="2"/> <!-- OnlineLibraries -->
     <PluginReference PluginId="{BDA68C24-EEA3-47D0-B43A-86E086E43AE1}" CompatibleAPI="3"/> <!-- FanartService -->
     <CoreDependency Name="MediaPortal.Common" CompatibleAPI="2" />
     <CoreDependency Name="MediaPortal.Backend" CompatibleAPI="2" />

@@ -28,6 +28,7 @@ namespace Emulators.Common
     public static Guid METADATAEXTRACTOR_ID = new Guid(METADATAEXTRACTOR_ID_STR);
 
     protected static readonly Guid ISORESOURCEPROVIDER_ID = new Guid("112728B1-F71D-4284-9E5C-3462E8D3C74D");
+    protected static readonly Guid ZIPRESOURCEPROVIDER_ID = new Guid("6B042DB8-69AD-4B57-B869-1BCEA4E43C77");
 
     protected static ICollection<MediaCategory> MEDIA_CATEGORIES = new List<MediaCategory>();
     protected static MediaCategory _gameCategory;
@@ -71,18 +72,26 @@ namespace Emulators.Common
 
     public async Task<bool> TryExtractMetadataAsync(IResourceAccessor mediaItemAccessor, IDictionary<Guid, IList<MediaItemAspect>> extractedAspectData, bool forceQuickMode)
     {
+      IResourceAccessor disposeAccessor = null;
       try
       {
-        //Exclude mounted files contained within isos. The importer seems to try and import files in isos even if
-        //we successfully import the iso file itself??
-        if (mediaItemAccessor.ParentProvider.Metadata.ResourceProviderId == ISORESOURCEPROVIDER_ID)
-          return false;
-        
         IFileSystemResourceAccessor fsra = mediaItemAccessor as IFileSystemResourceAccessor;
-        if (fsra == null || !fsra.IsFile)
+
+        if (fsra == null)
           return false;
 
-        using (LocalFsResourceAccessorHelper rah = new LocalFsResourceAccessorHelper(mediaItemAccessor))
+        if (!fsra.IsFile)
+        {
+          if (!IsChainedResourceProvider(mediaItemAccessor))
+            return false;
+          // The importer mounts iso and zip files as virtual directories but we need the accessor
+          // to the original file so we have to create one here and remember to dispose it later.
+          ResourcePath path = new ResourcePath(new[] { mediaItemAccessor.CanonicalLocalResourcePath.BasePathSegment });
+          if (!path.TryCreateLocalResourceAccessor(out disposeAccessor))
+            return false;
+        }
+
+        using (LocalFsResourceAccessorHelper rah = new LocalFsResourceAccessorHelper(disposeAccessor ?? mediaItemAccessor))
           return await ExtractGameData(rah.LocalFsResourceAccessor, extractedAspectData, forceQuickMode).ConfigureAwait(false);
       }
       catch (Exception e)
@@ -90,6 +99,11 @@ namespace Emulators.Common
         // Only log at the info level here - And simply return false. This lets the caller know that we
         // couldn't perform our task here.
         Logger.Info("GamesMetadataExtractor: Exception reading resource '{0}' (Text: '{1}')", mediaItemAccessor.CanonicalLocalResourcePath, e.Message);
+      }
+      finally
+      {
+        if (disposeAccessor != null)
+          disposeAccessor.Dispose();
       }
       return false;
     }
@@ -105,11 +119,11 @@ namespace Emulators.Common
       }
 
       var configurations = ServiceRegistration.Get<ISettingsManager>().Load<CommonSettings>().ConfiguredEmulators;
-      if (!HasGameExtension(lfsra.LocalFileSystemPath, platform, configurations))
+      if (!HasGameExtension(lfsra.CanonicalLocalResourcePath.BasePathSegment.Path, platform, configurations))
         return false;
 
       Logger.Debug("GamesMetadataExtractor: Importing game: '{0}', '{1}'", lfsra.LocalFileSystemPath, platform);
-      string name = DosPathHelper.GetFileNameWithoutExtension(lfsra.LocalFileSystemPath);
+      string name = DosPathHelper.GetFileNameWithoutExtension(lfsra.CanonicalLocalResourcePath.BasePathSegment.Path);
       GameInfo gameInfo = new GameInfo()
       {
         GameName = name,
@@ -153,8 +167,22 @@ namespace Emulators.Common
       return configurations.Any(c => c.Platforms.Contains(platform) && (c.FileExtensions.Count == 0 || c.FileExtensions.Contains(ext, StringComparer.InvariantCultureIgnoreCase)));
     }
 
+    protected static bool IsChainedResourceProvider(IResourceAccessor mediaItemAccessor)
+    {
+      Guid providerId = mediaItemAccessor.ParentProvider.Metadata.ResourceProviderId;
+      return ServiceRegistration.Get<IMediaAccessor>().LocalChainedResourceProviders.Any(rp => rp.Metadata.ResourceProviderId == providerId);
+    }
+
     public bool IsDirectorySingleResource(IResourceAccessor mediaItemAccessor)
     {
+      if (IsChainedResourceProvider(mediaItemAccessor))
+      {
+        var categories = ServiceRegistration.Get<IMediaCategoryHelper>().GetMediaCategories(mediaItemAccessor.CanonicalLocalResourcePath);
+        var configurations = ServiceRegistration.Get<ISettingsManager>().Load<CommonSettings>().ConfiguredEmulators;
+        string platform = categories.FirstOrDefault(s => _platformCategories.ContainsKey(s));
+        if (HasGameExtension(mediaItemAccessor.CanonicalLocalResourcePath.BasePathSegment.Path, platform, configurations))
+          return true;
+      }
       return false;
     }
 
