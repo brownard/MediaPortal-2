@@ -5,6 +5,7 @@
   xmlns:fanart="clr-namespace:MediaPortal.Extensions.UserServices.FanArtService.Client;assembly=FanArtService.Client"
   xmlns:media="clr-namespace:MediaPortal.UiComponents.Media.Models.AspectWrappers;assembly=Media"
   xmlns:emulators="clr-namespace:Emulators.MediaExtensions;assembly=Emulators"
+  xmlns:aspect="clr-namespace:Emulators.Common.Games;assembly=Emulators.Common"
   Grid.Column="2" Grid.Row="0" x:Name="MediaItemDetails"
   HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 
@@ -21,6 +22,12 @@
 
   <emulators:GameAspectWrapper Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                                MediaItem="{Binding Source={StaticResource FanArtBackgroundModel},Path=MediaItem}">
+    <emulators:GameAspectWrapper.IsVisible>
+      <MultiBinding Converter="{StaticResource MediaItemAspectToBoolConverter}">
+        <Binding Source="{StaticResource FanArtBackgroundModel}" Path="MediaItem" />
+        <Binding Source="{x:Static aspect:GameAspect.ASPECT_ID}" />
+      </MultiBinding>
+    </emulators:GameAspectWrapper.IsVisible>
     <emulators:GameAspectWrapper.Template>
       <ControlTemplate>
         <StackPanel Margin="20,30,20,15" DataContext="{Binding RelativeSource={RelativeSource TemplatedParent}}">
