@@ -5,7 +5,7 @@
   xmlns:fanart="clr-namespace:MediaPortal.Extensions.UserServices.FanArtService.Client;assembly=FanArtService.Client"
   xmlns:media="clr-namespace:MediaPortal.UiComponents.Media.Models.AspectWrappers;assembly=Media"
   xmlns:emulators="clr-namespace:Emulators.MediaExtensions;assembly=Emulators"
-  Grid.Column="2" Grid.Row="2" x:Name="MediaItemDetails"
+  x:Name="MediaItemDetails" Margin="0,0,-20,0"
   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
   DataContext="{Binding Source={StaticResource FanArtBackgroundModel},Path=SelectedItem}">
 
@@ -72,7 +72,7 @@
 
             <Label x:Name="Genre" Color="{ThemeResource TextColor}" Content="{Binding Genres}" Opacity="0.6" TextTrimming="WordEllipsis"/>
             <Label x:Name="Platform" Color="{ThemeResource TextColor}" Content="{Binding Platform}" Opacity="0.6" TextTrimming="WordEllipsis"/>
-            
+            <Label x:Name="Developer" Color="{ThemeResource TextColor}" Content="{Binding Developer}" Opacity="0.6" TextTrimming="WordEllipsis"/>
           </StackPanel>
         </ControlTemplate>
       </emulators:GameAspectWrapper.Template>
