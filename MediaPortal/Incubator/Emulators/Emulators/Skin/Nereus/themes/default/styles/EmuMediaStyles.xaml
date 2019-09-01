@@ -19,47 +19,28 @@
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-      <DockPanel Margin="0,0,4,0">
-        <Image x:Name="ItemTypeSmall" Stretch="Uniform"
-            Source="{Binding MediaItem}" FallbackSource="Game.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
+      <DockPanel  Margin="5,0,5,0">
+        <Image x:Name="ItemTypeSmall" Stretch="Uniform" Source="{Binding MediaItem}" 
+               FallbackSource="Game.png" Width="{StaticResource MEDIA_THUMB_WIDTH_S}" Height="{StaticResource MEDIA_THUMB_HEIGHT_S}">
           <Image.IsVisible>
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Small}"/>
           </Image.IsVisible>
         </Image>
-        <Image x:Name="ItemTypeMedium" Stretch="Uniform"
-            Source="{Binding MediaItem}" FallbackSource="Game.png" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
+        <Image x:Name="ItemTypeMedium" Stretch="Uniform" Source="{Binding MediaItem}" 
+               FallbackSource="Game.png" Width="{StaticResource MEDIA_THUMB_WIDTH_M}" Height="{StaticResource MEDIA_THUMB_HEIGHT_M}">
           <Image.IsVisible>
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Medium}"/>
           </Image.IsVisible>
         </Image>
-        <Image x:Name="ItemTypeLarge" Stretch="Uniform"
-            Source="{Binding MediaItem}" FallbackSource="Game.png" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
+        <Image x:Name="ItemTypeLarge" Stretch="Uniform" Source="{Binding MediaItem}" Margin="0,0,0,10"
+               FallbackSource="Game.png" Width="{StaticResource MEDIA_THUMB_WIDTH_L}" Height="{StaticResource MEDIA_THUMB_HEIGHT_L}">
           <Image.IsVisible>
             <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} == {LayoutSize}.{Large}"/>
           </Image.IsVisible>
         </Image>
       </DockPanel>
-      <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Stretch">
-        <Label x:Name="ItemLabel" Content="{Binding Title}" FontSize="{ThemeResource SmallFontSize}" Color="{ThemeResource MediaItemUnwatchedColor}" FontFamily="SegoeUIBold">
-          <Label.Color>
-            <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} ? {1} : {2}">
-              <Binding Path="!Virtual"/>
-              <Binding Source="{ThemeResource MediaItemUnwatchedColor}"/>
-              <Binding Source="{ThemeResource MediaItemOfflineColor}"/>
-            </MultiBinding>
-          </Label.Color>
-        </Label>
-        <Grid x:Name="Details" HorizontalAlignment="Stretch">
-          <Grid.IsVisible>
-            <Binding Source="{StaticResource ViewModeModel}" Path="LayoutSize" Converter="{StaticResource ExpressionValueConverter}" ConverterParameter="{}{0} != {LayoutSize}.{Small}"/>
-          </Grid.IsVisible>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-          </Grid.ColumnDefinitions>
-          <Label x:Name="PlatformLabel" Content="{Binding Platform}" FontSize="{ThemeResource SmallFontSize}" Color="{StaticResource MediaDetailsColor}" />
-        </Grid>
-
-      </StackPanel>
+      <Label x:Name="ItemLabel" Content="{Binding Title}" FontSize="{ThemeResource SmallFontSize}" Grid.Column="1"
+             Color="{ThemeResource MediaItemUnwatchedColor}" FontFamily="SegoeUIBold"/>
     </Grid>
   </ControlTemplate>
 
