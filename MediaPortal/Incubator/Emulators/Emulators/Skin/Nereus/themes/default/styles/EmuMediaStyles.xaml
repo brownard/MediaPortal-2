@@ -52,18 +52,25 @@
       <Grid.RowDefinitions>
         <RowDefinition Height="{StaticResource AUDIO_GRID_HEIGHT}"/>
       </Grid.RowDefinitions>
-      <Border VerticalAlignment="Stretch" HorizontalAlignment="Stretch" CornerRadius="4" BorderThickness="0" 
+      <Border VerticalAlignment="Stretch" HorizontalAlignment="Stretch" BorderThickness="0" 
               IsVisible="{Binding ElementName=thumb, Path=!HasImage}">
         <Border.Background>
-          <LinearGradientBrush StartPoint="0,1" EndPoint="1,0">
-            <GradientStop Color="#F2447da7" Offset="0"/>
-            <GradientStop Color="#F2124273" Offset="1"/>
-          </LinearGradientBrush>
+          <MultiBinding Converter="{StaticResource ExpressionMultiValueConverter}" ConverterParameter="{}{0} ? {1} : {2}">
+            <Binding RelativeSource="{RelativeSource Mode=FindAncestor,AncestorType={x:Type Button}}" Path="!HasFocus"/>
+            <Binding Source="{ThemeResource NereusColorMedium}"/>
+            <Binding Source="{ThemeResource NereusColorLight}"/>
+          </MultiBinding>
         </Border.Background>
       </Border>
-      <Label x:Name="ItemLabel" Content="{Binding Title}" HorizontalAlignment="Center" Wrap="True"
-          Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallFontSize}" IsVisible="{Binding ElementName=thumb, Path=!HasImage}"/>
-      <Image x:Name="thumb"  Stretch="Uniform" Source="{Binding MediaItem}" />
+
+      <Image Source="HomeContentIcons\game.png" Height="30" Width="30" Stretch="Uniform" Margin="8" VerticalAlignment="Top"
+             HorizontalAlignment="Left" IsVisible="{Binding ElementName=thumb, Path=!HasImage}"/>
+      
+      <Label x:Name="ItemLabel" Content="{Binding Title}" HorizontalContentAlignment="Center" Margin="5,90,5,15"
+             Wrap="True" Color="{ThemeResource TextColor}" FontSize="{ThemeResource SmallerFontSize}"
+             IsVisible="{Binding ElementName=thumb, Path=!HasImage}"/>
+
+      <Image x:Name="thumb" Stretch="Uniform" Source="{Binding MediaItem}" />
     </Grid>
   </ControlTemplate>
 
