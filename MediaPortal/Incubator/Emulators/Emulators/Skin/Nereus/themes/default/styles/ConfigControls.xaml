@@ -103,19 +103,19 @@
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="300"/>
+        <ColumnDefinition Width="200"/>
         <ColumnDefinition Width="*"/>
-        <ColumnDefinition Width="300"/>
+        <ColumnDefinition Width="350"/>
       </Grid.ColumnDefinitions>
       <Label x:Name="ItemLabel" Grid.Column="0" Content="{Binding [Name]}" FontSize="{ThemeResource SmallFontSize}"
-          HorizontalAlignment="Left" VerticalAlignment="Center"
-          Color="{ThemeResource TextColor}"/>
+             HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,10,0"
+             Color="{ThemeResource TextColor}"/>
       <Label x:Name="ItemLabel2" Grid.Column="1" Content="{Binding [Path]}" FontSize="{ThemeResource SmallFontSize}"
-          HorizontalAlignment="Left" VerticalAlignment="Center"
-          Color="{ThemeResource HintTextColor}"/>
+             HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,40,0"
+             Color="{ThemeResource HintTextColor}"/>
       <Label x:Name="ItemLabel3" Grid.Column="2" Content="{Binding [Platforms]}" FontSize="{ThemeResource SmallFontSize}"
-          HorizontalAlignment="Right" VerticalAlignment="Center"
-          Color="{ThemeResource HintTextColor}"/>
+             HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,10,0"
+             Color="{ThemeResource HintTextColor}"/>
     </Grid>
   </DataTemplate>
 
