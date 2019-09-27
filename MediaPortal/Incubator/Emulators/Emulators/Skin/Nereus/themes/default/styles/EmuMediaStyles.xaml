@@ -9,6 +9,8 @@
     DependsOnStyleResources="MediaStyles,MediaButtons,MediaColors,Consts,Colors,Buttons,OtherControls"
     >
 
+  <Model x:Key="ViewModeModel" Id="6997CD35-63F0-4F96-8997-E18C9382E2DC"/>
+  
   <!-- Game Item -->
   <ControlTemplate x:Key="ListViewGameItemTemplate">
     <Grid x:Name="ItemControl">
